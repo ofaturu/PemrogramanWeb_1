@@ -19,7 +19,7 @@ echo ("Hasil penjumlahan a dan b adalah = $tambah <br>");
 echo ("Hasil pengurangan a dan b adalah = $kurang<br>");
 echo ("Hasil perkalian a dan b adalah = $kali <br>");
 echo ("Hasil pembagian a dan b adalah = $bagi <br>");
-$nama = "ITSPKU";
+$nama = "UMPKU";
 $garis= "=====================================";
 echo "<p>";
 echo $garis."<br>";
