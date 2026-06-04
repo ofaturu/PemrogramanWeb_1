@@ -16,6 +16,12 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'sewa' ? 'active' : '' ?>" href="sewa.php">
+        <i class="nav-icon fa fa-receipt me-2"></i>
+        Data Penyewaan
+      </a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link <?= ($activePage ?? '') === 'add' ? 'active' : '' ?>" href="add.php">
         <i class="nav-icon fa fa-plus me-2"></i>
         Tambah Kendaraan
