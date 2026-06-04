@@ -1,8 +1,0 @@
-        :root { --primary: #1699eb; --secondary: #191C24; --light: #6C7293; --dark: #000000; }
-        body { background-color: var(--dark); color: var(--light); }
-        .bg-secondary { background-color: var(--secondary) !important; }
-
-        .sidebar .navbar-nav .nav-link {
-            white-space: nowrap;
-            font-size: 15px; 
-        }
