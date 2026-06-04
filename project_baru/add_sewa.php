@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Save to database
         $stmt = mysqli_prepare($mysqli, "INSERT INTO penyewaan (id_user, kode_unik_kendaraan, tanggal_sewa, tanggal_kembali, total_biaya, status) VALUES (?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, 'iisssd', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
+        mysqli_stmt_bind_param($stmt, 'iisiss', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
 
         if (mysqli_stmt_execute($stmt)) {
             header('Location: sewa.php?msg=added');

@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Update database
         $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET id_user = ?, kode_unik_kendaraan = ?, tanggal_sewa = ?, tanggal_kembali = ?, total_biaya = ?, status = ? WHERE id_sewa = ?");
-        mysqli_stmt_bind_param($upd, 'iisssdi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
+        mysqli_stmt_bind_param($upd, 'iisissi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
 
         if (mysqli_stmt_execute($upd)) {
             header('Location: sewa.php?msg=updated');
