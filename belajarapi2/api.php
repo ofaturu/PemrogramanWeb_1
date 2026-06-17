@@ -1,13 +1,15 @@
 <?php
-// ==========================================
-// 1. PENGATURAN HEADER & DATABASE
-// ==========================================
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-// Sesuaikan dengan kredensial database kamu
+// Tangani preflight request dari browser/client
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 $host = "localhost";
 $user = "root";
 $pass = "";
@@ -16,44 +18,25 @@ $db   = "belajarrelasi";
 $conn = new mysqli($host, $user, $pass, $db);
 
 if ($conn->connect_error) {
-    die(json_encode(["status" => "error", "message" => "Koneksi database gagal: " . $conn->connect_error]));
+    echo json_encode(["status" => "error", "message" => "Database error: " . $conn->connect_error]);
+    exit;
 }
 
-// Menangkap metode HTTP (GET, POST, PUT, DELETE)
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Menangkap input JSON dari raw body (untuk POST dan PUT)
+// Kunci utamanya di sini: Selalu decode raw JSON untuk semua method (POST, PUT, DELETE)
 $input = json_decode(file_get_contents('php://input'), true);
 
-// ==========================================
-// 2. ROUTING LOGIC CRUD
-// ==========================================
 switch ($method) {
-    
-    // --- READ (Tampilkan Data) ---
     case 'GET':
-        if (isset($_GET['nim'])) {
-            // Ambil satu data berdasarkan NIM
-            $nim = intval($_GET['nim']);
-            $stmt = $conn->prepare("SELECT * FROM mahasiswa WHERE nim = ?");
-            $stmt->bind_param("i", $nim);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $data = $result->fetch_assoc();
-            
-            echo json_encode($data ? $data : ["message" => "Data tidak ditemukan"]);
-        } else {
-            // Ambil semua data
-            $result = $conn->query("SELECT * FROM mahasiswa ORDER BY nim DESC");
-            $data = [];
-            while ($row = $result->fetch_assoc()) {
-                $data[] = $row;
-            }
-            echo json_encode($data);
+        $result = $conn->query("SELECT * FROM mahasiswa ORDER BY nim DESC");
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
         }
+        echo json_encode($data);
         break;
 
-    // --- CREATE (Tambah Data Baru) ---
     case 'POST':
         if (!empty($input['nim']) && !empty($input['nama']) && !empty($input['id_prodi'])) {
             $nim = intval($input['nim']);
@@ -64,59 +47,63 @@ switch ($method) {
             $stmt->bind_param("isi", $nim, $nama, $id_prodi);
 
             if ($stmt->execute()) {
-                echo json_encode(["status" => "success", "message" => "Data berhasil ditambahkan"]);
+                echo json_encode(["status" => "success", "message" => "Data $nama berhasil ditambahkan!"]);
             } else {
-                echo json_encode(["status" => "error", "message" => "Gagal menambahkan data: " . $stmt->error]);
+                echo json_encode(["status" => "error", "message" => "Gagal: NIM mungkin sudah ada."]);
             }
         } else {
-            echo json_encode(["status" => "error", "message" => "Data tidak lengkap"]);
+            echo json_encode(["status" => "error", "message" => "Data POST tidak lengkap."]);
         }
         break;
 
-    // --- UPDATE (Ubah Data) ---
     case 'PUT':
         if (!empty($input['nim']) && !empty($input['nama']) && !empty($input['id_prodi'])) {
             $nim = intval($input['nim']);
             $nama = $input['nama'];
             $id_prodi = intval($input['id_prodi']);
 
-            // NIM digunakan sebagai acuan (WHERE), nama dan id_prodi yang diubah
             $stmt = $conn->prepare("UPDATE mahasiswa SET nama = ?, id_prodi = ? WHERE nim = ?");
             $stmt->bind_param("sii", $nama, $id_prodi, $nim);
 
             if ($stmt->execute()) {
-                echo json_encode(["status" => "success", "message" => "Data berhasil diupdate"]);
+                // Cek apakah ada baris yang benar-benar berubah
+                if ($stmt->affected_rows > 0) {
+                    echo json_encode(["status" => "success", "message" => "Data NIM $nim berhasil diupdate!"]);
+                } else {
+                    echo json_encode(["status" => "success", "message" => "Tidak ada perubahan data pada NIM $nim."]);
+                }
             } else {
-                echo json_encode(["status" => "error", "message" => "Gagal mengupdate data"]);
+                echo json_encode(["status" => "error", "message" => "Query update gagal."]);
             }
         } else {
-            echo json_encode(["status" => "error", "message" => "Data tidak lengkap"]);
+            // Memberikan detail error jika data kosong (berguna untuk debugging)
+            echo json_encode(["status" => "error", "message" => "Data PUT tidak lengkap. Terbaca: " . json_encode($input)]);
         }
         break;
 
-    // --- DELETE (Hapus Data) ---
     case 'DELETE':
-        // Bisa dari parameter URL (?nim=...) atau dari body JSON
-        $nim = isset($_GET['nim']) ? intval($_GET['nim']) : (isset($input['nim']) ? intval($input['nim']) : null);
-
-        if ($nim) {
+        // Menangkap NIM dari Body JSON yang dikirim cURL client
+        if (!empty($input['nim'])) {
+            $nim = intval($input['nim']);
             $stmt = $conn->prepare("DELETE FROM mahasiswa WHERE nim = ?");
             $stmt->bind_param("i", $nim);
 
             if ($stmt->execute()) {
-                echo json_encode(["status" => "success", "message" => "Data berhasil dihapus"]);
+                if ($stmt->affected_rows > 0) {
+                    echo json_encode(["status" => "success", "message" => "Data NIM $nim berhasil dihapus!"]);
+                } else {
+                    echo json_encode(["status" => "error", "message" => "NIM $nim tidak ditemukan di database."]);
+                }
             } else {
-                echo json_encode(["status" => "error", "message" => "Gagal menghapus data"]);
+                echo json_encode(["status" => "error", "message" => "Gagal eksekusi query hapus."]);
             }
         } else {
-            echo json_encode(["status" => "error", "message" => "NIM tidak ditemukan untuk dihapus"]);
+            echo json_encode(["status" => "error", "message" => "NIM tidak dikirimkan untuk dihapus."]);
         }
         break;
 
     default:
-        // Jika method tidak dikenali
-        header("HTTP/1.0 405 Method Not Allowed");
-        echo json_encode(["status" => "error", "message" => "Method HTTP tidak diizinkan"]);
+        echo json_encode(["status" => "error", "message" => "Method tidak didukung."]);
         break;
 }
 
