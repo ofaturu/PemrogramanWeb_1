@@ -21,12 +21,7 @@
         Data Penyewaan
       </a>
     </li>
-    <li class="nav-item">
-      <a class="nav-link <?= ($activePage ?? '') === 'add' ? 'active' : '' ?>" href="dashboard.php?show_add_modal=1">
-        <i class="nav-icon fa fa-plus me-2"></i>
-        Tambah Kendaraan
-      </a>
-    </li>
+
     <li class="nav-item">
       <a class="nav-link <?= ($activePage ?? '') === 'profile' ? 'active' : '' ?>" href="profile.php">
         <i class="nav-icon fa fa-user-edit me-2"></i>
