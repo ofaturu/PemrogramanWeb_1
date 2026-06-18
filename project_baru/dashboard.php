@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
-                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, 'sssds', $kode, $nama, $jenis, $harga, $gambar_nama);
+                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, merk_kendaraan,nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, 'ssssds', $kode, $merk, $nama, $jenis, $harga, $gambar_nama);
 
                 if (mysqli_stmt_execute($stmt)) {
                     header('Location: dashboard.php?msg=added');
