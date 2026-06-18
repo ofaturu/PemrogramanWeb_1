@@ -78,14 +78,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all rentals with user name and vehicle name
+// Pagination settings
+$limit = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+$offset = ($page - 1) * $limit;
+
+// Count total items
+$count_res = mysqli_query($mysqli, "SELECT COUNT(*) FROM penyewaan");
+$count_row = mysqli_fetch_row($count_res);
+$total_items = $count_row[0];
+
+$total_pages = ceil($total_items / $limit);
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $limit;
+}
+
+// Fetch all rentals with user name and vehicle name with pagination
 $query = "SELECT p.*, u.nama AS nama_user, k.nama_kendaraan, k.harga_per_hari 
           FROM penyewaan p 
           LEFT JOIN users u ON p.id_user = u.id 
           LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
-          ORDER BY p.id_sewa DESC";
-$result = mysqli_query($mysqli, $query);
+          ORDER BY p.id_sewa DESC
+          LIMIT ? OFFSET ?";
+$stmt = mysqli_prepare($mysqli, $query);
+mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $rentals = mysqli_fetch_all($result, MYSQLI_ASSOC);
+mysqli_stmt_close($stmt);
+
 $total = count($rentals);
 
 $msg = $_GET['msg'] ?? '';
@@ -137,7 +162,7 @@ include 'partials/head.php';
                   <?php if ($total > 0): ?>
                       <?php foreach ($rentals as $i => $r): ?>
                       <tr>
-                          <td class="ps-4 fw-semibold text-body-secondary"><?= $i + 1 ?></td>
+                          <td class="ps-4 fw-semibold text-body-secondary"><?= $offset + $i + 1 ?></td>
                           <td class="text-body fw-bold"><?= htmlspecialchars($r['nama_user'] ?? 'N/A') ?></td>
                           <td>
                               <span class="text-body fw-semibold"><?= htmlspecialchars($r['nama_kendaraan'] ?? 'N/A') ?></span>
@@ -330,8 +355,37 @@ include 'partials/head.php';
                 </tbody>
               </table>
             </div>
+            <!-- Pagination Footer -->
+            <div class="card-footer py-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 bg-body-tertiary border-top border-secondary border-opacity-10">
+              <div class="text-muted small">
+                Menampilkan <?= $total_items > 0 ? $offset + 1 : 0 ?> sampai <?= min($offset + $limit, $total_items) ?> dari <?= $total_items ?> transaksi
+              </div>
+              <?php if ($total_pages > 1): ?>
+                <nav aria-label="Page navigation">
+                  <ul class="pagination pagination-sm mb-0">
+                    <!-- Previous Page -->
+                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page - 1 ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    <!-- Page Numbers -->
+                    <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+                      <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $p ?>"><?= $p ?></a>
+                      </li>
+                    <?php endfor; ?>
+                    <!-- Next Page -->
+                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page + 1 ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              <?php endif; ?>
+            </div>
           </div>
-        </div>
 
       </div>
     </div>

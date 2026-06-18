@@ -108,24 +108,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Pagination settings
+$limit = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+$offset = ($page - 1) * $limit;
+
 // Menangkap keyword pencarian dari URL
 $search = trim($_GET['search'] ?? '');
 
 if (!empty($search)) {
-    // Logika Search: Menggunakan LIKE dengan % untuk mencari data yang mengandung keyword
     $search_param = "%" . $search . "%";
     
-    $stmt = mysqli_prepare($mysqli, "SELECT * FROM kendaraan WHERE kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ? ORDER BY kode_unik_kendaraan ASC");
-    mysqli_stmt_bind_param($stmt, 'sss', $search_param, $search_param, $search_param);
-    mysqli_stmt_execute($stmt);
+    // Count total matching items
+    $count_stmt = mysqli_prepare($mysqli, "SELECT COUNT(*) FROM kendaraan WHERE kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ?");
+    mysqli_stmt_bind_param($count_stmt, 'sss', $search_param, $search_param, $search_param);
+    mysqli_stmt_execute($count_stmt);
+    mysqli_stmt_bind_result($count_stmt, $total_items);
+    mysqli_stmt_fetch($count_stmt);
+    mysqli_stmt_close($count_stmt);
     
+    $total_pages = ceil($total_items / $limit);
+    if ($page > $total_pages && $total_pages > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    $stmt = mysqli_prepare($mysqli, "SELECT * FROM kendaraan WHERE kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ? ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?");
+    mysqli_stmt_bind_param($stmt, 'sssii', $search_param, $search_param, $search_param, $limit, $offset);
+    mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $kendaraan = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_stmt_close($stmt);
 } else {
-    // Jika tidak ada pencarian, tampilkan semua data
-    $result = mysqli_query($mysqli, "SELECT * FROM kendaraan ORDER BY kode_unik_kendaraan ASC");
+    // Count total items
+    $count_res = mysqli_query($mysqli, "SELECT COUNT(*) FROM kendaraan");
+    $count_row = mysqli_fetch_row($count_res);
+    $total_items = $count_row[0];
+    
+    $total_pages = ceil($total_items / $limit);
+    if ($page > $total_pages && $total_pages > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    $stmt = mysqli_prepare($mysqli, "SELECT * FROM kendaraan ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?");
+    mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
     $kendaraan = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
 }
 
 $total = count($kendaraan);
@@ -185,7 +219,7 @@ include 'partials/head.php';
                   <?php if ($total > 0): ?>
                       <?php foreach ($kendaraan as $i => $k): ?>
                       <tr>
-                          <td class="ps-4 fw-semibold text-body-secondary"><?= $i + 1 ?></td>
+                          <td class="ps-4 fw-semibold text-body-secondary"><?= $offset + $i + 1 ?></td>
                           <td>
                               <?php if (!empty($k['gambar']) && file_exists('uploads/' . $k['gambar'])): ?>
                                   <img src="uploads/<?= htmlspecialchars($k['gambar']) ?>" alt="Kendaraan" class="rounded border" style="width: 70px; height: 50px; object-fit: cover;">
@@ -317,8 +351,37 @@ include 'partials/head.php';
                 </tbody>
               </table>
             </div>
+            <!-- Pagination Footer -->
+            <div class="card-footer py-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 bg-body-tertiary border-top border-secondary border-opacity-10">
+              <div class="text-muted small">
+                Menampilkan <?= $total_items > 0 ? $offset + 1 : 0 ?> sampai <?= min($offset + $limit, $total_items) ?> dari <?= $total_items ?> kendaraan
+              </div>
+              <?php if ($total_pages > 1): ?>
+                <nav aria-label="Page navigation">
+                  <ul class="pagination pagination-sm mb-0">
+                    <!-- Previous Page -->
+                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                      </a>
+                    </li>
+                    <!-- Page Numbers -->
+                    <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+                      <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $p ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $p ?></a>
+                      </li>
+                    <?php endfor; ?>
+                    <!-- Next Page -->
+                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              <?php endif; ?>
+            </div>
           </div>
-        </div>
 
       </div>
     </div>
