@@ -7,6 +7,106 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $nama_user = htmlspecialchars($_SESSION['user_nama']);
+$error_add = '';
+$error_edit = '';
+$error_edit_kode = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'add') {
+        $kode  = trim($_POST['kode_unik_kendaraan'] ?? '');
+        $nama  = trim($_POST['nama_kendaraan']      ?? '');
+        $jenis = trim($_POST['jenis_kendaraan']     ?? '');
+        $harga = $_POST['harga_per_hari']           ?? '';
+
+        if (empty($kode) || empty($nama) || empty($jenis) || $harga === '') {
+            $error_add = 'Semua field wajib diisi.';
+        } elseif (!is_numeric($harga) || $harga < 0) {
+            $error_add = 'Harga per hari harus berupa angka positif.';
+        } else {
+            $cek = mysqli_prepare($mysqli, "SELECT kode_unik_kendaraan FROM kendaraan WHERE kode_unik_kendaraan = ?");
+            mysqli_stmt_bind_param($cek, 's', $kode);
+            mysqli_stmt_execute($cek);
+            mysqli_stmt_store_result($cek);
+
+            if (mysqli_stmt_num_rows($cek) > 0) {
+                $error_add = 'Kode kendaraan sudah digunakan. Gunakan kode lain.';
+            } else {
+                // Proses Upload Gambar
+                $gambar_nama = null;
+                if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
+                    $tmp = $_FILES['gambar']['tmp_name'];
+                    $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
+                    $gambar_nama = time() . '_' . $kode . '.' . $ext;
+                    move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
+                }
+
+                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, 'sssds', $kode, $nama, $jenis, $harga, $gambar_nama);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    header('Location: dashboard.php?msg=added');
+                    exit;
+                } else {
+                    $error_add = 'Gagal menyimpan data. Coba lagi.';
+                }
+                mysqli_stmt_close($stmt);
+            }
+            mysqli_stmt_close($cek);
+        }
+    } elseif ($action === 'edit') {
+        $kode  = trim($_POST['kode_unik_kendaraan'] ?? '');
+        $nama_baru  = trim($_POST['nama_kendaraan']  ?? '');
+        $jenis_baru = trim($_POST['jenis_kendaraan'] ?? '');
+        $harga_baru = $_POST['harga_per_hari']       ?? '';
+        $error_edit_kode = $kode;
+
+        if (empty($kode)) {
+            $error_edit = 'Kode unik kendaraan tidak ditemukan.';
+        } elseif (empty($nama_baru) || empty($jenis_baru) || $harga_baru === '') {
+            $error_edit = 'Semua field wajib diisi.';
+        } elseif (!is_numeric($harga_baru) || $harga_baru < 0) {
+            $error_edit = 'Harga per hari harus berupa angka positif.';
+        } else {
+            $stmt = mysqli_prepare($mysqli, "SELECT gambar FROM kendaraan WHERE kode_unik_kendaraan = ?");
+            mysqli_stmt_bind_param($stmt, 's', $kode);
+            mysqli_stmt_execute($stmt);
+            $res = mysqli_stmt_get_result($stmt);
+            $kendaraan_edit = mysqli_fetch_assoc($res);
+            mysqli_stmt_close($stmt);
+
+            if ($kendaraan_edit) {
+                $gambar_baru = $kendaraan_edit['gambar'];
+                if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
+                    $tmp = $_FILES['gambar']['tmp_name'];
+                    $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
+                    $nama_file_baru = time() . '_' . $kode . '.' . $ext;
+                    
+                    if (move_uploaded_file($tmp, 'uploads/' . $nama_file_baru)) {
+                        if (!empty($kendaraan_edit['gambar']) && file_exists('uploads/' . $kendaraan_edit['gambar'])) {
+                            unlink('uploads/' . $kendaraan_edit['gambar']);
+                        }
+                        $gambar_baru = $nama_file_baru;
+                    }
+                }
+
+                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
+                mysqli_stmt_bind_param($upd, 'ssdss', $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
+
+                if (mysqli_stmt_execute($upd)) {
+                    header('Location: dashboard.php?msg=updated');
+                    exit;
+                } else {
+                    $error_edit = 'Gagal memperbarui data. Coba lagi.';
+                }
+                mysqli_stmt_close($upd);
+            } else {
+                $error_edit = 'Data kendaraan tidak ditemukan.';
+            }
+        }
+    }
+}
 
 // Menangkap keyword pencarian dari URL
 $search = trim($_GET['search'] ?? '');
@@ -49,20 +149,6 @@ include 'partials/head.php';
     ?>
     <div class="body flex-grow-1">
       <div class="container-lg px-4">
-        
-        <?php if ($msg === 'added'): ?>
-            <div class="alert alert-success border-0 text-success bg-success bg-opacity-10 py-2 px-3 mb-4">
-                <i class="fa fa-check-circle me-1"></i> Kendaraan berhasil ditambahkan.
-            </div>
-        <?php elseif ($msg === 'updated'): ?>
-            <div class="alert alert-success border-0 text-success bg-success bg-opacity-10 py-2 px-3 mb-4">
-                <i class="fa fa-check-circle me-1"></i> Data berhasil diperbarui.
-            </div>
-        <?php elseif ($msg === 'deleted'): ?>
-            <div class="alert alert-danger border-0 text-danger bg-danger bg-opacity-10 py-2 px-3 mb-4">
-                <i class="fa fa-trash me-1"></i> Kendaraan berhasil dihapus.
-            </div>
-        <?php endif; ?>
 
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 bg-body-tertiary">
@@ -76,7 +162,9 @@ include 'partials/head.php';
                     <a href="dashboard.php" class="btn btn-danger btn-sm" title="Reset Pencarian"><i class="fa fa-times"></i></a>
                 <?php endif; ?>
               </form>
-              <a href="add.php" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0"><i class="fa fa-plus me-1"></i> Tambah</a>
+              <button type="button" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0" data-coreui-toggle="modal" data-coreui-target="#addKendaraanModal">
+                <i class="fa fa-plus me-1"></i> Tambah
+              </button>
             </div>
           </div>
           <div class="card-body p-0">
@@ -111,18 +199,104 @@ include 'partials/head.php';
                           <td class="text-body fw-bold"><?= htmlspecialchars($k['nama_kendaraan']) ?></td>
                           <td>
                               <span class="badge bg-info bg-opacity-10 text-info px-2 py-1">
-                                  <?= (strtolower($k['jenis_kendaraan']) === 'roda 2') ? 'Roda 2' : 'Roda 4' ?>
+                                    <?= (strtolower($k['jenis_kendaraan']) === 'roda 2') ? 'Roda 2' : 'Roda 4' ?>
                               </span>
                           </td>
                           <td class="text-body fw-semibold">Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?></td>
                           <td class="pe-4 text-end">
                               <div class="btn-group btn-group-sm" role="group">
-                                  <a class="btn btn-outline-info d-flex align-items-center gap-1" href="edit.php?kode=<?= urlencode($k['kode_unik_kendaraan']) ?>">
+                                  <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
                                       <i class="fa fa-edit"></i> Edit
-                                  </a>
-                                  <a class="btn btn-outline-danger d-flex align-items-center gap-1" href="delete.php?kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" onclick="return confirm('Yakin hapus kendaraan ini?')">
+                                  </button>
+                                  <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteModal-<?= $k['kode_unik_kendaraan'] ?>">
                                       <i class="fa fa-trash"></i> Hapus
-                                  </a>
+                                  </button>
+                              </div>
+
+                              <!-- Edit Modal -->
+                              <div class="modal fade text-start" id="editModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                  <div class="modal-content border-0 shadow-lg">
+                                    <div class="modal-header bg-info text-white">
+                                      <h5 class="modal-title" id="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>"><i class="fa fa-edit me-2"></i>Edit Data Kendaraan</h5>
+                                      <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="" enctype="multipart/form-data" novalidate>
+                                      <div class="modal-body p-4">
+                                        <?php if (!empty($error_edit) && $error_edit_kode == $k['kode_unik_kendaraan']): ?>
+                                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
+                                                <i class="fa fa-exclamation-triangle me-1"></i> <?= htmlspecialchars($error_edit) ?>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="kode_unik_kendaraan" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>">
+
+                                        <div class="row g-3">
+                                          <div class="col-md-6">
+                                            <label class="form-label" for="kode_unik_<?= $k['kode_unik_kendaraan'] ?>">Kode Unik Kendaraan</label>
+                                            <input type="text" id="kode_unik_<?= $k['kode_unik_kendaraan'] ?>" class="form-control text-warning bg-dark border border-secondary" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>" readonly disabled>
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label" for="nama_<?= $k['kode_unik_kendaraan'] ?>">Nama Kendaraan *</label>
+                                            <input type="text" id="nama_<?= $k['kode_unik_kendaraan'] ?>" name="nama_kendaraan" class="form-control" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['nama_kendaraan'] ?? $k['nama_kendaraan']) : $k['nama_kendaraan']) ?>" required>
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label" for="jenis_<?= $k['kode_unik_kendaraan'] ?>">Jenis Kendaraan *</label>
+                                            <select id="jenis_<?= $k['kode_unik_kendaraan'] ?>" name="jenis_kendaraan" class="form-select" required>
+                                              <?php 
+                                              $curr_jenis = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['jenis_kendaraan'] ?? $k['jenis_kendaraan']) : $k['jenis_kendaraan'];
+                                              $j_curr = strtolower(trim($curr_jenis)); 
+                                              ?>
+                                              <option value="Roda 2" <?= $j_curr === 'roda 2' ? 'selected' : '' ?>>Roda 2 (Motor)</option>
+                                              <option value="Roda 4" <?= $j_curr === 'roda 4' ? 'selected' : '' ?>>Roda 4 (Mobil)</option>
+                                            </select>
+                                          </div>
+                                          <div class="col-md-6">
+                                            <label class="form-label" for="harga_<?= $k['kode_unik_kendaraan'] ?>">Harga per Hari (Rp) *</label>
+                                            <input type="number" id="harga_<?= $k['kode_unik_kendaraan'] ?>" name="harga_per_hari" class="form-control" min="0" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['harga_per_hari'] ?? $k['harga_per_hari']) : $k['harga_per_hari']) ?>" required>
+                                          </div>
+                                          <div class="col-12 my-3">
+                                            <label class="form-label d-block">Gambar Saat Ini</label>
+                                            <?php if (!empty($k['gambar']) && file_exists('uploads/' . $k['gambar'])): ?>
+                                                <img src="uploads/<?= htmlspecialchars($k['gambar']) ?>" alt="Mobil" class="rounded mb-2 img-thumbnail" style="width: 150px; height: 100px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <span class="badge bg-dark mb-2 py-2 px-3">Belum ada gambar</span>
+                                            <?php endif; ?>
+                                            <input type="file" id="gambar_<?= $k['kode_unik_kendaraan'] ?>" name="gambar" class="form-control" accept="image/*">
+                                            <div class="form-text text-muted">Biarkan kosong jika tidak ingin mengubah gambar.</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
+                                        <button type="submit" class="btn btn-info text-white"><i class="fa fa-save me-1"></i> Simpan Perubahan</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <!-- Delete Confirmation Modal -->
+                              <div class="modal fade text-start" id="deleteModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="deleteModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                  <div class="modal-content border-0 shadow-lg">
+                                    <div class="modal-header bg-danger text-white">
+                                      <h5 class="modal-title" id="deleteModalLabel-<?= $k['kode_unik_kendaraan'] ?>"><i class="fa fa-exclamation-triangle me-2"></i>Konfirmasi Hapus</h5>
+                                      <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4 text-center">
+                                      <i class="fa fa-trash fa-3x text-danger mb-3"></i>
+                                      <h5 class="mb-2">Apakah Anda yakin ingin menghapus kendaraan ini?</h5>
+                                      <p class="text-muted mb-0"><b><?= htmlspecialchars($k['nama_kendaraan']) ?></b> (Kode: <?= htmlspecialchars($k['kode_unik_kendaraan']) ?>)</p>
+                                      <p class="text-danger small mt-2 mb-0"><i class="fa fa-info-circle"></i> Tindakan ini tidak dapat dibatalkan.</p>
+                                    </div>
+                                    <div class="modal-footer bg-light justify-content-center">
+                                      <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
+                                      <a href="delete.php?kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-danger px-4">Hapus</a>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                           </td>
                       </tr>
@@ -148,4 +322,110 @@ include 'partials/head.php';
 
       </div>
     </div>
+
+    <!-- Tambah Kendaraan Modal -->
+    <div class="modal fade" id="addKendaraanModal" tabindex="-1" aria-labelledby="addKendaraanModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="addKendaraanModalLabel"><i class="fa fa-plus me-2"></i>Tambah Kendaraan Baru</h5>
+            <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="" enctype="multipart/form-data" novalidate>
+            <div class="modal-body p-4">
+              <?php if (!empty($error_add)): ?>
+                  <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
+                      <i class="fa fa-exclamation-triangle me-1"></i> <?= htmlspecialchars($error_add) ?>
+                  </div>
+              <?php endif; ?>
+
+              <input type="hidden" name="action" value="add">
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="add_kode_unik">Kode Unik Kendaraan *</label>
+                  <input type="text" id="add_kode_unik" name="kode_unik_kendaraan" class="form-control" placeholder="Contoh: 1122" value="<?= htmlspecialchars($_POST['kode_unik_kendaraan'] ?? '') ?>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="add_nama">Nama Kendaraan *</label>
+                  <input type="text" id="add_nama" name="nama_kendaraan" class="form-control" placeholder="Contoh: Toyota Avanza" value="<?= htmlspecialchars($_POST['nama_kendaraan'] ?? '') ?>" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="add_jenis">Jenis Kendaraan *</label>
+                  <select id="add_jenis" name="jenis_kendaraan" class="form-select" required>
+                    <option value="" disabled <?= empty($_POST['jenis_kendaraan']) ? 'selected' : '' ?>>-- Pilih Jenis Kendaraan --</option>
+                    <option value="Roda 2" <?= ($_POST['jenis_kendaraan'] ?? '') === 'Roda 2' ? 'selected' : '' ?>>Roda 2 (Motor)</option>
+                    <option value="Roda 4" <?= ($_POST['jenis_kendaraan'] ?? '') === 'Roda 4' ? 'selected' : '' ?>>Roda 4 (Mobil)</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="add_harga">Harga per Hari (Rp) *</label>
+                  <input type="number" id="add_harga" name="harga_per_hari" class="form-control" placeholder="Contoh: 150000" min="0" value="<?= htmlspecialchars($_POST['harga_per_hari'] ?? '') ?>" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="add_gambar">Upload Gambar Kendaraan (Opsional)</label>
+                  <input type="file" id="add_gambar" name="gambar" class="form-control" accept="image/*">
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Popup Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 12px;">
+          <div class="modal-body p-4">
+            <div class="mb-3 text-success">
+              <i class="fa fa-check-circle fa-4x animate__animated animate__bounceIn"></i>
+            </div>
+            <h4 class="modal-title fw-bold mb-2 text-success" id="successModalLabel">Berhasil!</h4>
+            <p class="text-body-secondary mb-3" id="successModalMessage">
+              <?php
+              if ($msg === 'added') {
+                  echo 'Data telah berhasil disimpan.';
+              } elseif ($msg === 'updated') {
+                  echo 'Data telah berhasil diperbarui.';
+              } elseif ($msg === 'deleted') {
+                  echo 'Data telah berhasil dihapus.';
+              }
+              ?>
+            </p>
+            <button type="button" class="btn btn-success text-white w-100 py-2" data-coreui-dismiss="modal" style="border-radius: 8px;">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <?php include 'partials/footer.php'; ?>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 1. Success Modal Trigger
+      <?php if (!empty($msg)): ?>
+      const successModal = new coreui.Modal(document.getElementById('successModal'));
+      successModal.show();
+      setTimeout(() => {
+        successModal.hide();
+      }, 3000);
+      <?php endif; ?>
+
+      // 2. Open Add Modal on validation error or sidebar query parameter
+      <?php if (!empty($error_add) || isset($_GET['show_add_modal'])): ?>
+      const addModal = new coreui.Modal(document.getElementById('addKendaraanModal'));
+      addModal.show();
+      <?php endif; ?>
+
+      // 3. Open Edit Modal on validation error
+      <?php if (!empty($error_edit) && !empty($error_edit_kode)): ?>
+      const editModal = new coreui.Modal(document.getElementById('editModal-<?= $error_edit_kode ?>'));
+      editModal.show();
+      <?php endif; ?>
+    });
+    </script>

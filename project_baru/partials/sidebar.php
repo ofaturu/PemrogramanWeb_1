@@ -22,7 +22,7 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link <?= ($activePage ?? '') === 'add' ? 'active' : '' ?>" href="add.php">
+      <a class="nav-link <?= ($activePage ?? '') === 'add' ? 'active' : '' ?>" href="dashboard.php?show_add_modal=1">
         <i class="nav-icon fa fa-plus me-2"></i>
         Tambah Kendaraan
       </a>
