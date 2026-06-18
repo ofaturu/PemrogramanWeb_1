@@ -1,10 +1,10 @@
-<footer class="footer px-4 py-3 border-top mt-auto bg-body-tertiary">
+<footer class="footer px-4 py-3 border-top mt-auto bg-body-tertiary" style="position: sticky; bottom: 0; z-index: 1020;">
   <div class="container-fluid d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
     <div>
       &copy; <?= date('Y') ?> <a href="#" class="text-decoration-none text-primary fw-semibold">FTrans Management</a>. All Rights Reserved.
     </div>
     <div class="text-body-secondary small">
-      Powered by <a href="https://coreui.io" class="text-decoration-none text-primary fw-semibold" target="_blank">CoreUI Admin Template</a>
+      Powered by <a href="https://instagram/ofaturu" class="text-decoration-none text-primary fw-semibold" target="_blank">Ofaturu</a>
     </div>
   </div>
 </footer>

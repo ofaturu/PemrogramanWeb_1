@@ -351,37 +351,38 @@ include 'partials/head.php';
                 </tbody>
               </table>
             </div>
-            <!-- Pagination Footer -->
-            <div class="card-footer py-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 bg-body-tertiary border-top border-secondary border-opacity-10">
-              <div class="text-muted small">
-                Menampilkan <?= $total_items > 0 ? $offset + 1 : 0 ?> sampai <?= min($offset + $limit, $total_items) ?> dari <?= $total_items ?> kendaraan
-              </div>
-              <?php if ($total_pages > 1): ?>
-                <nav aria-label="Page navigation">
-                  <ul class="pagination pagination-sm mb-0">
-                    <!-- Previous Page -->
-                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                      <a class="page-link" href="?page=<?= $page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                      </a>
-                    </li>
-                    <!-- Page Numbers -->
-                    <?php for ($p = 1; $p <= $total_pages; $p++): ?>
-                      <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $p ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $p ?></a>
-                      </li>
-                    <?php endfor; ?>
-                    <!-- Next Page -->
-                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                      <a class="page-link" href="?page=<?= $page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              <?php endif; ?>
-            </div>
           </div>
+          <!-- Pagination Footer -->
+          <div class="card-footer py-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 bg-body-tertiary border-top border-secondary border-opacity-10">
+            <div class="text-muted small">
+              Menampilkan <?= $total_items > 0 ? $offset + 1 : 0 ?> sampai <?= min($offset + $limit, $total_items) ?> dari <?= $total_items ?> kendaraan
+            </div>
+            <?php if ($total_pages > 1): ?>
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                  <!-- Previous Page -->
+                  <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  <!-- Page Numbers -->
+                  <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+                    <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
+                      <a class="page-link" href="?page=<?= $p ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $p ?></a>
+                    </li>
+                  <?php endfor; ?>
+                  <!-- Next Page -->
+                  <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            <?php endif; ?>
+          </div>
+        </div>
 
       </div>
     </div>
