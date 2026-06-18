@@ -21,6 +21,13 @@
         Data Penyewaan
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'users' ? 'active' : '' ?>" href="users.php">
+        <i class="nav-icon fa fa-users me-2"></i>
+        Data User
+      </a>
+    </li>
+
 
     <li class="nav-item">
       <a class="nav-link <?= ($activePage ?? '') === 'profile' ? 'active' : '' ?>" href="profile.php">

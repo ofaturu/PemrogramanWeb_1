@@ -125,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
-                mysqli_stmt_bind_param($upd, 'ssdss', $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
+                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET merk_kendaraan = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
+                mysqli_stmt_bind_param($upd, 'sssdss', $brand_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
 
                 if (mysqli_stmt_execute($upd)) {
                     header('Location: dashboard.php?msg=updated');
