@@ -11,24 +11,10 @@ $error_add = '';
 $error_edit = '';
 $error_edit_kode = '';
 
-$roda2_brands = ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'Vespa', 'Piaggio', 'Ducati', 'KTM', 'Harley-Davidson', 'BMW Motorrad', 'Benelli', 'Royal Enfield'];
-$roda4_brands = ['Toyota', 'Honda', 'Suzuki', 'Mitsubishi', 'Daihatsu', 'Nissan', 'Hyundai', 'Wuling', 'Mazda', 'Kia', 'Chevrolet', 'Ford', 'Isuzu', 'BMW', 'Mercedes-Benz', 'Lexus', 'Audi'];
-
-function split_vehicle_name($fullname) {
-    global $roda2_brands, $roda4_brands;
-    $brands = array_unique(array_merge($roda2_brands, $roda4_brands));
-    
-    usort($brands, function($a, $b) {
-        return strlen($b) - strlen($a);
-    });
-    
-    foreach ($brands as $brand) {
-        if (stripos($fullname, $brand) === 0) {
-            $model = trim(substr($fullname, strlen($brand)));
-            return [$brand, $model];
-        }
-    }
-    return ['', $fullname];
+$merk_options = [];
+$res_merk = mysqli_query($mysqli, "SELECT id_merk, nama_merk FROM merk_kendaraan ORDER BY nama_merk ASC");
+if ($res_merk) {
+    $merk_options = mysqli_fetch_all($res_merk, MYSQLI_ASSOC);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,18 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($action === 'add') {
         $kode  = trim($_POST['kode_unik_kendaraan'] ?? '');
-        $merk  = trim($_POST['merk_kendaraan']      ?? '');
+        $id_merk = intval($_POST['id_merk']          ?? 0);
         $model = trim($_POST['model_kendaraan']     ?? '');
         $jenis = trim($_POST['jenis_kendaraan']     ?? '');
         $harga = $_POST['harga_per_hari']           ?? '';
 
         $brand = '';
-        if (!empty($merk)) {
-            list($brand, $brand_jenis) = explode('|', $merk);
+        foreach ($merk_options as $mo) {
+            if ($mo['id_merk'] == $id_merk) {
+                $brand = $mo['nama_merk'];
+                break;
+            }
         }
-        $nama = trim($brand . ' ' . $model);
+        $nama = trim(ucwords($brand) . ' ' . $model);
 
-        if (empty($kode) || empty($merk) || empty($model) || empty($jenis) || $harga === '') {
+        if (empty($kode) || empty($id_merk) || empty($model) || empty($jenis) || $harga === '') {
             $error_add = 'Semua field wajib diisi.';
         } elseif (!is_numeric($harga) || $harga < 0) {
             $error_add = 'Harga per hari harus berupa angka positif.';
@@ -69,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
-                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, merk_kendaraan, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, 'ssssds', $kode, $merk, $nama, $jenis, $harga, $gambar_nama);
+                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, 'sisssd', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama);
 
                 if (mysqli_stmt_execute($stmt)) {
                     header('Location: dashboard.php?msg=added');
@@ -84,21 +73,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'edit') {
         $kode  = trim($_POST['kode_unik_kendaraan'] ?? '');
-        $merk_baru  = trim($_POST['merk_kendaraan']  ?? '');
+        $id_merk_baru  = intval($_POST['id_merk']  ?? 0);
         $model_baru = trim($_POST['model_kendaraan'] ?? '');
         $jenis_baru = trim($_POST['jenis_kendaraan'] ?? '');
         $harga_baru = $_POST['harga_per_hari']       ?? '';
         $error_edit_kode = $kode;
 
         $brand_baru = '';
-        if (!empty($merk_baru)) {
-            list($brand_baru, $brand_jenis) = explode('|', $merk_baru);
+        foreach ($merk_options as $mo) {
+            if ($mo['id_merk'] == $id_merk_baru) {
+                $brand_baru = $mo['nama_merk'];
+                break;
+            }
         }
-        $nama_baru = trim($brand_baru . ' ' . $model_baru);
+        $nama_baru = trim(ucwords($brand_baru) . ' ' . $model_baru);
 
         if (empty($kode)) {
             $error_edit = 'Kode unik kendaraan tidak ditemukan.';
-        } elseif (empty($merk_baru) || empty($model_baru) || empty($jenis_baru) || $harga_baru === '') {
+        } elseif (empty($id_merk_baru) || empty($model_baru) || empty($jenis_baru) || $harga_baru === '') {
             $error_edit = 'Semua field wajib diisi.';
         } elseif (!is_numeric($harga_baru) || $harga_baru < 0) {
             $error_edit = 'Harga per hari harus berupa angka positif.';
@@ -125,8 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET merk_kendaraan = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
-                mysqli_stmt_bind_param($upd, 'sssdss', $brand_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
+                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
+                mysqli_stmt_bind_param($upd, 'isssds', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
 
                 if (mysqli_stmt_execute($upd)) {
                     header('Location: dashboard.php?msg=updated');
@@ -306,23 +298,32 @@ include 'partials/head.php';
                                             <input type="text" id="kode_unik_<?= $k['kode_unik_kendaraan'] ?>" class="form-control text-warning bg-dark border border-secondary" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>" readonly disabled>
                                           </div>
                                           <?php
-                                          $fullname = $error_edit_kode == $k['kode_unik_kendaraan'] ? (($_POST['brand_baru'] ?? '') . ' ' . ($_POST['model_kendaraan'] ?? '')) : $k['nama_kendaraan'];
-                                          list($cur_brand, $cur_model) = split_vehicle_name($fullname);
+                                          if ($error_edit_kode == $k['kode_unik_kendaraan']) {
+                                              $cur_id_merk = intval($_POST['id_merk'] ?? 0);
+                                              $cur_model = $_POST['model_kendaraan'] ?? '';
+                                          } else {
+                                              $cur_id_merk = $k['id_merk'];
+                                              // Get the brand name for this vehicle's id_merk to strip it from nama_kendaraan
+                                              $cur_brand_name = '';
+                                              foreach ($merk_options as $mo) {
+                                                  if ($mo['id_merk'] == $cur_id_merk) {
+                                                      $cur_brand_name = $mo['nama_merk'];
+                                                      break;
+                                                  }
+                                              }
+                                              $cur_model = $k['nama_kendaraan'];
+                                              if (!empty($cur_brand_name) && stripos($k['nama_kendaraan'], $cur_brand_name) === 0) {
+                                                  $cur_model = trim(substr($k['nama_kendaraan'], strlen($cur_brand_name)));
+                                              }
+                                          }
                                           ?>
                                           <div class="col-md-6">
                                             <label class="form-label" for="merk_<?= $k['kode_unik_kendaraan'] ?>">Merk Kendaraan *</label>
-                                            <select id="merk_<?= $k['kode_unik_kendaraan'] ?>" name="merk_kendaraan" class="form-select select2-brand-edit" data-modal-id="editModal-<?= $k['kode_unik_kendaraan'] ?>" required>
-                                              <option value=""></option>
-                                              <optgroup label="Roda 2 (Motor)">
-                                                <?php foreach ($roda2_brands as $brand): ?>
-                                                  <option value="<?= $brand ?>|Roda 2" <?= ($cur_brand === $brand) ? 'selected' : '' ?>><?= $brand ?></option>
-                                                <?php endforeach; ?>
-                                              </optgroup>
-                                              <optgroup label="Roda 4 (Mobil)">
-                                                <?php foreach ($roda4_brands as $brand): ?>
-                                                  <option value="<?= $brand ?>|Roda 4" <?= ($cur_brand === $brand) ? 'selected' : '' ?>><?= $brand ?></option>
-                                                <?php endforeach; ?>
-                                              </optgroup>
+                                            <select id="merk_<?= $k['kode_unik_kendaraan'] ?>" name="id_merk" class="form-select select2-brand-edit" data-modal-id="editModal-<?= $k['kode_unik_kendaraan'] ?>" required>
+                                              <option value="" disabled>-- Pilih Merk Kendaraan --</option>
+                                              <?php foreach ($merk_options as $option): ?>
+                                                <option value="<?= $option['id_merk'] ?>" <?= ($cur_id_merk == $option['id_merk']) ? 'selected' : '' ?>><?= htmlspecialchars(ucwords($option['nama_merk'])) ?></option>
+                                              <?php endforeach; ?>
                                             </select>
                                           </div>
                                           <div class="col-md-6">
@@ -466,18 +467,11 @@ include 'partials/head.php';
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="add_merk">Merk Kendaraan *</label>
-                  <select id="add_merk" name="merk_kendaraan" class="form-select select2-brand" required>
+                  <select id="add_merk" name="id_merk" class="form-select select2-brand" required>
                     <option value="" disabled selected>-- Pilih Merk Kendaraan --</option>
-                    <optgroup label="Roda 2 (Motor)">
-                      <?php foreach ($roda2_brands as $brand): ?>
-                        <option value="<?= $brand ?>|Roda 2" <?= ($_POST['merk_kendaraan'] ?? '') === "$brand|Roda 2" ? 'selected' : '' ?>><?= $brand ?></option>
-                      <?php endforeach; ?>
-                    </optgroup>
-                    <optgroup label="Roda 4 (Mobil)">
-                      <?php foreach ($roda4_brands as $brand): ?>
-                        <option value="<?= $brand ?>|Roda 4" <?= ($_POST['merk_kendaraan'] ?? '') === "$brand|Roda 4" ? 'selected' : '' ?>><?= $brand ?></option>
-                      <?php endforeach; ?>
-                    </optgroup>
+                    <?php foreach ($merk_options as $option): ?>
+                      <option value="<?= $option['id_merk'] ?>" <?= (($_POST['id_merk'] ?? '') == $option['id_merk']) ? 'selected' : '' ?>><?= htmlspecialchars(ucwords($option['nama_merk'])) ?></option>
+                    <?php endforeach; ?>
                   </select>
                 </div>
                 <div class="col-md-6">
@@ -568,16 +562,6 @@ include 'partials/head.php';
         dropdownParent: $('#addKendaraanModal')
       });
 
-      // Auto-set Jenis Kendaraan when brand changes in Add Modal
-      $('#add_merk').on('change', function() {
-        const val = $(this).val();
-        if (val) {
-          const parts = val.split('|');
-          const jenis = parts[1]; // Roda 2 or Roda 4
-          $('#add_jenis').val(jenis);
-        }
-      });
-
       // 5. Initialize Select2 for all Edit Modals
       $('.select2-brand-edit').each(function() {
         const selectEl = $(this);
@@ -586,18 +570,6 @@ include 'partials/head.php';
         selectEl.select2({
           theme: 'bootstrap-5',
           dropdownParent: $('#' + modalId)
-        });
-
-        // Auto-set Jenis Kendaraan when brand changes in Edit Modal
-        selectEl.on('change', function() {
-          const val = $(this).val();
-          if (val) {
-            const parts = val.split('|');
-            const jenis = parts[1];
-            // Find the closest row container and select element for jenis
-            const selectJenis = selectEl.closest('.row').find('select[name="jenis_kendaraan"]');
-            selectJenis.val(jenis);
-          }
         });
       });
     });
