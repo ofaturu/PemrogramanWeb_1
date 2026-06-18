@@ -10,6 +10,10 @@
 </footer>
 </div> <!-- Closing div of wrapper -->
 
+<!-- jQuery & Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <!-- CoreUI and necessary plugins-->
 <script src="vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
 <script src="vendors/simplebar/js/simplebar.min.js"></script>
