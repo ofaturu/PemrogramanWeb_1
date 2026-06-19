@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 19, 2026 at 04:54 AM
+-- Generation Time: Jun 19, 2026 at 05:03 AM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.1.12
 
@@ -55,7 +55,23 @@ INSERT INTO `merk_kendaraan` (`id_merk`, `nama_merk`) VALUES
 (1, 'honda'),
 (2, 'toyota'),
 (3, 'daihatsu'),
-(4, 'kia');
+(4, 'kia'),
+(5, 'Suzuki'),
+(6, 'Mitsubishi'),
+(7, 'Nissan'),
+(8, 'Mazda'),
+(9, 'Isuzu'),
+(10, 'Wuling'),
+(11, 'Hyundai'),
+(12, 'BMW'),
+(13, 'Mercedes-Benz'),
+(14, 'Audi'),
+(15, 'Volkswagen'),
+(16, 'Ford'),
+(17, 'Chevrolet'),
+(18, 'Yamaha'),
+(19, 'Kawasaki'),
+(20, 'Vespa');
 
 -- --------------------------------------------------------
 
@@ -137,7 +153,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `merk_kendaraan`
 --
 ALTER TABLE `merk_kendaraan`
-  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `penyewaan`
