@@ -353,7 +353,7 @@ if ($format === 'word') {
     
     $phpWord = new \PhpOffice\PhpWord\PhpWord();
     
-    $properties = $phpWord->getDocProperties();
+    $properties = $phpWord->getDocInfo();
     $properties->setCreator('FTrans Car Rental');
     $properties->setCompany('FTrans');
     $properties->setTitle($title_text);
