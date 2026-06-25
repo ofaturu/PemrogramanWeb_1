@@ -774,7 +774,8 @@ if ($format === 'pdf') {
                 
             } elseif ($target === 'sewa') {
                 $html .= '<td>' . htmlspecialchars($row['nama_user'] ?? 'N/A') . '</td>';
-                $html .= '<td>' . htmlspecialchars($row['nama_kendaraan'] ?? 'N/A') . ' (' . htmlspecialchars($row['kode_unik_kendaraan']) . ')</td>';
+                $html .= '<td>' . htmlspecialchars($row['nama_kendaraan'] ?? 'N/A') . '</td>';
+                $html .= '<td class="text-center">' . htmlspecialchars($row['kode_unik_kendaraan']) . '</td>';
                 $html .= '<td class="text-center" style="font-size: 8.5pt;">' . date('d M Y H:i', strtotime($row['tanggal_sewa'])) . '</td>';
                 $html .= '<td class="text-center" style="font-size: 8.5pt;">' . date('d M Y H:i', strtotime($row['tanggal_kembali'])) . '</td>';
                 $html .= '<td class="text-right" style="font-weight: bold;">Rp ' . number_format($row['total_biaya'], 0, ',', '.') . '</td>';

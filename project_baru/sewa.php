@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_add = 'Tanggal kembali tidak boleh mendahului tanggal sewa.';
         } else {
             $stmt = mysqli_prepare($mysqli, "INSERT INTO penyewaan (id_user, kode_unik_kendaraan, tanggal_sewa, tanggal_kembali, total_biaya, status) VALUES (?, ?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, 'iisiss', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
+            mysqli_stmt_bind_param($stmt, 'iissis', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
 
             if (mysqli_stmt_execute($stmt)) {
                 header('Location: sewa.php?msg=added');
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_edit = 'Tanggal kembali tidak boleh mendahului tanggal sewa.';
         } else {
             $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET id_user = ?, kode_unik_kendaraan = ?, tanggal_sewa = ?, tanggal_kembali = ?, total_biaya = ?, status = ? WHERE id_sewa = ?");
-            mysqli_stmt_bind_param($upd, 'iisissi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
+            mysqli_stmt_bind_param($upd, 'iissisi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
 
             if (mysqli_stmt_execute($upd)) {
                 header('Location: sewa.php?msg=updated');
