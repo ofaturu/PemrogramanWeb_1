@@ -210,6 +210,47 @@ include 'partials/head.php';
     <div class="body flex-grow-1">
       <div class="container-lg px-4">
 
+        <?php if (isset($_SESSION['import_error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show border-0 bg-danger bg-opacity-10 text-danger p-3 mb-4" role="alert">
+                <i class="fa fa-exclamation-triangle me-2"></i> <?= htmlspecialchars($_SESSION['import_error']) ?>
+                <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['import_error']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['import_result'])): ?>
+            <?php 
+            $res = $_SESSION['import_result']; 
+            $inserted = $res['inserted'] ?? 0;
+            $updated = $res['updated'] ?? 0;
+            $failed = $res['failed'] ?? 0;
+            $errors = $res['errors'] ?? [];
+            unset($_SESSION['import_result']);
+            ?>
+            <div class="alert alert-info alert-dismissible fade show border-0 bg-info bg-opacity-10 text-info p-3 mb-4" role="alert">
+                <h6 class="alert-heading fw-bold mb-2"><i class="fa fa-info-circle me-1"></i> Hasil Impor Data Kendaraan:</h6>
+                <p class="mb-1 text-dark small">
+                    <span class="badge bg-success me-1"><?= $inserted ?> baru</span>
+                    <span class="badge bg-primary me-1"><?= $updated ?> diperbarui</span>
+                    <span class="badge bg-danger"><?= $failed ?> gagal</span>
+                </p>
+                <?php if ($failed > 0 && !empty($errors)): ?>
+                    <hr class="my-2 border-info border-opacity-25">
+                    <div class="text-danger small" style="max-height: 150px; overflow-y: auto;">
+                        <ul class="mb-0 ps-3">
+                            <?php foreach (array_slice($errors, 0, 10) as $err): ?>
+                                <li><?= htmlspecialchars($err) ?></li>
+                            <?php endforeach; ?>
+                            <?php if (count($errors) > 10): ?>
+                                <li>... dan <?= count($errors) - 10 ?> baris kesalahan lainnya.</li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-list me-2 text-primary"></i>Daftar Kendaraan</h5>
@@ -229,8 +270,12 @@ include 'partials/head.php';
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
                   <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
+              <button type="button" class="btn btn-warning btn-sm text-nowrap mt-2 mt-sm-0 text-white" data-coreui-toggle="modal" data-coreui-target="#importKendaraanModal">
+                <i class="fa fa-upload me-1"></i> Import
+              </button>
               <button type="button" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0" data-coreui-toggle="modal" data-coreui-target="#addKendaraanModal">
                 <i class="fa fa-plus me-1"></i> Tambah
               </button>
@@ -274,6 +319,9 @@ include 'partials/head.php';
                           <td class="text-body fw-semibold">Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?></td>
                           <td class="pe-4 text-end">
                               <div class="btn-group btn-group-sm" role="group">
+                                  <a href="export.php?target=kendaraan&format=pdf&kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak PDF">
+                                      <i class="fa fa-print"></i> Cetak
+                                  </a>
                                   <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
                                       <i class="fa fa-edit"></i> Edit
                                   </button>
@@ -514,6 +562,36 @@ include 'partials/head.php';
       </div>
     </div>
 
+    <!-- Import Kendaraan Modal -->
+    <div class="modal fade" id="importKendaraanModal" tabindex="-1" aria-labelledby="importKendaraanModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-warning text-white">
+            <h5 class="modal-title" id="importKendaraanModalLabel"><i class="fa fa-upload me-2 text-white"></i>Import Data Kendaraan</h5>
+            <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="import.php" enctype="multipart/form-data" novalidate>
+            <div class="modal-body p-4">
+              <div class="mb-3">
+                <p class="text-body-secondary small">Anda dapat mengimpor data kendaraan secara massal menggunakan file Excel (.xlsx) atau CSV. Pastikan format kolom sesuai dengan template.</p>
+                <a href="import.php?action=template" class="btn btn-outline-primary btn-sm w-100 py-2"><i class="fa fa-download me-1"></i> Unduh Template Excel</a>
+              </div>
+              <hr class="text-secondary opacity-25">
+              <div class="mb-3">
+                <label class="form-label" for="excel_file">Pilih File Excel / CSV *</label>
+                <input type="file" id="excel_file" name="excel_file" class="form-control" accept=".xlsx, .xls, .csv" required>
+                <div class="form-text text-muted">Maksimal ukuran file: 5 MB.</div>
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-warning text-white"><i class="fa fa-upload me-1 text-white"></i> Mulai Impor</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Success Popup Modal -->
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -531,6 +609,8 @@ include 'partials/head.php';
                   echo 'Data telah berhasil diperbarui.';
               } elseif ($msg === 'deleted') {
                   echo 'Data telah berhasil dihapus.';
+              } elseif ($msg === 'imported') {
+                  echo 'Data telah berhasil diimpor.';
               }
               ?>
             </p>
