@@ -75,15 +75,26 @@ include 'partials/head.php';
           <div class="card-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-users me-2 text-primary"></i>Daftar User</h5>
             
-            <form method="GET" action="" class="d-flex align-items-center gap-2" style="max-width: 300px; width: 100%;">
-              <div class="input-group input-group-sm">
-                <input type="text" name="search" class="form-control" placeholder="Cari nama atau email..." value="<?= htmlspecialchars($search) ?>">
-                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
-                <?php if (!empty($search)): ?>
-                  <a href="users.php" class="btn btn-secondary"><i class="fa fa-times"></i></a>
-                <?php endif; ?>
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2 w-100 w-sm-auto justify-content-end">
+              <form method="GET" action="" class="d-flex align-items-center gap-2" style="max-width: 300px; width: 100%;">
+                <div class="input-group input-group-sm">
+                  <input type="text" name="search" class="form-control" placeholder="Cari nama atau email..." value="<?= htmlspecialchars($search) ?>">
+                  <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                  <?php if (!empty($search)): ?>
+                    <a href="users.php" class="btn btn-secondary"><i class="fa fa-times"></i></a>
+                  <?php endif; ?>
+                </div>
+              </form>
+              <div class="dropdown mt-2 mt-sm-0">
+                <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
+                  <i class="fa fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="export.php?target=users&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=users&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                </ul>
               </div>
-            </form>
+            </div>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">

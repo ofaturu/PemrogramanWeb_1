@@ -222,6 +222,15 @@ include 'partials/head.php';
                     <a href="dashboard.php" class="btn btn-danger btn-sm" title="Reset Pencarian"><i class="fa fa-times"></i></a>
                 <?php endif; ?>
               </form>
+              <div class="dropdown mt-2 mt-sm-0">
+                <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
+                  <i class="fa fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                </ul>
+              </div>
               <button type="button" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0" data-coreui-toggle="modal" data-coreui-target="#addKendaraanModal">
                 <i class="fa fa-plus me-1"></i> Tambah
               </button>

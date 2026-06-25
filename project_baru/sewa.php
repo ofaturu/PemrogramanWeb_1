@@ -141,7 +141,18 @@ include 'partials/head.php';
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex align-items-center justify-content-between bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-receipt me-2 text-primary"></i>Daftar Transaksi Penyewaan</h5>
-            <button type="button" class="btn btn-primary btn-sm" data-coreui-toggle="modal" data-coreui-target="#addSewaModal"><i class="fa fa-plus me-1"></i> Tambah Penyewaan</button>
+            <div class="d-flex gap-2">
+              <div class="dropdown">
+                <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
+                  <i class="fa fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="export.php?target=sewa&format=excel"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=sewa&format=word"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" data-coreui-toggle="modal" data-coreui-target="#addSewaModal"><i class="fa fa-plus me-1"></i> Tambah Penyewaan</button>
+            </div>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
