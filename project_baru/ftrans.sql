@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 19, 2026 at 05:03 AM
+-- Generation Time: Jun 25, 2026 at 09:56 AM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.1.12
 
@@ -35,6 +35,18 @@ CREATE TABLE `kendaraan` (
   `harga_per_hari` int(10) DEFAULT NULL,
   `gambar` longblob DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `kendaraan`
+--
+
+INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`) VALUES
+(1, 14, 'Audi A8', 'roda 4', 500000, NULL),
+(2, 3, 'Daihatsu Xenia', 'roda 4', 350000, NULL),
+(3, 3, 'Daihatsu Xenia New 2025', 'roda 4', 400000, NULL),
+(5, 4, 'Kia Kia', 'roda 4', 300000, NULL),
+(6, 8, 'Mazda Mazda 3', 'roda 4', 700000, NULL),
+(7, 6, 'Mitsubishi Galant', 'roda 4', 250000, NULL);
 
 -- --------------------------------------------------------
 
@@ -89,6 +101,15 @@ CREATE TABLE `penyewaan` (
   `status` enum('booking','sedang_disewa','selesai','dibatalkan') DEFAULT 'booking'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `penyewaan`
+--
+
+INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`) VALUES
+(13, 1, 6, '2026-06-25 09:05:00', '2026-06-26 09:05:00', 700000, 'sedang_disewa'),
+(17, 2, 1, '2026-06-25 09:13:00', '2026-06-26 09:13:00', 500000, 'booking'),
+(18, 2, 1, '2026-06-25 09:05:00', '2026-06-26 09:05:00', 500000, 'booking');
+
 -- --------------------------------------------------------
 
 --
@@ -111,7 +132,8 @@ INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`) VALUES
 (1, 'fatchur', 'a@gmail.com', '$2y$10$T2irbai2z4cqvHqXZwL5qumnXUoZ6nIVLaZyr18rxPtjpvgjPS.UW', '2026-05-08 02:37:05'),
 (2, 'bagas', 'b@gmail.com', '$2y$10$NVpgcRk3ZdZX1Wbi4iHXR.Le.BW4F1GHr6Mhxzuf6Rxiyy/evGldC', '2026-05-13 06:33:31'),
 (3, 'Test Operator Updated', 'testop@ftrans.com', '$2y$10$CksAaIy3ywj6K/jz.6D8pu0ZUk0L5oCKmAHDX.8o3ax7uwCRFAYnu', '2026-06-04 07:40:37'),
-(4, 'Test User', 'test@example.com', '$2y$10$voyGYVCdrXnwncEfHK6v4uuW7EbgSgUhJzE18xenxkz/wsOdEAwXK', '2026-06-18 07:26:53');
+(4, 'Test User', 'test@example.com', '$2y$10$voyGYVCdrXnwncEfHK6v4uuW7EbgSgUhJzE18xenxkz/wsOdEAwXK', '2026-06-18 07:26:53'),
+(5, 'Test User', 'test2@example.com', '$2y$10$2cMOaiGO3uw7WmgE3blA2..Xwt9t/1rAdldhguDIlLTLP.O1GmCTm', '2026-06-25 07:38:27');
 
 --
 -- Indexes for dumped tables
@@ -159,13 +181,13 @@ ALTER TABLE `merk_kendaraan`
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
