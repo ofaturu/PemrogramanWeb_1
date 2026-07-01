@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2026 at 09:56 AM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.1.12
+-- Generation Time: Jul 01, 2026 at 10:48 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -44,7 +44,7 @@ INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `je
 (1, 14, 'Audi A8', 'roda 4', 500000, NULL),
 (2, 3, 'Daihatsu Xenia', 'roda 4', 350000, NULL),
 (3, 3, 'Daihatsu Xenia New 2025', 'roda 4', 400000, NULL),
-(5, 4, 'Kia Kia', 'roda 4', 300000, NULL),
+(5, 4, 'Kia Seltos', 'roda 4', 300000, NULL),
 (6, 8, 'Mazda Mazda 3', 'roda 4', 700000, NULL),
 (7, 6, 'Mitsubishi Galant', 'roda 4', 250000, NULL);
 
@@ -98,17 +98,21 @@ CREATE TABLE `penyewaan` (
   `tanggal_sewa` datetime NOT NULL,
   `tanggal_kembali` datetime NOT NULL,
   `total_biaya` int(11) DEFAULT NULL,
-  `status` enum('booking','sedang_disewa','selesai','dibatalkan') DEFAULT 'booking'
+  `status` enum('booking','sedang_disewa','selesai','dibatalkan') DEFAULT 'booking',
+  `bukti_pembayaran` varchar(255) DEFAULT NULL,
+  `waktu_bayar` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `penyewaan`
 --
 
-INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`) VALUES
-(13, 1, 6, '2026-06-25 09:05:00', '2026-06-26 09:05:00', 700000, 'sedang_disewa'),
-(17, 2, 1, '2026-06-25 09:13:00', '2026-06-26 09:13:00', 500000, 'booking'),
-(18, 2, 1, '2026-06-25 09:05:00', '2026-06-26 09:05:00', 500000, 'booking');
+INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`) VALUES
+(19, 7, 1, '2026-07-01 09:21:00', '2026-07-02 09:21:00', 500000, 'sedang_disewa', 'receipt_19_1782891474.jpeg', '2026-07-01 14:37:54'),
+(20, 8, 6, '2026-07-01 09:38:00', '2026-07-02 09:38:00', 700000, 'selesai', 'receipt_20_1782891874.jpeg', '2026-07-01 14:44:34'),
+(21, 8, 1, '2026-07-01 09:51:00', '2026-07-02 09:51:00', 500000, 'selesai', 'receipt_21_1782892337.jpeg', '2026-07-01 14:52:17'),
+(22, 8, 6, '2026-07-01 09:52:00', '2026-07-24 09:52:00', 16100000, 'selesai', 'receipt_22_1782893616.jpeg', '2026-07-01 15:13:36'),
+(25, 8, 1, '2026-07-01 10:20:00', '2026-08-06 10:20:00', 18000000, 'selesai', 'receipt_25_1782894564.jpeg', '2026-07-01 15:29:24');
 
 -- --------------------------------------------------------
 
@@ -121,19 +125,18 @@ CREATE TABLE `users` (
   `nama` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `role` varchar(20) DEFAULT 'user'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`) VALUES
-(1, 'fatchur', 'a@gmail.com', '$2y$10$T2irbai2z4cqvHqXZwL5qumnXUoZ6nIVLaZyr18rxPtjpvgjPS.UW', '2026-05-08 02:37:05'),
-(2, 'bagas', 'b@gmail.com', '$2y$10$NVpgcRk3ZdZX1Wbi4iHXR.Le.BW4F1GHr6Mhxzuf6Rxiyy/evGldC', '2026-05-13 06:33:31'),
-(3, 'Test Operator Updated', 'testop@ftrans.com', '$2y$10$CksAaIy3ywj6K/jz.6D8pu0ZUk0L5oCKmAHDX.8o3ax7uwCRFAYnu', '2026-06-04 07:40:37'),
-(4, 'Test User', 'test@example.com', '$2y$10$voyGYVCdrXnwncEfHK6v4uuW7EbgSgUhJzE18xenxkz/wsOdEAwXK', '2026-06-18 07:26:53'),
-(5, 'Test User', 'test2@example.com', '$2y$10$2cMOaiGO3uw7WmgE3blA2..Xwt9t/1rAdldhguDIlLTLP.O1GmCTm', '2026-06-25 07:38:27');
+INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`, `role`) VALUES
+(1, 'fatchur rachman', 'fatchurrachman001@gmail.com', '$2y$10$c/Sau5RgcMCS3fWMP8Qz/OEpfoRayRnZ8WDzQx8bU0lhZwQ2EJ1fC', '2026-07-01 06:56:39', 'admin'),
+(7, 'user1', 'user1@gmail.com', '$2y$10$LAb0osYqgunw558Nbf6CRO01j6erzyIxATOwt8oxgWl.ubFxiawBW', '2026-07-01 07:18:28', 'user'),
+(8, 'ofaturu', 'ofaturu@gmail.com', '$2y$10$.fc4i0Ztseij9aJv3wPf0.NJ8ZnfTrak3zGK9v262TVa0RbceHp1S', '2026-07-01 07:35:14', 'user');
 
 --
 -- Indexes for dumped tables
@@ -181,13 +184,13 @@ ALTER TABLE `merk_kendaraan`
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
