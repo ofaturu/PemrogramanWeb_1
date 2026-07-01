@@ -1,3 +1,5 @@
 # Ignore environment configuration files containing sensitive credentials
 .env
 project_baru/.env
+project_baru/emails/
+project_baru/uploads/
