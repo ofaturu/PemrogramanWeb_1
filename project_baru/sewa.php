@@ -54,6 +54,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($stmt, 'iissis', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
 
             if (mysqli_stmt_execute($stmt)) {
+                $id_sewa = mysqli_insert_id($mysqli);
+
+                // Fetch details for invoice email
+                $det_stmt = mysqli_prepare($mysqli, "
+                    SELECT p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, u.nama AS nama_user, u.email AS email_user, k.nama_kendaraan, k.harga_per_hari
+                    FROM penyewaan p
+                    JOIN users u ON p.id_user = u.id
+                    JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
+                    WHERE p.id_sewa = ?
+                ");
+                mysqli_stmt_bind_param($det_stmt, 'i', $id_sewa);
+                mysqli_stmt_execute($det_stmt);
+                $det_res = mysqli_stmt_get_result($det_stmt);
+                $detail = mysqli_fetch_assoc($det_res);
+                mysqli_stmt_close($det_stmt);
+
+                if ($detail) {
+                    $t_sewa = strtotime($detail['tanggal_sewa']);
+                    $t_kembali = strtotime($detail['tanggal_kembali']);
+                    $diff_days = ceil(($t_kembali - $t_sewa) / 86400);
+                    if ($diff_days <= 0) $diff_days = 1;
+
+                    // Compile HTML content for Invoice Email
+                    $payment_url = "http://localhost/PemrogramanWeb_1/project_baru/bayar.php?id=" . $id_sewa;
+                    
+                    $email_body = '
+                    <h2>Tagihan Transaksi Penyewaan Kendaraan</h2>
+                    <p>Halo <strong>' . htmlspecialchars($detail['nama_user']) . '</strong>,</p>
+                    <p>Terima kasih telah melakukan pemesanan kendaraan di FTrans. Berikut adalah rincian tagihan (invoice) penyewaan Anda:</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold; width: 40%;">Nomor Invoice:</td><td>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</td></tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Nama Kendaraan:</td><td>' . htmlspecialchars($detail['nama_kendaraan']) . '</td></tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Tarif Sewa:</td><td>Rp ' . number_format($detail['harga_per_hari'], 0, ',', '.') . ' / hari</td></tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Periode Sewa:</td><td>' . date('d M Y H:i', $t_sewa) . ' s.d. ' . date('d M Y H:i', $t_kembali) . ' (' . $diff_days . ' hari)</td></tr>
+                        <tr style="border-bottom: 2px solid #3b82f6; padding: 12px 0; font-size: 16px; font-weight: bold; color: #3b82f6;"><td style="font-weight: bold;">Total Tagihan:</td><td>Rp ' . number_format($detail['total_biaya'], 0, ',', '.') . '</td></tr>
+                    </table>
+                    
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                        <h4 style="margin-top: 0; color: #1e293b;">💳 INSTRUKSI PEMBAYARAN:</h4>
+                        <p style="margin-bottom: 10px;">Silakan lakukan transfer bank dengan nominal pas ke rekening resmi berikut:</p>
+                        <p style="margin: 4px 0;"><strong>Bank BCA:</strong> 123456789</p>
+                        <p style="margin: 4px 0;"><strong>Atas Nama:</strong> FTrans Car Rental</p>
+                        <p style="margin-top: 15px; margin-bottom: 0;">Setelah melakukan transfer, silakan unggah bukti pembayaran melalui tautan berikut:</p>
+                        <p style="margin-top: 10px;"><a href="' . $payment_url . '" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Bayar & Unggah Bukti</a></p>
+                    </div>
+                    
+                    <p>Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi tim Customer Support kami.</p>
+                    ';
+
+                    ftrans_send_email($detail['email_user'], $detail['nama_user'], 'Tagihan Pembayaran Penyewaan #' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT), $email_body);
+                }
+                
                 header('Location: sewa.php?msg=added');
                 exit;
             } else {
@@ -107,7 +160,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error_edit = 'Gagal menyimpan perubahan. Coba lagi.';
             }
-            mysqli_stmt_close($upd);
+        }
+    } elseif ($action === 'verify_payment') {
+        $id_sewa = $_POST['id_sewa'] ?? '';
+        
+        // Secure - only admin can verify
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+            header('Location: sewa.php?error=unauthorized');
+            exit;
+        }
+
+        if (!empty($id_sewa)) {
+            // Update status to sedang_disewa
+            $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET status = 'sedang_disewa' WHERE id_sewa = ?");
+            mysqli_stmt_bind_param($upd, 'i', $id_sewa);
+            
+            if (mysqli_stmt_execute($upd)) {
+                mysqli_stmt_close($upd);
+
+                // Fetch details for success email
+                $det_stmt = mysqli_prepare($mysqli, "
+                    SELECT p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, u.nama AS nama_user, u.email AS email_user, k.nama_kendaraan
+                    FROM penyewaan p
+                    JOIN users u ON p.id_user = u.id
+                    JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
+                    WHERE p.id_sewa = ?
+                ");
+                mysqli_stmt_bind_param($det_stmt, 'i', $id_sewa);
+                mysqli_stmt_execute($det_stmt);
+                $det_res = mysqli_stmt_get_result($det_stmt);
+                $detail = mysqli_fetch_assoc($det_res);
+                mysqli_stmt_close($det_stmt);
+
+                if ($detail) {
+                    // Send Payment Success Email
+                    $email_body = '
+                    <h2>Konfirmasi Pembayaran Lunas & Penyewaan Aktif</h2>
+                    <p>Halo <strong>' . htmlspecialchars($detail['nama_user']) . '</strong>,</p>
+                    <p>Pembayaran Anda untuk transaksi sewa kendaraan dengan nomor invoice <strong>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</strong> telah berhasil **diverifikasi dan dinyatakan Lunas** oleh admin kami.</p>
+                    
+                    <p>Status sewa Anda saat ini adalah: <strong style="color: #16a34a;">Sedang Disewa (Aktif)</strong>.</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold; width: 40%;">Kendaraan:</td><td>' . htmlspecialchars($detail['nama_kendaraan']) . '</td></tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Periode Sewa:</td><td>' . date('d M Y H:i', strtotime($detail['tanggal_sewa'])) . ' s.d. ' . date('d M Y H:i', strtotime($detail['tanggal_kembali'])) . '</td></tr>
+                        <tr style="border-bottom: 2px solid #16a34a; padding: 12px 0; font-size: 16px; font-weight: bold; color: #16a34a;"><td style="font-weight: bold;">Status Pembayaran:</td><td>LUNAS (Verified)</td></tr>
+                    </table>
+                    
+                    <p>Terima kasih telah menyewa kendaraan di FTrans. Semoga perjalanan Anda menyenangkan, nyaman, dan aman sampai tujuan.</p>
+                    ';
+
+                    ftrans_send_email($detail['email_user'], $detail['nama_user'], 'Konfirmasi Pembayaran Lunas #' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT), $email_body);
+                }
+                
+                header('Location: sewa.php?msg=payment_verified');
+                exit;
+            } else {
+                mysqli_stmt_close($upd);
+                $error_edit = 'Gagal memverifikasi pembayaran. Coba lagi.';
+            }
         }
     }
 }
@@ -266,6 +377,28 @@ include 'partials/head.php';
                                   <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak Struk/Invoice PDF">
                                       <i class="fa fa-print"></i> Struk
                                   </a>
+
+                                  <!-- Payment Action -->
+                                  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                      <?php if ($r['status'] === 'booking' && !empty($r['bukti_pembayaran'])): ?>
+                                          <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#verifyPaymentModal-<?= $r['id_sewa'] ?>" title="Verifikasi Pembayaran">
+                                              <i class="fa fa-check"></i> Verifikasi
+                                          </button>
+                                      <?php endif; ?>
+                                  <?php else: ?>
+                                      <?php if ($r['status'] === 'booking'): ?>
+                                          <?php if (empty($r['bukti_pembayaran'])): ?>
+                                              <a href="bayar.php?id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-primary d-flex align-items-center gap-1" title="Bayar Sekarang">
+                                                  <i class="fa fa-credit-card"></i> Bayar
+                                              </a>
+                                          <?php else: ?>
+                                              <a href="bayar.php?id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-info d-flex align-items-center gap-1" title="Menunggu Verifikasi Admin">
+                                                  <i class="fa fa-clock"></i> Status Bayar
+                                              </a>
+                                          <?php endif; ?>
+                                      <?php endif; ?>
+                                  <?php endif; ?>
+
                                   <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editSewaModal-<?= $r['id_sewa'] ?>">
                                       <i class="fa fa-edit"></i> Edit
                                   </button>
@@ -395,6 +528,45 @@ include 'partials/head.php';
                                 }
                               })();
                               </script>
+
+                              <!-- Verify Payment Modal (Admin Only) -->
+                              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin' && !empty($r['bukti_pembayaran'])): ?>
+                              <div class="modal fade text-start" id="verifyPaymentModal-<?= $r['id_sewa'] ?>" tabindex="-1" aria-labelledby="verifyPaymentModalLabel-<?= $r['id_sewa'] ?>" aria-hidden="true">
+                                <div class="modal-dialog modal-md modal-dialog-centered">
+                                  <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                                    <div class="modal-header bg-success text-white" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                      <h5 class="modal-title" id="verifyPaymentModalLabel-<?= $r['id_sewa'] ?>"><i class="fa fa-check-circle me-2"></i>Verifikasi Pembayaran</h5>
+                                      <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="">
+                                      <input type="hidden" name="action" value="verify_payment">
+                                      <input type="hidden" name="id_sewa" value="<?= $r['id_sewa'] ?>">
+                                      <div class="modal-body p-4 text-center">
+                                        <div class="mb-3 text-start">
+                                          <div class="small text-muted fw-bold">Nomor Invoice:</div>
+                                          <div class="fw-bold fs-6">#INV-<?= str_pad($r['id_sewa'], 5, '0', STR_PAD_LEFT) ?></div>
+                                          <div class="small text-muted mt-2 fw-bold">Penyewa / Kendaraan:</div>
+                                          <div class="text-body-emphasis"><?= htmlspecialchars($r['nama_user'] ?? 'N/A') ?> - <?= htmlspecialchars($r['nama_kendaraan'] ?? 'N/A') ?></div>
+                                          <div class="small text-muted mt-2 fw-bold">Total Biaya:</div>
+                                          <div class="fw-bold text-success">Rp <?= number_format($r['total_biaya'], 0, ',', '.') ?></div>
+                                        </div>
+                                        <div class="border rounded p-2 bg-body-tertiary mb-3">
+                                          <div class="small text-muted mb-2 text-start fw-bold">Bukti Transfer:</div>
+                                          <a href="uploads/<?= htmlspecialchars($r['bukti_pembayaran']) ?>" target="_blank" title="Klik untuk memperbesar">
+                                            <img src="uploads/<?= htmlspecialchars($r['bukti_pembayaran']) ?>" alt="Bukti Transfer" class="img-fluid rounded border shadow-sm" style="max-height: 250px; object-fit: contain;">
+                                          </a>
+                                        </div>
+                                        <p class="text-muted small">Harap pastikan nominal transfer pada bukti di atas sesuai dengan total biaya penyewaan sebelum menekan tombol verifikasi.</p>
+                                      </div>
+                                      <div class="modal-footer bg-light justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                        <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
+                                        <button type="submit" class="btn btn-success text-white px-4 fw-bold">Setujui & Verifikasi</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+                              <?php endif; ?>
 
                               <!-- Delete Confirmation Modal -->
                               <div class="modal fade text-start" id="deleteSewaModal-<?= $r['id_sewa'] ?>" tabindex="-1" aria-labelledby="deleteSewaModalLabel-<?= $r['id_sewa'] ?>" aria-hidden="true">
@@ -562,11 +734,13 @@ include 'partials/head.php';
             <p class="text-body-secondary mb-3" id="successModalMessage">
               <?php
               if ($msg === 'added') {
-                  echo 'Transaksi penyewaan berhasil ditambahkan.';
+                  echo 'Transaksi penyewaan berhasil ditambahkan. Silakan cek email Anda untuk detail invoice/tagihan.';
               } elseif ($msg === 'updated') {
                   echo 'Transaksi berhasil diperbarui.';
               } elseif ($msg === 'deleted') {
                   echo 'Transaksi penyewaan berhasil dihapus.';
+              } elseif ($msg === 'payment_verified') {
+                  echo 'Pembayaran berhasil diverifikasi! Sistem telah mengirimkan email konfirmasi pembayaran.';
               }
               ?>
             </p>
