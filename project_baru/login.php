@@ -3,6 +3,35 @@ require_once 'config.php';
 
 $error = '';
 
+// Check for error queries passed from callback page
+if (isset($_GET['error'])) {
+    if ($_GET['error'] === 'google_auth') {
+        $error = 'Gagal melakukan autentikasi dengan Google.';
+    } elseif ($_GET['error'] === 'no_code') {
+        $error = 'Kode otorisasi Google tidak ditemukan.';
+    } elseif ($_GET['error'] === 'db_error') {
+        $error = 'Gagal memproses data pengguna di database.';
+    } else {
+        $error = htmlspecialchars($_GET['error']);
+    }
+}
+
+$google_client_id = $_ENV['GOOGLE_CLIENT_ID'] ?? getenv('GOOGLE_CLIENT_ID');
+$google_redirect_url = $_ENV['GOOGLE_REDIRECT_URL'] ?? getenv('GOOGLE_REDIRECT_URL');
+
+$google_auth_url = "";
+if (!empty($google_client_id) && !empty($google_redirect_url)) {
+    $params = [
+        'client_id' => $google_client_id,
+        'redirect_uri' => $google_redirect_url,
+        'response_type' => 'code',
+        'scope' => 'openid email profile',
+        'access_type' => 'online',
+        'prompt' => 'select_account'
+    ];
+    $google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query($params);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -22,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_nama'] = $user['nama'];
+            // Session flag to indicate if they logged in via Google
+            $_SESSION['logged_in_via_google'] = false; 
             header('Location: dashboard.php');
             exit;
         } else {
@@ -76,6 +107,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <button class="btn btn-primary w-100 py-2" type="submit">Sign In</button>
                 </div>
               </form>
+
+              <?php if (!empty($google_auth_url)): ?>
+                <div class="position-relative text-center my-1">
+                  <hr class="text-body-secondary">
+                  <span class="position-absolute top-50 start-50 translate-middle bg-body px-3 text-body-secondary small">atau</span>
+                </div>
+                <div class="col-12">
+                  <a href="<?= htmlspecialchars($google_auth_url) ?>" class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+                    <i class="fab fa-google"></i> Masuk dengan Google
+                  </a>
+                </div>
+              <?php endif; ?>
             </div>
           </div>
           <div class="text-center text-body-secondary">

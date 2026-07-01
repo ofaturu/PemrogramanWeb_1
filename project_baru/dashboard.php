@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in_via_google']) || $_SESSION['logged_in_via_google'] !== true) {
     header('Location: login.php');
     exit;
 }

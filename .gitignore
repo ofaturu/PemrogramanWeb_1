@@ -1,0 +1,3 @@
+# Ignore environment configuration files containing sensitive credentials
+.env
+project_baru/.env
