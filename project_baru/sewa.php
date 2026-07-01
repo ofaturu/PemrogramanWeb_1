@@ -111,6 +111,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($upd, 'iissisi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
 
             if (mysqli_stmt_execute($upd)) {
+                // If status was changed to sedang_disewa, trigger receipt email
+                if ($status === 'sedang_disewa') {
+                    require_once 'send_invoice.php';
+                    try {
+                        send_invoice_email($id_sewa, 'receipt');
+                    } catch (\Exception $e) {
+                        error_log("Failed to send SMTP receipt email from edit modal: " . $e->getMessage());
+                    }
+                }
+                
                 header('Location: sewa.php?msg=updated');
                 exit;
             } else {
