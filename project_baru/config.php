@@ -43,3 +43,4 @@ if (!$mysqli) {
 mysqli_set_charset($mysqli, 'utf8');
 
 ?>
+<!-- tes -->
