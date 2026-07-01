@@ -79,15 +79,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = $_POST['status'] ?? 'booking';
         } else {
             // Non-admin can only edit their own rental
-            $check_stmt = mysqli_prepare($mysqli, "SELECT id_user, status FROM penyewaan WHERE id_sewa = ?");
+            $check_stmt = mysqli_prepare($mysqli, "SELECT id_user, status, bukti_pembayaran FROM penyewaan WHERE id_sewa = ?");
             mysqli_stmt_bind_param($check_stmt, 'i', $id_sewa);
             mysqli_stmt_execute($check_stmt);
-            mysqli_stmt_bind_result($check_stmt, $owner_id, $db_status);
+            mysqli_stmt_bind_result($check_stmt, $owner_id, $db_status, $db_bukti);
             mysqli_stmt_fetch($check_stmt);
             mysqli_stmt_close($check_stmt);
             
             if ($owner_id != $_SESSION['user_id']) {
                 header('Location: sewa.php?error=unauthorized');
+                exit;
+            }
+
+            if (!empty($db_bukti) || $db_status !== 'booking') {
+                header('Location: sewa.php?error=cannot_edit_paid');
                 exit;
             }
             
@@ -249,6 +254,23 @@ include 'partials/head.php';
     <div class="body flex-grow-1">
       <div class="container-lg px-4">
 
+        <?php if (isset($_GET['error'])): ?>
+            <?php 
+            $err_msg = 'Terjadi kesalahan sistem.';
+            if ($_GET['error'] === 'cannot_edit_paid') {
+                $err_msg = 'Transaksi tidak dapat diedit karena pembayaran telah diunggah atau transaksi sedang diproses. Silakan hubungi Admin untuk melakukan perubahan.';
+            } elseif ($_GET['error'] === 'cannot_delete_paid') {
+                $err_msg = 'Transaksi tidak dapat dibatalkan/dihapus karena pembayaran telah diunggah atau transaksi sedang diproses. Silakan hubungi Admin untuk mengajukan pembatalan.';
+            } elseif ($_GET['error'] === 'unauthorized') {
+                $err_msg = 'Akses ditolak: Anda tidak memiliki wewenang untuk mengakses transaksi ini.';
+            }
+            ?>
+            <div class="alert alert-danger alert-dismissible fade show border-0 bg-danger bg-opacity-10 text-danger p-3 mb-4" style="border-radius: 8px;" role="alert">
+                <i class="fa fa-exclamation-triangle me-2"></i><strong>Gagal!</strong> <?= htmlspecialchars($err_msg) ?>
+                <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex align-items-center justify-content-between bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-receipt me-2 text-primary"></i>Daftar Transaksi Penyewaan</h5>
@@ -337,12 +359,25 @@ include 'partials/head.php';
                                       <?php endif; ?>
                                   <?php endif; ?>
 
-                                  <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editSewaModal-<?= $r['id_sewa'] ?>">
-                                      <i class="fa fa-edit"></i> Edit
-                                  </button>
-                                  <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteSewaModal-<?= $r['id_sewa'] ?>">
-                                      <i class="fa fa-trash"></i> Hapus
-                                  </button>
+                                   <?php 
+                                   $can_user_edit = true;
+                                   if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                                       if (!empty($r['bukti_pembayaran']) || $r['status'] !== 'booking') {
+                                           $can_user_edit = false;
+                                       }
+                                   }
+                                   ?>
+
+                                   <?php if ($can_user_edit): ?>
+                                       <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editSewaModal-<?= $r['id_sewa'] ?>">
+                                           <i class="fa fa-edit"></i> Edit
+                                       </button>
+                                       <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteSewaModal-<?= $r['id_sewa'] ?>">
+                                           <i class="fa fa-trash"></i> Hapus
+                                       </button>
+                                   <?php else: ?>
+                                       <span class="text-body-secondary small ms-2 align-self-center"><i class="fa fa-info-circle me-1"></i>Hubungi Admin untuk perubahan/pembatalan</span>
+                                   <?php endif; ?>
                               </div>
 
                               <!-- Edit Rental Modal -->
