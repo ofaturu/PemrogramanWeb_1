@@ -274,9 +274,9 @@ include 'partials/head.php';
                   <i class="fa fa-download me-1"></i> Export
                 </button>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
               <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
@@ -327,7 +327,7 @@ include 'partials/head.php';
                           <td class="text-body fw-semibold">Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?></td>
                           <td class="pe-4 text-end">
                               <div class="btn-group btn-group-sm" role="group">
-                                  <a href="export.php?target=kendaraan&format=pdf&kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak PDF">
+                                  <a href="export.php?target=kendaraan&format=pdf&kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak PDF" target="_blank">
                                       <i class="fa fa-print"></i> Cetak
                                   </a>
                                   <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>

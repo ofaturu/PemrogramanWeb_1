@@ -120,9 +120,9 @@ include 'partials/head.php';
                   <i class="fa fa-download me-1"></i> Export
                 </button>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="export.php?target=users&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=users&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=users&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=users&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=users&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=users&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
               <?php endif; ?>
@@ -162,7 +162,7 @@ include 'partials/head.php';
                           </td>
                            <td class="pe-4 text-end">
                               <div class="d-inline-flex gap-1">
-                                  <a href="export.php?target=users&format=pdf&id=<?= urlencode($u['id']) ?>" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" title="Cetak Riwayat PDF">
+                                   <a href="export.php?target=users&format=pdf&id=<?= urlencode($u['id']) ?>" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" title="Cetak Riwayat PDF" target="_blank">
                                       <i class="fa fa-print"></i> Cetak Riwayat
                                   </a>
                                   <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#userDetailModal-<?= $u['id'] ?>">

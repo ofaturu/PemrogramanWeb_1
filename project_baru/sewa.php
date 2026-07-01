@@ -320,9 +320,9 @@ include 'partials/head.php';
                   <i class="fa fa-download me-1"></i> Export
                 </button>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="export.php?target=sewa&format=excel"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=sewa&format=word"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=sewa&format=pdf"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=sewa&format=excel" target="_blank"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=sewa&format=word" target="_blank"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=sewa&format=pdf" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
               <button type="button" class="btn btn-primary btn-sm" data-coreui-toggle="modal" data-coreui-target="#addSewaModal"><i class="fa fa-plus me-1"></i> Tambah Penyewaan</button>
@@ -374,7 +374,7 @@ include 'partials/head.php';
                           </td>
                           <td class="pe-4 text-end">
                               <div class="btn-group btn-group-sm" role="group">
-                                  <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak Struk/Invoice PDF">
+                                  <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak Struk/Invoice PDF" target="_blank">
                                       <i class="fa fa-print"></i> Struk
                                   </a>
 

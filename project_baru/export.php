@@ -853,6 +853,6 @@ if ($format === 'pdf') {
     $mpdf->WriteHTML($html);
     
     $filename = 'ftrans_doc_' . $target . ($is_detail ? '_detail_' . $detail_id : '_laporan') . '_' . date('Ymd_His') . '.pdf';
-    $mpdf->Output($filename, 'D');
+    $mpdf->Output($filename, 'I');
     exit;
 }
