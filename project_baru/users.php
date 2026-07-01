@@ -325,9 +325,9 @@ include 'partials/head.php';
                     </table>
                   </div>
                 <?php else: ?>
-                  <div class="text-center py-5 border rounded-3 bg-light">
-                    <i class="fa fa-folder-open fa-2x mb-2 text-muted"></i>
-                    <p class="mb-0 text-muted">Belum ada riwayat penyewaan untuk user ini.</p>
+                  <div class="text-center py-5 border rounded-3 bg-body-tertiary">
+                    <i class="fa fa-folder-open fa-2x mb-2 text-body-secondary"></i>
+                    <p class="mb-0 text-body-secondary">Belum ada riwayat penyewaan untuk user ini.</p>
                   </div>
                 <?php endif; ?>
               </div>
