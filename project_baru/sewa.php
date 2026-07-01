@@ -56,55 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (mysqli_stmt_execute($stmt)) {
                 $id_sewa = mysqli_insert_id($mysqli);
 
-                // Fetch details for invoice email
-                $det_stmt = mysqli_prepare($mysqli, "
-                    SELECT p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, u.nama AS nama_user, u.email AS email_user, k.nama_kendaraan, k.harga_per_hari
-                    FROM penyewaan p
-                    JOIN users u ON p.id_user = u.id
-                    JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
-                    WHERE p.id_sewa = ?
-                ");
-                mysqli_stmt_bind_param($det_stmt, 'i', $id_sewa);
-                mysqli_stmt_execute($det_stmt);
-                $det_res = mysqli_stmt_get_result($det_stmt);
-                $detail = mysqli_fetch_assoc($det_res);
-                mysqli_stmt_close($det_stmt);
-
-                if ($detail) {
-                    $t_sewa = strtotime($detail['tanggal_sewa']);
-                    $t_kembali = strtotime($detail['tanggal_kembali']);
-                    $diff_days = ceil(($t_kembali - $t_sewa) / 86400);
-                    if ($diff_days <= 0) $diff_days = 1;
-
-                    // Compile HTML content for Invoice Email
-                    $payment_url = "http://localhost/PemrogramanWeb_1/project_baru/bayar.php?id=" . $id_sewa;
-                    
-                    $email_body = '
-                    <h2>Tagihan Transaksi Penyewaan Kendaraan</h2>
-                    <p>Halo <strong>' . htmlspecialchars($detail['nama_user']) . '</strong>,</p>
-                    <p>Terima kasih telah melakukan pemesanan kendaraan di FTrans. Berikut adalah rincian tagihan (invoice) penyewaan Anda:</p>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold; width: 40%;">Nomor Invoice:</td><td>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</td></tr>
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Nama Kendaraan:</td><td>' . htmlspecialchars($detail['nama_kendaraan']) . '</td></tr>
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Tarif Sewa:</td><td>Rp ' . number_format($detail['harga_per_hari'], 0, ',', '.') . ' / hari</td></tr>
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Periode Sewa:</td><td>' . date('d M Y H:i', $t_sewa) . ' s.d. ' . date('d M Y H:i', $t_kembali) . ' (' . $diff_days . ' hari)</td></tr>
-                        <tr style="border-bottom: 2px solid #3b82f6; padding: 12px 0; font-size: 16px; font-weight: bold; color: #3b82f6;"><td style="font-weight: bold;">Total Tagihan:</td><td>Rp ' . number_format($detail['total_biaya'], 0, ',', '.') . '</td></tr>
-                    </table>
-                    
-                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-                        <h4 style="margin-top: 0; color: #1e293b;">💳 INSTRUKSI PEMBAYARAN:</h4>
-                        <p style="margin-bottom: 10px;">Silakan lakukan transfer bank dengan nominal pas ke rekening resmi berikut:</p>
-                        <p style="margin: 4px 0;"><strong>Bank BCA:</strong> 123456789</p>
-                        <p style="margin: 4px 0;"><strong>Atas Nama:</strong> FTrans Car Rental</p>
-                        <p style="margin-top: 15px; margin-bottom: 0;">Setelah melakukan transfer, silakan unggah bukti pembayaran melalui tautan berikut:</p>
-                        <p style="margin-top: 10px;"><a href="' . $payment_url . '" style="display: inline-block; background-color: #3b82f6; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">Bayar & Unggah Bukti</a></p>
-                    </div>
-                    
-                    <p>Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi tim Customer Support kami.</p>
-                    ';
-
-                    ftrans_send_email($detail['email_user'], $detail['nama_user'], 'Tagihan Pembayaran Penyewaan #' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT), $email_body);
+                require_once 'send_invoice.php';
+                try {
+                    send_invoice_email($id_sewa, 'invoice');
+                } catch (\Exception $e) {
+                    error_log("Failed to send SMTP invoice email: " . $e->getMessage());
                 }
                 
                 header('Location: sewa.php?msg=added');
@@ -178,39 +134,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (mysqli_stmt_execute($upd)) {
                 mysqli_stmt_close($upd);
 
-                // Fetch details for success email
-                $det_stmt = mysqli_prepare($mysqli, "
-                    SELECT p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, u.nama AS nama_user, u.email AS email_user, k.nama_kendaraan
-                    FROM penyewaan p
-                    JOIN users u ON p.id_user = u.id
-                    JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
-                    WHERE p.id_sewa = ?
-                ");
-                mysqli_stmt_bind_param($det_stmt, 'i', $id_sewa);
-                mysqli_stmt_execute($det_stmt);
-                $det_res = mysqli_stmt_get_result($det_stmt);
-                $detail = mysqli_fetch_assoc($det_res);
-                mysqli_stmt_close($det_stmt);
-
-                if ($detail) {
-                    // Send Payment Success Email
-                    $email_body = '
-                    <h2>Konfirmasi Pembayaran Lunas & Penyewaan Aktif</h2>
-                    <p>Halo <strong>' . htmlspecialchars($detail['nama_user']) . '</strong>,</p>
-                    <p>Pembayaran Anda untuk transaksi sewa kendaraan dengan nomor invoice <strong>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</strong> telah berhasil **diverifikasi dan dinyatakan Lunas** oleh admin kami.</p>
-                    
-                    <p>Status sewa Anda saat ini adalah: <strong style="color: #16a34a;">Sedang Disewa (Aktif)</strong>.</p>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold; width: 40%;">Kendaraan:</td><td>' . htmlspecialchars($detail['nama_kendaraan']) . '</td></tr>
-                        <tr style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;"><td style="font-weight: bold;">Periode Sewa:</td><td>' . date('d M Y H:i', strtotime($detail['tanggal_sewa'])) . ' s.d. ' . date('d M Y H:i', strtotime($detail['tanggal_kembali'])) . '</td></tr>
-                        <tr style="border-bottom: 2px solid #16a34a; padding: 12px 0; font-size: 16px; font-weight: bold; color: #16a34a;"><td style="font-weight: bold;">Status Pembayaran:</td><td>LUNAS (Verified)</td></tr>
-                    </table>
-                    
-                    <p>Terima kasih telah menyewa kendaraan di FTrans. Semoga perjalanan Anda menyenangkan, nyaman, dan aman sampai tujuan.</p>
-                    ';
-
-                    ftrans_send_email($detail['email_user'], $detail['nama_user'], 'Konfirmasi Pembayaran Lunas #' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT), $email_body);
+                require_once 'send_invoice.php';
+                try {
+                    send_invoice_email($id_sewa, 'receipt');
+                } catch (\Exception $e) {
+                    error_log("Failed to send SMTP receipt email: " . $e->getMessage());
                 }
                 
                 header('Location: sewa.php?msg=payment_verified');
