@@ -20,35 +20,54 @@ $offset = ($page - 1) * $limit;
 $search = trim($_GET['search'] ?? '');
 $search_param = "%" . $search . "%";
 
-// Count total matching users
-$count_query = "SELECT COUNT(*) FROM users WHERE nama LIKE ? OR email LIKE ?";
-$c_stmt = mysqli_prepare($mysqli, $count_query);
-mysqli_stmt_bind_param($c_stmt, 'ss', $search_param, $search_param);
-mysqli_stmt_execute($c_stmt);
-mysqli_stmt_bind_result($c_stmt, $total_items);
-mysqli_stmt_fetch($c_stmt);
-mysqli_stmt_close($c_stmt);
+if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+    // Count total matching users
+    $count_query = "SELECT COUNT(*) FROM users WHERE nama LIKE ? OR email LIKE ?";
+    $c_stmt = mysqli_prepare($mysqli, $count_query);
+    mysqli_stmt_bind_param($c_stmt, 'ss', $search_param, $search_param);
+    mysqli_stmt_execute($c_stmt);
+    mysqli_stmt_bind_result($c_stmt, $total_items);
+    mysqli_stmt_fetch($c_stmt);
+    mysqli_stmt_close($c_stmt);
 
-$total_pages = ceil($total_items / $limit);
-if ($page > $total_pages && $total_pages > 0) {
-    $page = $total_pages;
-    $offset = ($page - 1) * $limit;
+    $total_pages = ceil($total_items / $limit);
+    if ($page > $total_pages && $total_pages > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    // Fetch matching users
+    $query = "SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+              FROM users u
+              LEFT JOIN penyewaan p ON u.id = p.id_user
+              WHERE u.nama LIKE ? OR u.email LIKE ?
+              GROUP BY u.id
+              ORDER BY u.nama ASC
+              LIMIT ? OFFSET ?";
+    $stmt = mysqli_prepare($mysqli, $query);
+    mysqli_stmt_bind_param($stmt, 'ssii', $search_param, $search_param, $limit, $offset);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $users_list = mysqli_fetch_all($res, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
+} else {
+    // Non-admin can only see themselves
+    $total_items = 1;
+    $total_pages = 1;
+    $offset = 0;
+
+    $query = "SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+              FROM users u
+              LEFT JOIN penyewaan p ON u.id = p.id_user
+              WHERE u.id = ?
+              GROUP BY u.id";
+    $stmt = mysqli_prepare($mysqli, $query);
+    mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $users_list = mysqli_fetch_all($res, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
 }
-
-// Fetch matching users
-$query = "SELECT u.id, u.nama, u.email, COUNT(p.id_sewa) AS jumlah_sewa
-          FROM users u
-          LEFT JOIN penyewaan p ON u.id = p.id_user
-          WHERE u.nama LIKE ? OR u.email LIKE ?
-          GROUP BY u.id
-          ORDER BY u.nama ASC
-          LIMIT ? OFFSET ?";
-$stmt = mysqli_prepare($mysqli, $query);
-mysqli_stmt_bind_param($stmt, 'ssii', $search_param, $search_param, $limit, $offset);
-mysqli_stmt_execute($stmt);
-$res = mysqli_stmt_get_result($stmt);
-$users_list = mysqli_fetch_all($res, MYSQLI_ASSOC);
-mysqli_stmt_close($stmt);
 
 $total = count($users_list);
 ?>
@@ -71,6 +90,16 @@ include 'partials/head.php';
     <div class="body flex-grow-1">
       <div class="container-lg px-4">
 
+        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
+            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small py-2 px-3 mb-4">
+                <i class="fa fa-check-circle me-1"></i> User berhasil dihapus dari sistem.
+            </div>
+        <?php elseif (isset($_GET['error']) && $_GET['error'] === 'self_delete'): ?>
+            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
+                <i class="fa fa-exclamation-triangle me-1"></i> Anda tidak dapat menghapus akun Anda sendiri.
+            </div>
+        <?php endif; ?>
+
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-users me-2 text-primary"></i>Daftar User</h5>
@@ -85,6 +114,7 @@ include 'partials/head.php';
                   <?php endif; ?>
                 </div>
               </form>
+              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
               <div class="dropdown mt-2 mt-sm-0">
                 <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
                   <i class="fa fa-download me-1"></i> Export
@@ -95,6 +125,7 @@ include 'partials/head.php';
                   <li><a class="dropdown-item" href="export.php?target=users&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
+              <?php endif; ?>
             </div>
           </div>
           <div class="card-body p-0">
@@ -106,6 +137,7 @@ include 'partials/head.php';
                     <th scope="col" style="width: 100px;">ID</th>
                     <th scope="col">Nama User</th>
                     <th scope="col">Email</th>
+                    <th scope="col" style="width: 120px;">Role</th>
                     <th scope="col" style="width: 200px;">Jumlah Sewa</th>
                     <th scope="col" class="pe-4 text-end" style="width: 150px;">Aksi</th>
                   </tr>
@@ -119,6 +151,11 @@ include 'partials/head.php';
                           <td class="text-body fw-bold"><?= htmlspecialchars($u['nama']) ?></td>
                           <td class="text-body-secondary"><?= htmlspecialchars($u['email']) ?></td>
                           <td>
+                              <span class="badge bg-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> bg-opacity-10 text-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> px-2.5 py-1.5 fw-semibold" style="font-size: 0.85rem;">
+                                  <?= htmlspecialchars(ucfirst($u['role'])) ?>
+                              </span>
+                          </td>
+                          <td>
                               <span class="badge bg-secondary bg-opacity-10 text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 0.85rem;">
                                   <i class="fa fa-car me-1"></i> <?= htmlspecialchars($u['jumlah_sewa']) ?> Transaksi
                               </span>
@@ -131,13 +168,18 @@ include 'partials/head.php';
                                   <button type="button" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#userDetailModal-<?= $u['id'] ?>">
                                       <i class="fa fa-info-circle"></i> Detail Sewa
                                   </button>
+                                  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin' && $u['id'] != $_SESSION['user_id']): ?>
+                                      <a href="delete_user.php?id=<?= urlencode($u['id']) ?>" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" onclick="return confirm('Apakah Anda yakin ingin menghapus user ini beserta seluruh riwayat transaksinya?')" title="Hapus User">
+                                          <i class="fa fa-trash"></i> Hapus
+                                      </a>
+                                  <?php endif; ?>
                               </div>
                            </td>
                       </tr>
                       <?php endforeach; ?>
                   <?php else: ?>
                       <tr>
-                          <td colspan="6" class="text-center py-5 text-muted">
+                          <td colspan="7" class="text-center py-5 text-muted">
                               <i class="fa fa-folder-open fa-2x mb-3 text-muted d-block"></i>
                               Belum ada data user.
                           </td>

@@ -86,7 +86,7 @@ $email = trim($user_info['email']);
 $name = trim($user_info['name'] ?? $user_info['given_name'] ?? 'User Google');
 
 // 3. Find or register the user in the database
-$stmt = mysqli_prepare($mysqli, "SELECT id, nama FROM users WHERE email = ?");
+$stmt = mysqli_prepare($mysqli, "SELECT id, nama, role FROM users WHERE email = ?");
 mysqli_stmt_bind_param($stmt, 's', $email);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
@@ -97,6 +97,7 @@ if ($user) {
     // User already exists, log them in
     $_SESSION['user_id']   = $user['id'];
     $_SESSION['user_nama'] = $user['nama'];
+    $_SESSION['user_role'] = $user['role'];
     $_SESSION['logged_in_via_google'] = true;
 } else {
     // User does not exist, auto-register them
@@ -110,6 +111,7 @@ if ($user) {
             
             $_SESSION['user_id']   = $user_id;
             $_SESSION['user_nama'] = $name;
+            $_SESSION['user_role'] = 'user'; // default role is 'user' for new accounts
             $_SESSION['logged_in_via_google'] = true;
         } else {
             mysqli_stmt_close($insert_stmt);

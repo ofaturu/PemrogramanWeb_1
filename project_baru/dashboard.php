@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['logged_in_via_google']) || $_SESSION['logged_in_via_google'] !== true) {
+if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
@@ -18,6 +18,12 @@ if ($res_merk) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Restrict modifications to Admin role
+    if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+        header('Location: dashboard.php?error=unauthorized');
+        exit;
+    }
+
     $action = $_POST['action'] ?? '';
     
     if ($action === 'add') {
@@ -273,12 +279,14 @@ include 'partials/head.php';
                   <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
-              <button type="button" class="btn btn-warning btn-sm text-nowrap mt-2 mt-sm-0 text-white" data-coreui-toggle="modal" data-coreui-target="#importKendaraanModal">
-                <i class="fa fa-upload me-1"></i> Import
-              </button>
-              <button type="button" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0" data-coreui-toggle="modal" data-coreui-target="#addKendaraanModal">
-                <i class="fa fa-plus me-1"></i> Tambah
-              </button>
+              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                <button type="button" class="btn btn-warning btn-sm text-nowrap mt-2 mt-sm-0 text-white" data-coreui-toggle="modal" data-coreui-target="#importKendaraanModal">
+                  <i class="fa fa-upload me-1"></i> Import
+                </button>
+                <button type="button" class="btn btn-primary btn-sm text-nowrap mt-2 mt-sm-0" data-coreui-toggle="modal" data-coreui-target="#addKendaraanModal">
+                  <i class="fa fa-plus me-1"></i> Tambah
+                </button>
+              <?php endif; ?>
             </div>
           </div>
           <div class="card-body p-0">
@@ -322,14 +330,17 @@ include 'partials/head.php';
                                   <a href="export.php?target=kendaraan&format=pdf&kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak PDF">
                                       <i class="fa fa-print"></i> Cetak
                                   </a>
-                                  <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
-                                      <i class="fa fa-edit"></i> Edit
-                                  </button>
-                                  <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteModal-<?= $k['kode_unik_kendaraan'] ?>">
-                                      <i class="fa fa-trash"></i> Hapus
-                                  </button>
+                                  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                      <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
+                                          <i class="fa fa-edit"></i> Edit
+                                      </button>
+                                      <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteModal-<?= $k['kode_unik_kendaraan'] ?>">
+                                          <i class="fa fa-trash"></i> Hapus
+                                      </button>
+                                  <?php endif; ?>
                               </div>
 
+                              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                               <!-- Edit Modal -->
                               <div class="modal fade text-start" id="editModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
                                 <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -444,6 +455,7 @@ include 'partials/head.php';
                                   </div>
                                 </div>
                               </div>
+                              <?php endif; ?>
                           </td>
                       </tr>
                       <?php endforeach; ?>

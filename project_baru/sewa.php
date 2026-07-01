@@ -11,9 +11,18 @@ $error_edit = '';
 $error_edit_id = '';
 
 // Fetch users for dropdown
-$users_query = "SELECT id, nama FROM users ORDER BY nama ASC";
-$users_res = mysqli_query($mysqli, $users_query);
-$users = mysqli_fetch_all($users_res, MYSQLI_ASSOC);
+if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+    $users_query = "SELECT id, nama FROM users ORDER BY nama ASC";
+    $users_res = mysqli_query($mysqli, $users_query);
+    $users = mysqli_fetch_all($users_res, MYSQLI_ASSOC);
+} else {
+    $users = [
+        [
+            'id' => $_SESSION['user_id'],
+            'nama' => $_SESSION['user_nama']
+        ]
+    ];
+}
 
 // Fetch vehicles for dropdown
 $vehicles_query = "SELECT kode_unik_kendaraan, nama_kendaraan, harga_per_hari FROM kendaraan ORDER BY nama_kendaraan ASC";
@@ -24,12 +33,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     
     if ($action === 'add') {
-        $id_user = $_POST['id_user'] ?? '';
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            $id_user = $_POST['id_user'] ?? '';
+            $status = $_POST['status'] ?? 'booking';
+        } else {
+            $id_user = $_SESSION['user_id'];
+            $status = 'booking';
+        }
         $kode_unik = $_POST['kode_unik_kendaraan'] ?? '';
         $tgl_sewa = $_POST['tanggal_sewa'] ?? '';
         $tgl_kembali = $_POST['tanggal_kembali'] ?? '';
         $total_biaya = $_POST['total_biaya'] ?? '';
-        $status = $_POST['status'] ?? 'booking';
 
         if (empty($id_user) || empty($kode_unik) || empty($tgl_sewa) || empty($tgl_kembali) || $total_biaya === '') {
             $error_add = 'Semua field wajib diisi.';
@@ -49,13 +63,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'edit') {
         $id_sewa = $_POST['id_sewa'] ?? '';
-        $id_user = $_POST['id_user'] ?? '';
+        $error_edit_id = $id_sewa;
+
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            $id_user = $_POST['id_user'] ?? '';
+            $status = $_POST['status'] ?? 'booking';
+        } else {
+            // Non-admin can only edit their own rental
+            $check_stmt = mysqli_prepare($mysqli, "SELECT id_user, status FROM penyewaan WHERE id_sewa = ?");
+            mysqli_stmt_bind_param($check_stmt, 'i', $id_sewa);
+            mysqli_stmt_execute($check_stmt);
+            mysqli_stmt_bind_result($check_stmt, $owner_id, $db_status);
+            mysqli_stmt_fetch($check_stmt);
+            mysqli_stmt_close($check_stmt);
+            
+            if ($owner_id != $_SESSION['user_id']) {
+                header('Location: sewa.php?error=unauthorized');
+                exit;
+            }
+            
+            $id_user = $_SESSION['user_id'];
+            $status = $db_status;
+        }
+
         $kode_unik = $_POST['kode_unik_kendaraan'] ?? '';
         $tgl_sewa = $_POST['tanggal_sewa'] ?? '';
         $tgl_kembali = $_POST['tanggal_kembali'] ?? '';
         $total_biaya = $_POST['total_biaya'] ?? '';
-        $status = $_POST['status'] ?? 'booking';
-        $error_edit_id = $id_sewa;
 
         if (empty($id_sewa)) {
             $error_edit = 'ID transaksi penyewaan tidak ditemukan.';
@@ -86,30 +120,58 @@ if ($page < 1) {
 }
 $offset = ($page - 1) * $limit;
 
-// Count total items
-$count_res = mysqli_query($mysqli, "SELECT COUNT(*) FROM penyewaan");
-$count_row = mysqli_fetch_row($count_res);
-$total_items = $count_row[0];
+// Count total items and Fetch rentals depending on role
+if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+    $count_res = mysqli_query($mysqli, "SELECT COUNT(*) FROM penyewaan");
+    $count_row = mysqli_fetch_row($count_res);
+    $total_items = $count_row[0];
 
-$total_pages = ceil($total_items / $limit);
-if ($page > $total_pages && $total_pages > 0) {
-    $page = $total_pages;
-    $offset = ($page - 1) * $limit;
+    $total_pages = ceil($total_items / $limit);
+    if ($page > $total_pages && $total_pages > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    $query = "SELECT p.*, u.nama AS nama_user, k.nama_kendaraan, k.harga_per_hari 
+              FROM penyewaan p 
+              LEFT JOIN users u ON p.id_user = u.id 
+              LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+              ORDER BY p.id_sewa DESC
+              LIMIT ? OFFSET ?";
+    $stmt = mysqli_prepare($mysqli, $query);
+    mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rentals = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
+} else {
+    $count_stmt = mysqli_prepare($mysqli, "SELECT COUNT(*) FROM penyewaan WHERE id_user = ?");
+    mysqli_stmt_bind_param($count_stmt, 'i', $_SESSION['user_id']);
+    mysqli_stmt_execute($count_stmt);
+    mysqli_stmt_bind_result($count_stmt, $total_items);
+    mysqli_stmt_fetch($count_stmt);
+    mysqli_stmt_close($count_stmt);
+
+    $total_pages = ceil($total_items / $limit);
+    if ($page > $total_pages && $total_pages > 0) {
+        $page = $total_pages;
+        $offset = ($page - 1) * $limit;
+    }
+
+    $query = "SELECT p.*, u.nama AS nama_user, k.nama_kendaraan, k.harga_per_hari 
+              FROM penyewaan p 
+              LEFT JOIN users u ON p.id_user = u.id 
+              LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+              WHERE p.id_user = ?
+              ORDER BY p.id_sewa DESC
+              LIMIT ? OFFSET ?";
+    $stmt = mysqli_prepare($mysqli, $query);
+    mysqli_stmt_bind_param($stmt, 'iii', $_SESSION['user_id'], $limit, $offset);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rentals = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
 }
-
-// Fetch all rentals with user name and vehicle name with pagination
-$query = "SELECT p.*, u.nama AS nama_user, k.nama_kendaraan, k.harga_per_hari 
-          FROM penyewaan p 
-          LEFT JOIN users u ON p.id_user = u.id 
-          LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
-          ORDER BY p.id_sewa DESC
-          LIMIT ? OFFSET ?";
-$stmt = mysqli_prepare($mysqli, $query);
-mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$rentals = mysqli_fetch_all($result, MYSQLI_ASSOC);
-mysqli_stmt_close($stmt);
 
 $total = count($rentals);
 
@@ -277,7 +339,7 @@ include 'partials/head.php';
 
                                           <div class="col-md-6">
                                             <label class="form-label" for="edit_status-<?= $r['id_sewa'] ?>">Status Penyewaan *</label>
-                                            <select id="edit_status-<?= $r['id_sewa'] ?>" name="status" class="form-select" required>
+                                            <select id="edit_status-<?= $r['id_sewa'] ?>" name="status" class="form-select" <?= (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin') ? 'disabled' : '' ?> required>
                                               <?php $curr_status = $error_edit_id == $r['id_sewa'] ? ($_POST['status'] ?? $r['status']) : $r['status']; ?>
                                               <option value="booking" <?= $curr_status === 'booking' ? 'selected' : '' ?>>Booking</option>
                                               <option value="sedang_disewa" <?= $curr_status === 'sedang_disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
@@ -470,8 +532,8 @@ include 'partials/head.php';
 
                 <div class="col-md-6">
                   <label class="form-label" for="add_status">Status Penyewaan *</label>
-                  <select id="add_status" name="status" class="form-select" required>
-                    <option value="booking" <?= ($_POST['status'] ?? '') === 'booking' ? 'selected' : '' ?>>Booking</option>
+                  <select id="add_status" name="status" class="form-select" <?= (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin') ? 'disabled' : '' ?> required>
+                    <option value="booking" <?= ($_POST['status'] ?? '') === 'booking' || (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin') ? 'selected' : '' ?>>Booking</option>
                     <option value="sedang_disewa" <?= ($_POST['status'] ?? '') === 'sedang_disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
                     <option value="selesai" <?= ($_POST['status'] ?? '') === 'selesai' ? 'selected' : '' ?>>Selesai</option>
                     <option value="dibatalkan" <?= ($_POST['status'] ?? '') === 'dibatalkan' ? 'selected' : '' ?>>Dibatalkan</option>

@@ -69,6 +69,11 @@ if ($target === 'kendaraan') {
         if (!$detail_data) {
             die("Data transaksi penyewaan tidak ditemukan.");
         }
+           
+           // Enforce role permission check for individual rental details
+           if (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin' && $detail_data['id_user'] != $_SESSION['user_id']) {
+               die("Akses ditolak: Anda tidak memiliki wewenang untuk mengekspor detail transaksi penyewaan ini.");
+           }
     }
 } elseif ($target === 'users') {
     $id_user = intval($_GET['id'] ?? 0);
@@ -86,6 +91,11 @@ if ($target === 'kendaraan') {
         if (!$detail_data) {
             die("Data user tidak ditemukan.");
         }
+
+           // Enforce role permission check for individual user details
+           if (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin' && $detail_data['id'] != $_SESSION['user_id']) {
+               die("Akses ditolak: Anda tidak memiliki wewenang untuk mengekspor profil pengguna ini.");
+           }
         
         // Ambil riwayat sewa user
         $stmt_rent = mysqli_prepare($mysqli, "
@@ -146,46 +156,80 @@ if (!$is_detail) {
         $title_text = "Laporan Transaksi Penyewaan Kendaraan — FTrans";
         $headers = ['No', 'Nama Penyewa', 'Nama Kendaraan', 'Kode Kendaraan', 'Tanggal Sewa', 'Tanggal Kembali', 'Total Biaya', 'Status'];
         
-        $query = "
-            SELECT p.*, u.nama AS nama_user, k.nama_kendaraan 
-            FROM penyewaan p 
-            LEFT JOIN users u ON p.id_user = u.id 
-            LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
-            ORDER BY p.id_sewa DESC
-        ";
-        $result = mysqli_query($mysqli, $query);
-        $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    } elseif ($target === 'users') {
-        $search = trim($_GET['search'] ?? '');
-        $title_text = "Laporan Data User Aplikasi — FTrans";
-        $headers = ['No', 'ID User', 'Nama User', 'Email', 'Jumlah Transaksi Sewa'];
-        
-        if (!empty($search)) {
-            $search_param = "%" . $search . "%";
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
             $query = "
-                SELECT u.id, u.nama, u.email, COUNT(p.id_sewa) AS jumlah_sewa
-                FROM users u
-                LEFT JOIN penyewaan p ON u.id = p.id_user
-                WHERE u.nama LIKE ? OR u.email LIKE ?
-                GROUP BY u.id
-                ORDER BY u.nama ASC
+                SELECT p.*, u.nama AS nama_user, k.nama_kendaraan 
+                FROM penyewaan p 
+                LEFT JOIN users u ON p.id_user = u.id 
+                LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+                ORDER BY p.id_sewa DESC
+            ";
+            $result = mysqli_query($mysqli, $query);
+            $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        } else {
+            $query = "
+                SELECT p.*, u.nama AS nama_user, k.nama_kendaraan 
+                FROM penyewaan p 
+                LEFT JOIN users u ON p.id_user = u.id 
+                LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+                WHERE p.id_user = ?
+                ORDER BY p.id_sewa DESC
             ";
             $stmt = mysqli_prepare($mysqli, $query);
-            mysqli_stmt_bind_param($stmt, 'ss', $search_param, $search_param);
+            mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             mysqli_stmt_close($stmt);
+        }
+    } elseif ($target === 'users') {
+        $search = trim($_GET['search'] ?? '');
+        $title_text = "Laporan Data User Aplikasi — FTrans";
+        $headers = ['No', 'ID User', 'Nama User', 'Email', 'Role', 'Jumlah Transaksi Sewa'];
+        
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            if (!empty($search)) {
+                $search_param = "%" . $search . "%";
+                $query = "
+                    SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+                    FROM users u
+                    LEFT JOIN penyewaan p ON u.id = p.id_user
+                    WHERE u.nama LIKE ? OR u.email LIKE ?
+                    GROUP BY u.id
+                    ORDER BY u.nama ASC
+                ";
+                $stmt = mysqli_prepare($mysqli, $query);
+                mysqli_stmt_bind_param($stmt, 'ss', $search_param, $search_param);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+                mysqli_stmt_close($stmt);
+            } else {
+                $query = "
+                    SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+                    FROM users u
+                    LEFT JOIN penyewaan p ON u.id = p.id_user
+                    GROUP BY u.id
+                    ORDER BY u.nama ASC
+                ";
+                $result = mysqli_query($mysqli, $query);
+                $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            }
         } else {
+            // Non-admin can only see themselves
             $query = "
-                SELECT u.id, u.nama, u.email, COUNT(p.id_sewa) AS jumlah_sewa
+                SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
                 FROM users u
                 LEFT JOIN penyewaan p ON u.id = p.id_user
+                WHERE u.id = ?
                 GROUP BY u.id
-                ORDER BY u.nama ASC
             ";
-            $result = mysqli_query($mysqli, $query);
+            $stmt = mysqli_prepare($mysqli, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $_SESSION['user_id']);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            mysqli_stmt_close($stmt);
         }
     }
 }
@@ -308,8 +352,10 @@ if ($format === 'excel') {
             $sheet->getStyle('B' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->setCellValue('C' . $currentRow, $row['nama']);
             $sheet->setCellValue('D' . $currentRow, $row['email']);
-            $sheet->setCellValue('E' . $currentRow, $row['jumlah_sewa']);
+            $sheet->setCellValue('E' . $currentRow, ucfirst($row['role'] ?? 'user'));
             $sheet->getStyle('E' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('F' . $currentRow, $row['jumlah_sewa']);
+            $sheet->getStyle('F' . $currentRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         }
         $currentRow++;
     }
@@ -411,7 +457,7 @@ if ($format === 'word') {
     } elseif ($target === 'sewa') {
         $colWidths = [600, 1600, 1800, 1000, 1400, 1400, 1200, 800];
     } elseif ($target === 'users') {
-        $colWidths = [800, 1200, 2800, 3200, 1500];
+        $colWidths = [600, 1000, 2200, 2600, 1400, 1700];
     }
     
     $table->addRow(350);
@@ -497,6 +543,9 @@ if ($format === 'word') {
             $cell->addText($row['email'], ['name' => 'Segoe UI', 'size' => 9], ['alignment' => 'left', 'spaceAfter' => 0]);
             
             $cell = $table->addCell($colWidths[4], $cellStyle);
+            $cell->addText(ucfirst($row['role'] ?? 'user'), ['name' => 'Segoe UI', 'size' => 9], ['alignment' => 'center', 'spaceAfter' => 0]);
+            
+            $cell = $table->addCell($colWidths[5], $cellStyle);
             $cell->addText($row['jumlah_sewa'] . ' Sewa', ['name' => 'Segoe UI', 'size' => 9], ['alignment' => 'center', 'spaceAfter' => 0]);
         }
     }
@@ -792,6 +841,7 @@ if ($format === 'pdf') {
                 $html .= '<td class="text-center">#' . $row['id'] . '</td>';
                 $html .= '<td>' . htmlspecialchars($row['nama']) . '</td>';
                 $html .= '<td>' . htmlspecialchars($row['email']) . '</td>';
+                $html .= '<td class="text-center">' . htmlspecialchars(ucfirst($row['role'] ?? 'user')) . '</td>';
                 $html .= '<td class="text-center">' . $row['jumlah_sewa'] . ' Sewa</td>';
             }
             $html .= '</tr>';

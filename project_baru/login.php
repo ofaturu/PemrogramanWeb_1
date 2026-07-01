@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
     } else {
-        $stmt = mysqli_prepare($mysqli, "SELECT id, nama, password FROM users WHERE email = ?");
+        $stmt = mysqli_prepare($mysqli, "SELECT id, nama, password, role FROM users WHERE email = ?");
         mysqli_stmt_bind_param($stmt, 's', $email);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_nama'] = $user['nama'];
+            $_SESSION['user_role'] = $user['role'];
             // Session flag to indicate if they logged in via Google
             $_SESSION['logged_in_via_google'] = false; 
             header('Location: dashboard.php');
