@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-// Retrieve landing page settings
+// Ambil pengaturan halaman landing page
 $settings = [];
 $res_settings = mysqli_query($mysqli, "SELECT setting_key, setting_value FROM landing_settings");
 if ($res_settings) {
@@ -10,13 +10,13 @@ if ($res_settings) {
     }
 }
 
-// Fallback values in case they are missing from DB
+// Nilai cadangan (fallback) jika tidak ditemukan di database
 $landing_hero_title = $settings['hero_title'] ?? 'Eksplorasi Perjalanan Kelas Dunia Bersama Kami.';
 $landing_hero_subtitle = $settings['hero_subtitle'] ?? 'Nikmati kenyamanan berkendara terbaik dengan armada mobil mewah dan pelayanan VIP yang dirancang khusus untuk memenuhi standar eksklusivitas Anda.';
 $landing_hero_image_raw = $settings['hero_image'] ?? 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80';
 $landing_hero_image = (strpos($landing_hero_image_raw, 'http') !== false) ? $landing_hero_image_raw : 'uploads/' . $landing_hero_image_raw;
 
-// Fetch vehicles from database
+// Ambil data kendaraan dari database
 $vehicles = [];
 if ($mysqli) {
     $query = "SELECT k.*, m.nama_merk 
@@ -31,36 +31,35 @@ if ($mysqli) {
     }
 }
 
-// Map database cars to luxury high-quality stock images
-function getCarImageUrl($car_name, $brand) {
-    $name = strtolower($car_name);
-    $brand = strtolower($brand);
+// Petakan merk kendaraan ke gambar stock berkualitas tinggi
+function getBrandImageUrl($brand) {
+    $brand = strtolower(trim($brand));
     
-    if (strpos($name, 'audi') !== false || strpos($brand, 'audi') !== false) {
-        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi A8
-    } elseif (strpos($name, 'ranger') !== false || strpos($name, 'ford') !== false || strpos($brand, 'ford') !== false) {
-        return 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=800&q=80'; // Ford Ranger
-    } elseif (strpos($name, 'xenia') !== false || strpos($brand, 'daihatsu') !== false) {
-        return 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'; // MPV / SUV
-    } elseif (strpos($name, 'seltos') !== false || strpos($brand, 'kia') !== false) {
-        return 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'; // Ford
-    } elseif (strpos($name, 'mazda') !== false || strpos($brand, 'mazda') !== false) {
-        return 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80'; // Porsche
-    } elseif (strpos($name, 'galant') !== false || strpos($brand, 'porsche') !== false) {
-        return 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80'; // Mercedes AMG GT
-    } elseif (strpos($name, 'mercedes') !== false || strpos($brand, 'mercedes') !== false || strpos($name, 'benz') !== false || strpos($name, 'amg') !== false) {
-        return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80'; // Mercedes AMG GT
-    } elseif (strpos($name, 'bmw') !== false || strpos($brand, 'bmw') !== false) {
+    if (strpos($brand, 'audi') !== false) {
+        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi
+    } elseif (strpos($brand, 'ford') !== false) {
+        return 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=800&q=80'; // Ford
+    } elseif (strpos($brand, 'daihatsu') !== false) {
+        return 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'; // Daihatsu
+    } elseif (strpos($brand, 'kia') !== false) {
+        return 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'; // Kia
+    } elseif (strpos($brand, 'mazda') !== false) {
+        return 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80'; // Mazda
+    } elseif (strpos($brand, 'mitsubishi') !== false) {
+        return 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=800&q=80'; // Mitsubishi
+    } elseif (strpos($brand, 'mercedes') !== false || strpos($brand, 'benz') !== false) {
+        return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80'; // Mercedes Benz
+    } elseif (strpos($brand, 'bmw') !== false) {
         return 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'; // BMW
-    } elseif (strpos($name, 'civic') !== false || strpos($brand, 'honda') !== false) {
+    } elseif (strpos($brand, 'honda') !== false) {
         return 'https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=800&q=80'; // Honda
-    } elseif (strpos($name, 'alphard') !== false) {
-        return 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&w=800&q=80'; // Toyota Alphard
     } elseif (strpos($brand, 'toyota') !== false) {
         return 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=80'; // Toyota
+    } elseif (strpos($brand, 'suzuki') !== false) {
+        return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80'; // Suzuki
     }
     
-    // Default luxury sedan image
+    // Default luxury car image
     return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80';
 }
 ?>
@@ -218,23 +217,25 @@ function getCarImageUrl($car_name, $brand) {
                             </div>
                         <?php else: ?>
                             <?php 
-                            // Render three sets of the vehicle list to enable seamless infinite scrolling loop
+                            // Render tiga set daftar kendaraan untuk mendukung perulangan scroll tak terbatas (infinite loop)
                             for ($set = 0; $set < 3; $set++):
                                 foreach ($vehicles as $car): 
-                                    $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : getCarImageUrl($car['nama_kendaraan'], $car['nama_merk'] ?? '');
+                                    $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : getBrandImageUrl($car['nama_merk'] ?? '');
                                 ?>
                                     <div class="car-slide">
-                                        <div class="car-card">
+                                        <div class="car-card text-start">
                                             <div class="car-img-wrapper">
                                                 <img src="<?= $car_img ?>" alt="<?= htmlspecialchars($car['nama_kendaraan']) ?>" class="car-img">
-                                                <div class="car-price-badge">
-                                                    Rp <?= number_format($car['harga_per_hari'], 0, ',', '.') ?> <span>/ Hari</span>
-                                                </div>
                                             </div>
                                             <div class="p-4 d-flex flex-column flex-grow-1">
-                                                <div class="mb-3">
-                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2 small text-uppercase"><?= htmlspecialchars($car['nama_merk'] ?? 'Premium') ?></span>
-                                                    <h5 class="fw-bold mb-0 text-truncate"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2 small text-uppercase"><?= htmlspecialchars($car['nama_merk'] ?? 'Premium') ?></span>
+                                                        <h5 class="fw-bold mb-0 text-truncate" style="max-width: 200px;"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
+                                                    </div>
+                                                    <div class="text-end ms-3 flex-shrink-0">
+                                                        <span class="text-primary fw-bold fs-5">Rp <?= number_format($car['harga_per_hari'], 0, ',', '.') ?> <span class="text-muted fw-normal" style="font-size: 0.75rem;">/ Hari</span></span>
+                                                    </div>
                                                 </div>
                                                 
                                                 <div class="row g-2 mb-4">
@@ -245,10 +246,10 @@ function getCarImageUrl($car_name, $brand) {
                                                         <i class="fa fa-user"></i> 5 Penumpang
                                                     </div>
                                                     <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-gas-pump"></i> Bensin Premium
+                                                        <i class="fa fa-gas-pump"></i> Bensin
                                                     </div>
                                                     <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-shield-alt"></i> Asuransi Full
+                                                        <i class="fa fa-shield-alt"></i> Asuransi
                                                     </div>
                                                 </div>
                                                 

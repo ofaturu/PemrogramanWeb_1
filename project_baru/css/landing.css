@@ -274,8 +274,7 @@ h6 {
     transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     height: 100%;
     display: flex;
-    flex-direction: row;
-    /* Horizontal card format */
+    flex-direction: column;
 }
 
 .car-card:hover {
@@ -285,8 +284,8 @@ h6 {
 
 .car-img-wrapper {
     position: relative;
-    width: 45%;
-    min-height: 240px;
+    width: 100%;
+    height: 220px;
     overflow: hidden;
     background-color: rgba(0, 0, 0, 0.02);
 }
@@ -455,7 +454,7 @@ h6 {
 }
 
 .car-slide {
-    flex: 0 0 520px;
+    flex: 0 0 400px;
     scroll-snap-align: center;
     transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.5s ease;
     transform: scale(0.92);

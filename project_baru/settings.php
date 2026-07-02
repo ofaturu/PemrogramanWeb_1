@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-// Verify authentication and role
+// Verifikasi autentikasi dan peran (role)
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 $error   = '';
 $success = '';
 
-// Retrieve current settings
+// Ambil pengaturan yang saat ini aktif
 $settings = [];
 $res = mysqli_query($mysqli, "SELECT setting_key, setting_value FROM landing_settings");
 if ($res) {
@@ -24,7 +24,7 @@ if ($res) {
     }
 }
 
-// Handle Form Submission
+// Tangani pengiriman formulir (form submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $hero_title = trim($_POST['hero_title'] ?? '');
     $hero_subtitle = trim($_POST['hero_subtitle'] ?? '');
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($hero_title) || empty($hero_subtitle)) {
         $error = 'Judul dan deskripsi landing page wajib diisi.';
     } else {
-        // Handle Image Upload
+        // Tangani pengunggahan gambar
         $hero_image = $settings['hero_image'] ?? '';
         if (isset($_FILES['hero_image']) && $_FILES['hero_image']['error'] === UPLOAD_ERR_OK) {
             $tmp = $_FILES['hero_image']['tmp_name'];
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_filename = 'landing_hero_' . time() . '.' . $ext;
             
             if (move_uploaded_file($tmp, 'uploads/' . $new_filename)) {
-                // Delete old image if it is a local upload
+                // Hapus gambar lama jika merupakan unggahan lokal
                 if (!empty($hero_image) && strpos($hero_image, 'http') === false && file_exists('uploads/' . $hero_image)) {
                     unlink('uploads/' . $hero_image);
                 }
@@ -51,19 +51,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($error)) {
-            // Update hero_title
+            // Simpan perubahan judul (hero_title)
             $stmt = mysqli_prepare($mysqli, "INSERT INTO landing_settings (setting_key, setting_value) VALUES ('hero_title', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
             mysqli_stmt_bind_param($stmt, 'ss', $hero_title, $hero_title);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
 
-            // Update hero_subtitle
+            // Simpan perubahan deskripsi (hero_subtitle)
             $stmt = mysqli_prepare($mysqli, "INSERT INTO landing_settings (setting_key, setting_value) VALUES ('hero_subtitle', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
             mysqli_stmt_bind_param($stmt, 'ss', $hero_subtitle, $hero_subtitle);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
 
-            // Update hero_image
+            // Simpan perubahan gambar (hero_image)
             $stmt = mysqli_prepare($mysqli, "INSERT INTO landing_settings (setting_key, setting_value) VALUES ('hero_image', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
             mysqli_stmt_bind_param($stmt, 'ss', $hero_image, $hero_image);
             mysqli_stmt_execute($stmt);
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $success = 'Pengaturan landing page berhasil disimpan!';
             
-            // Reload settings
+            // Segarkan kembali pengaturan yang disimpan
             $settings['hero_title'] = $hero_title;
             $settings['hero_subtitle'] = $hero_subtitle;
             $settings['hero_image'] = $hero_image;

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Scroll Reveal Animation using Intersection Observer
+    // 1. Animasi scroll reveal menggunakan Intersection Observer
     const reveals = document.querySelectorAll('.reveal');
     
     if ('IntersectionObserver' in window) {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             revealObserver.observe(reveal);
         });
     } else {
-        // Fallback for older browsers
+        // Cadangan untuk browser lama
         const revealOnScroll = () => {
             reveals.forEach(reveal => {
                 const windowHeight = window.innerHeight;
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revealOnScroll();
     }
 
-    // 2. Custom Dark/Light theme toggle mechanism (CoreUI compatible)
+    // 2. Mekanisme sakelar tema gelap/terang kustom (kompatibel dengan CoreUI)
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const themeIcon = document.getElementById('theme-icon');
     const storageKey = 'coreui-free-bootstrap-admin-template-theme';
@@ -46,16 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateIcon = (theme) => {
         if (!themeIcon) return;
         if (theme === 'dark') {
-            themeIcon.className = 'fas fa-sun text-warning'; // Show Sun in Dark Mode
+            themeIcon.className = 'fas fa-sun text-warning'; // Tampilkan Matahari di Mode Gelap
         } else {
-            themeIcon.className = 'fas fa-moon'; // Show Moon in Light Mode
+            themeIcon.className = 'fas fa-moon'; // Tampilkan Bulan di Mode Terang
         }
     };
 
-    // Sync UI icon on initial load
+    // Sinkronkan ikon UI saat pertama kali dimuat
     updateIcon(getAppliedTheme());
 
-    // Observe data-coreui-theme changes to sync icon dynamically if modified elsewhere
+    // Amati perubahan data-coreui-theme untuk menyinkronkan ikon secara dinamis jika diubah di tempat lain
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'attributes' && mutation.attributeName === 'data-coreui-theme') {
@@ -70,18 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = getAppliedTheme();
             const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
-            // Set attributes and store preference
+            // Setel atribut dan simpan preferensi ke penyimpanan lokal
             document.documentElement.setAttribute('data-coreui-theme', targetTheme);
             localStorage.setItem(storageKey, targetTheme);
             updateIcon(targetTheme);
 
-            // Dispatch event for system integrity (like charts in background dashboard)
+            // Kirim event untuk integritas sistem (seperti grafik di dashboard latar belakang)
             const event = new Event('ColorSchemeChange');
             document.documentElement.dispatchEvent(event);
         });
     }
 
-    // 3. Horizontal Car Slider centering scale effect
+    // 3. Efek pembesaran skala tengah Slider Mobil Horizontal
     const slider = document.getElementById('car-slider');
     const slides = document.querySelectorAll('.car-slide');
     const prevBtn = document.getElementById('slide-prev');
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const setSize = slides.length / 3;
             let width = 0;
             for (let i = 0; i < setSize; i++) {
-                width += slides[i].offsetWidth + 30; // 30px gap
+                width += slides[i].offsetWidth + 30; // jarak antar kartu (gap) 30px
             }
             return width;
         };
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             slider.style.scrollBehavior = 'smooth';
         };
 
-        // Initialize position on load
+        // Inisialisasi posisi gulir saat dimuat
         setTimeout(initMiddleScroll, 150);
 
         const updateActiveSlide = () => {
@@ -133,13 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const setWidth = getSetWidth();
             if (setWidth <= 0) return;
 
-            // If scrolled into Set A (left clone set)
+            // Jika digulir masuk ke Set A (set klon sebelah kiri)
             if (slider.scrollLeft < setWidth - 50) {
                 slider.style.scrollBehavior = 'auto';
                 slider.scrollLeft = slider.scrollLeft + setWidth;
                 slider.style.scrollBehavior = 'smooth';
             }
-            // If scrolled into Set C (right clone set)
+            // Jika digulir masuk ke Set C (set klon sebelah kanan)
             else if (slider.scrollLeft >= (setWidth * 2) - 50) {
                 slider.style.scrollBehavior = 'auto';
                 slider.scrollLeft = slider.scrollLeft - setWidth;
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Scroll event listener with requestAnimationFrame and debounce for seamless loop jump
+        // Listener event scroll dengan requestAnimationFrame dan debounce untuk lompatan loop tak terbatas
         let ticking = false;
         let scrollTimeout;
         
@@ -166,14 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
         });
 
-        // Trigger initial active slide calculation
+        // Picu kalkulasi awal slide yang aktif
         setTimeout(updateActiveSlide, 200);
 
-        // Click nav buttons
+        // Pengikatan tombol navigasi panah
         if (prevBtn && nextBtn) {
             const getScrollAmount = () => {
                 if (slides.length > 0) {
-                    return slides[0].offsetWidth + 30; // Slide width + gap
+                    return slides[0].offsetWidth + 30; // Lebar slide + gap
                 }
                 return 410;
             };
