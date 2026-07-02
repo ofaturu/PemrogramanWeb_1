@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 01, 2026 at 10:48 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Jul 02, 2026 at 10:14 AM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.1.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -41,12 +41,7 @@ CREATE TABLE `kendaraan` (
 --
 
 INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`) VALUES
-(1, 14, 'Audi A8', 'roda 4', 500000, NULL),
-(2, 3, 'Daihatsu Xenia', 'roda 4', 350000, NULL),
-(3, 3, 'Daihatsu Xenia New 2025', 'roda 4', 400000, NULL),
-(5, 4, 'Kia Seltos', 'roda 4', 300000, NULL),
-(6, 8, 'Mazda Mazda 3', 'roda 4', 700000, NULL),
-(7, 6, 'Mitsubishi Galant', 'roda 4', 250000, NULL);
+(1, 14, 'Audi A8', 'roda 4', 1000000, NULL);
 
 -- --------------------------------------------------------
 
@@ -83,7 +78,8 @@ INSERT INTO `merk_kendaraan` (`id_merk`, `nama_merk`) VALUES
 (17, 'Chevrolet'),
 (18, 'Yamaha'),
 (19, 'Kawasaki'),
-(20, 'Vespa');
+(20, 'Vespa'),
+(21, 'porsche');
 
 -- --------------------------------------------------------
 
@@ -102,17 +98,6 @@ CREATE TABLE `penyewaan` (
   `bukti_pembayaran` varchar(255) DEFAULT NULL,
   `waktu_bayar` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `penyewaan`
---
-
-INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`) VALUES
-(19, 7, 1, '2026-07-01 09:21:00', '2026-07-02 09:21:00', 500000, 'sedang_disewa', 'receipt_19_1782891474.jpeg', '2026-07-01 14:37:54'),
-(20, 8, 6, '2026-07-01 09:38:00', '2026-07-02 09:38:00', 700000, 'selesai', 'receipt_20_1782891874.jpeg', '2026-07-01 14:44:34'),
-(21, 8, 1, '2026-07-01 09:51:00', '2026-07-02 09:51:00', 500000, 'selesai', 'receipt_21_1782892337.jpeg', '2026-07-01 14:52:17'),
-(22, 8, 6, '2026-07-01 09:52:00', '2026-07-24 09:52:00', 16100000, 'selesai', 'receipt_22_1782893616.jpeg', '2026-07-01 15:13:36'),
-(25, 8, 1, '2026-07-01 10:20:00', '2026-08-06 10:20:00', 18000000, 'selesai', 'receipt_25_1782894564.jpeg', '2026-07-01 15:29:24');
 
 -- --------------------------------------------------------
 
@@ -178,13 +163,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `merk_kendaraan`
 --
 ALTER TABLE `merk_kendaraan`
-  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `users`
