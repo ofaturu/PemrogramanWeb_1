@@ -36,7 +36,10 @@ CREATE TABLE `kendaraan` (
   `gambar` longblob DEFAULT NULL,
   `transmisi` varchar(20) DEFAULT 'Matic',
   `tempat_duduk` varchar(20) DEFAULT '5 Seater',
-  `bahan_bakar` varchar(30) DEFAULT 'Bensin'
+  `bahan_bakar` varchar(30) DEFAULT 'Bensin',
+  `status_kendaraan` enum('tersedia','disewa','perawatan') DEFAULT 'tersedia',
+  `stok` int(11) DEFAULT 1,
+  `warna` varchar(50) DEFAULT 'Hitam'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

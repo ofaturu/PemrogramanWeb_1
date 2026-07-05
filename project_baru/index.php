@@ -340,10 +340,20 @@ function getCarImageUrl($car) {
                             for ($set = 0; $set < 3; $set++):
                                 foreach ($vehicles as $car): 
                                     $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : '';
+                                    $status_k = strtolower(trim($car['status_kendaraan'] ?? 'tersedia'));
                                 ?>
                                     <div class="car-slide" data-jenis="<?= htmlspecialchars(strtolower($car['jenis_kendaraan'])) ?>">
                                         <div class="car-card text-start">
-                                            <div class="car-img-wrapper">
+                                            <div class="car-img-wrapper position-relative">
+                                                <!-- Status Badge (Absolute Positioned over Image) -->
+                                                <?php if ($status_k === 'disewa'): ?>
+                                                    <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-2 fw-bold" style="z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 0.75rem;"><i class="fa fa-key me-1"></i>Sedang Disewa</span>
+                                                <?php elseif ($status_k === 'perawatan'): ?>
+                                                    <span class="badge bg-danger text-white position-absolute top-0 end-0 m-3 px-3 py-2 fw-bold" style="z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 0.75rem;"><i class="fa fa-tools me-1"></i>Dalam Perawatan</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success text-white position-absolute top-0 end-0 m-3 px-3 py-2 fw-bold" style="z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 0.75rem;"><i class="fa fa-check me-1"></i>Tersedia</span>
+                                                <?php endif; ?>
+
                                                 <?php if (!empty($car_img)): ?>
                                                     <img src="<?= $car_img ?>" alt="<?= htmlspecialchars($car['nama_kendaraan']) ?>" class="car-img">
                                                 <?php else: ?>
@@ -355,11 +365,15 @@ function getCarImageUrl($car) {
                                             <div class="p-4 d-flex flex-column flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                                     <div>
-                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary mb-2 small text-uppercase"><?= htmlspecialchars($car['nama_merk'] ?? 'Premium') ?></span>
-                                                        <h5 class="fw-bold mb-0 text-truncate" style="max-width: 200px;"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
+                                                        <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                                                            <span class="badge bg-secondary bg-opacity-10 text-secondary small text-uppercase" style="font-size: 0.65rem;"><?= htmlspecialchars($car['nama_merk'] ?? 'Premium') ?></span>
+                                                            <span class="badge bg-light text-muted border small" style="font-size: 0.6rem; font-weight: normal;"><i class="fa fa-cubes me-1"></i>Stok: <?= intval($car['stok'] ?? 1) ?></span>
+                                                            <span class="badge bg-light text-muted border small" style="font-size: 0.6rem; font-weight: normal;"><i class="fa fa-palette me-1"></i><?= htmlspecialchars($car['warna'] ?? 'Hitam') ?></span>
+                                                        </div>
+                                                        <h5 class="fw-bold mb-0 text-truncate" style="max-width: 170px;"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
                                                     </div>
-                                                    <div class="text-end ms-3 flex-shrink-0">
-                                                        <span class="text-primary fw-bold fs-5">Rp <?= number_format($car['harga_per_hari'], 0, ',', '.') ?> <span class="text-muted fw-normal" style="font-size: 0.75rem;">/ Hari</span></span>
+                                                    <div class="text-end ms-2 flex-shrink-0">
+                                                        <span class="text-primary fw-bold fs-5" style="font-size: 1.1rem !important;">Rp <?= number_format($car['harga_per_hari'], 0, ',', '.') ?> <span class="text-muted fw-normal" style="font-size: 0.7rem;">/ Hari</span></span>
                                                     </div>
                                                 </div>
                                                 
@@ -379,10 +393,16 @@ function getCarImageUrl($car) {
                                                 </div>
                                                 
                                                 <div class="mt-auto">
-                                                    <?php if (isset($_SESSION['user_id'])): ?>
-                                                        <a href="sewa.php?car_code=<?= $car['kode_unik_kendaraan'] ?>" class="btn btn-outline-gold w-100 py-2">Sewa Sekarang <i class="fa fa-arrow-right ms-1"></i></a>
+                                                    <?php if ($status_k === 'disewa'): ?>
+                                                        <button class="btn btn-secondary w-100 py-2 border-0" disabled><i class="fa fa-ban me-1"></i> Sedang Disewa</button>
+                                                    <?php elseif ($status_k === 'perawatan'): ?>
+                                                        <button class="btn btn-danger bg-opacity-75 text-white w-100 py-2 border-0" disabled><i class="fa fa-tools me-1"></i> Dalam Perawatan</button>
                                                     <?php else: ?>
-                                                        <a href="login.php" class="btn btn-outline-gold w-100 py-2">Login untuk Menyewa <i class="fa fa-arrow-right ms-1"></i></a>
+                                                        <?php if (isset($_SESSION['user_id'])): ?>
+                                                            <a href="sewa.php?car_code=<?= $car['kode_unik_kendaraan'] ?>" class="btn btn-outline-gold w-100 py-2">Sewa Sekarang <i class="fa fa-arrow-right ms-1"></i></a>
+                                                        <?php else: ?>
+                                                            <a href="login.php" class="btn btn-outline-gold w-100 py-2">Login untuk Menyewa <i class="fa fa-arrow-right ms-1"></i></a>
+                                                        <?php endif; ?>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

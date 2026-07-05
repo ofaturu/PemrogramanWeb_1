@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $transmisi = trim($_POST['transmisi']       ?? 'Matic');
         $tempat_duduk = trim($_POST['tempat_duduk'] ?? '5 Seater');
         $bahan_bakar = trim($_POST['bahan_bakar']   ?? 'Bensin');
+        $status_kendaraan = trim($_POST['status_kendaraan'] ?? 'tersedia');
+        $stok = intval($_POST['stok']               ?? 1);
+        $warna = trim($_POST['warna']               ?? 'Hitam');
 
         $brand = '';
         foreach ($merk_options as $mo) {
@@ -68,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
-                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar, transmisi, tempat_duduk, bahan_bakar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, 'sisssssss', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama, $transmisi, $tempat_duduk, $bahan_bakar);
+                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar, transmisi, tempat_duduk, bahan_bakar, status_kendaraan, stok, warna) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, 'sissssssssis', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama, $transmisi, $tempat_duduk, $bahan_bakar, $status_kendaraan, $stok, $warna);
 
                 if (mysqli_stmt_execute($stmt)) {
                     header('Location: dashboard.php?msg=added');
@@ -90,6 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $transmisi_baru = trim($_POST['transmisi']   ?? 'Matic');
         $tempat_duduk_baru = trim($_POST['tempat_duduk'] ?? '5 Seater');
         $bahan_bakar_baru = trim($_POST['bahan_bakar'] ?? 'Bensin');
+        $status_kendaraan_baru = trim($_POST['status_kendaraan'] ?? 'tersedia');
+        $stok_baru = intval($_POST['stok']           ?? 1);
+        $warna_baru = trim($_POST['warna']           ?? 'Hitam');
         $error_edit_kode = $kode;
 
         $brand_baru = '';
@@ -131,8 +137,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ?, transmisi = ?, tempat_duduk = ?, bahan_bakar = ? WHERE kode_unik_kendaraan = ?");
-                mysqli_stmt_bind_param($upd, 'issssssss', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $transmisi_baru, $tempat_duduk_baru, $bahan_bakar_baru, $kode);
+                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ?, transmisi = ?, tempat_duduk = ?, bahan_bakar = ?, status_kendaraan = ?, stok = ?, warna = ? WHERE kode_unik_kendaraan = ?");
+                mysqli_stmt_bind_param($upd, 'issssssssiss', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $transmisi_baru, $tempat_duduk_baru, $bahan_bakar_baru, $status_kendaraan_baru, $stok_baru, $warna_baru, $kode);
 
                 if (mysqli_stmt_execute($upd)) {
                     header('Location: dashboard.php?msg=updated');
@@ -307,6 +313,7 @@ include 'partials/head.php';
                     <th scope="col">Kode Unik</th>
                     <th scope="col">Nama Kendaraan</th>
                     <th scope="col">Jenis</th>
+                    <th scope="col">Status</th>
                     <th scope="col">Harga / Hari</th>
                     <th scope="col" class="pe-4 text-end">Aksi</th>
                   </tr>
@@ -326,11 +333,29 @@ include 'partials/head.php';
                           <td>
                               <span class="badge bg-dark text-warning border border-warning px-2 py-1 fs-6"><?= htmlspecialchars($k['kode_unik_kendaraan']) ?></span>
                           </td>
-                          <td class="text-body fw-bold"><?= htmlspecialchars($k['nama_kendaraan']) ?></td>
+                          <td class="text-body fw-bold">
+                              <?= htmlspecialchars($k['nama_kendaraan']) ?>
+                              <div class="text-muted small mt-1" style="font-size: 0.75rem; font-weight: normal;">
+                                  <span><i class="fa fa-cubes me-1"></i>Stok: <strong><?= intval($k['stok'] ?? 1) ?></strong></span> | 
+                                  <span><i class="fa fa-palette me-1"></i>Warna: <strong><?= htmlspecialchars($k['warna'] ?? 'Hitam') ?></strong></span>
+                              </div>
+                          </td>
                           <td>
                               <span class="badge bg-info bg-opacity-10 text-info px-2 py-1">
                                     <?= (strtolower($k['jenis_kendaraan']) === 'roda 2') ? 'Roda 2' : 'Roda 4' ?>
                               </span>
+                          </td>
+                          <td>
+                              <?php
+                              $status = strtolower(trim($k['status_kendaraan'] ?? 'tersedia'));
+                              if ($status === 'disewa'):
+                                  echo '<span class="badge bg-warning text-dark px-2 py-1"><i class="fa fa-key me-1"></i>Sedang Disewa</span>';
+                              elseif ($status === 'perawatan'):
+                                  echo '<span class="badge bg-danger text-white px-2 py-1"><i class="fa fa-tools me-1"></i>Dalam Perawatan</span>';
+                              else:
+                                  echo '<span class="badge bg-success text-white px-2 py-1"><i class="fa fa-check me-1"></i>Tersedia</span>';
+                              endif;
+                              ?>
                           </td>
                           <td class="text-body fw-semibold">Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?></td>
                           <td class="pe-4 text-end">
@@ -426,6 +451,9 @@ include 'partials/head.php';
                                           $cur_transmisi = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['transmisi'] ?? ($k['transmisi'] ?? 'Matic')) : ($k['transmisi'] ?? 'Matic');
                                           $cur_tempat_duduk = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['tempat_duduk'] ?? ($k['tempat_duduk'] ?? '5 Seater')) : ($k['tempat_duduk'] ?? '5 Seater');
                                           $cur_bahan_bakar = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['bahan_bakar'] ?? ($k['bahan_bakar'] ?? 'Bensin')) : ($k['bahan_bakar'] ?? 'Bensin');
+                                          $cur_status_kendaraan = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['status_kendaraan'] ?? ($k['status_kendaraan'] ?? 'tersedia')) : ($k['status_kendaraan'] ?? 'tersedia');
+                                          $cur_stok = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['stok'] ?? ($k['stok'] ?? 1)) : ($k['stok'] ?? 1);
+                                          $cur_warna = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['warna'] ?? ($k['warna'] ?? 'Hitam')) : ($k['warna'] ?? 'Hitam');
                                           ?>
                                           
                                           <div class="col-md-4">
@@ -442,6 +470,22 @@ include 'partials/head.php';
                                           <div class="col-md-4">
                                             <label class="form-label" for="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>">Bahan Bakar *</label>
                                             <input type="text" id="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($cur_bahan_bakar) ?>" required>
+                                          </div>
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="status_<?= $k['kode_unik_kendaraan'] ?>">Status Ketersediaan *</label>
+                                            <select id="status_<?= $k['kode_unik_kendaraan'] ?>" name="status_kendaraan" class="form-select" required>
+                                              <option value="tersedia" <?= $cur_status_kendaraan === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
+                                              <option value="disewa" <?= $cur_status_kendaraan === 'disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
+                                              <option value="perawatan" <?= $cur_status_kendaraan === 'perawatan' ? 'selected' : '' ?>>Dalam Perawatan</option>
+                                            </select>
+                                          </div>
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="stok_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Stok *</label>
+                                            <input type="number" id="stok_<?= $k['kode_unik_kendaraan'] ?>" name="stok" class="form-control" min="0" value="<?= htmlspecialchars($cur_stok) ?>" required>
+                                          </div>
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="warna_<?= $k['kode_unik_kendaraan'] ?>">Warna Tersedia *</label>
+                                            <input type="text" id="warna_<?= $k['kode_unik_kendaraan'] ?>" name="warna" class="form-control" value="<?= htmlspecialchars($cur_warna) ?>" required>
                                           </div>
                                           
                                           <div class="col-12 my-3">
@@ -604,6 +648,22 @@ include 'partials/head.php';
                 <div class="col-md-4">
                   <label class="form-label" for="add_bahan_bakar">Bahan Bakar *</label>
                   <input type="text" id="add_bahan_bakar" name="bahan_bakar" class="form-control" placeholder="Contoh: Bensin, Solar, Shell V-Power" value="<?= htmlspecialchars($_POST['bahan_bakar'] ?? 'Bensin') ?>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_status">Status Ketersediaan *</label>
+                  <select id="add_status" name="status_kendaraan" class="form-select" required>
+                    <option value="tersedia" <?= ($_POST['status_kendaraan'] ?? '') === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
+                    <option value="disewa" <?= ($_POST['status_kendaraan'] ?? '') === 'disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
+                    <option value="perawatan" <?= ($_POST['status_kendaraan'] ?? '') === 'perawatan' ? 'selected' : '' ?>>Dalam Perawatan</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_stok">Jumlah Stok *</label>
+                  <input type="number" id="add_stok" name="stok" class="form-control" min="0" placeholder="Contoh: 1" value="<?= htmlspecialchars($_POST['stok'] ?? '1') ?>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_warna">Warna Tersedia *</label>
+                  <input type="text" id="add_warna" name="warna" class="form-control" placeholder="Contoh: Hitam, Putih, Merah" value="<?= htmlspecialchars($_POST['warna'] ?? 'Hitam') ?>" required>
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="add_gambar">Upload Gambar Kendaraan (Opsional)</label>
