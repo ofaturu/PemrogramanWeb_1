@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 02, 2026 at 10:14 AM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.1.12
+-- Generation Time: Jul 05, 2026 at 10:53 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -46,8 +46,35 @@ CREATE TABLE `kendaraan` (
 -- Dumping data for table `kendaraan`
 --
 
-INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`) VALUES
-(1, 14, 'Audi A8', 'roda 4', 1000000, NULL);
+INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`, `transmisi`, `tempat_duduk`, `bahan_bakar`, `status_kendaraan`, `stok`, `warna`) VALUES
+(1, 14, 'Audi A8', 'roda 4', 1000000, 0x61382e6a7067, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(2, 12, 'BMW M4', 'roda 4', 750000, 0x6d342e77656270, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(3, 1, 'Honda NSX', 'roda 4', 2500000, 0x6e73782e6a7067, 'Matic', '5 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(4, 2, 'Toyota GR Supra', 'roda 4', 3000000, 0x67725f73757072612e6a7067, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(5, 8, 'Mazda RX 7', 'roda 4', 2000000, 0x72785f372e6a7067, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(7, 6, 'Mitsubishi Lancer Evo X', 'roda 4', 1000000, 0x6c616e6365725f65766f5f782e77656270, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(8, 7, 'Nissan GTR R35', 'roda 4', 3500000, 0x6774725f7233352e6a7067, 'Matic', '5 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(9, 18, 'Yamaha R1M', 'roda 2', 500000, 0x72316d2e6a7067, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `landing_settings`
+--
+
+CREATE TABLE `landing_settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `landing_settings`
+--
+
+INSERT INTO `landing_settings` (`setting_key`, `setting_value`) VALUES
+('hero_image', 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80'),
+('hero_subtitle', 'Nikmati kenyamanan berkendara terbaik dengan armada mobil mewah dan pelayanan VIP yang dirancang khusus untuk memenuhi standar eksklusivitas Anda.'),
+('hero_title', 'Eksplorasi Perjalanan Kelas Dunia Bersama Kami.');
 
 -- --------------------------------------------------------
 
@@ -85,7 +112,7 @@ INSERT INTO `merk_kendaraan` (`id_merk`, `nama_merk`) VALUES
 (18, 'Yamaha'),
 (19, 'Kawasaki'),
 (20, 'Vespa'),
-(21, 'porsche');
+(21, 'Porsche');
 
 -- --------------------------------------------------------
 
@@ -104,6 +131,17 @@ CREATE TABLE `penyewaan` (
   `bukti_pembayaran` varchar(255) DEFAULT NULL,
   `waktu_bayar` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `penyewaan`
+--
+
+INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`) VALUES
+(31, 1, 3, '2026-07-05 10:23:00', '2026-07-06 10:23:00', 2500000, 'sedang_disewa', NULL, NULL),
+(32, 8, 1, '2026-07-05 10:24:00', '2026-07-06 10:24:00', 1000000, 'sedang_disewa', 'bukti pembayaran_ofaturu_32.png', '2026-07-05 15:24:47'),
+(33, 8, 3, '2026-07-05 10:29:00', '2026-07-06 10:29:00', 2500000, 'sedang_disewa', 'bukti pembayaran_ofaturu_33.jpg', '2026-07-05 15:29:50'),
+(35, 8, 8, '2026-07-05 10:44:00', '2026-07-06 10:44:00', 3500000, 'sedang_disewa', 'bukti pembayaran_ofaturu_35.jpg', '2026-07-05 15:44:30'),
+(37, 8, 1, '2026-07-05 10:48:00', '2026-07-06 10:48:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_37.jpg', '2026-07-05 15:49:04');
 
 -- --------------------------------------------------------
 
@@ -141,6 +179,12 @@ ALTER TABLE `kendaraan`
   ADD KEY `id_merk` (`id_merk`);
 
 --
+-- Indexes for table `landing_settings`
+--
+ALTER TABLE `landing_settings`
+  ADD PRIMARY KEY (`setting_key`);
+
+--
 -- Indexes for table `merk_kendaraan`
 --
 ALTER TABLE `merk_kendaraan`
@@ -166,6 +210,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `kendaraan`
+--
+ALTER TABLE `kendaraan`
+  MODIFY `kode_unik_kendaraan` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
 -- AUTO_INCREMENT for table `merk_kendaraan`
 --
 ALTER TABLE `merk_kendaraan`
@@ -175,7 +225,7 @@ ALTER TABLE `merk_kendaraan`
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `users`
