@@ -341,52 +341,17 @@ h6 {
     justify-content: space-between;
 }
 
-.car-spec-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.spec-item-premium {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.spec-icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: rgba(13, 148, 136, 0.1);
-    color: #0d9488;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.spec-text-box {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-}
-
-.spec-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
+.car-spec-item {
+    font-size: 0.82rem;
     color: var(--text-muted);
-    letter-spacing: 0.05em;
-    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
 }
 
-.spec-value {
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--text-main);
+.car-spec-item i {
+    color: var(--accent-gold);
 }
 
 /* --- HOW IT WORKS STEP --- */

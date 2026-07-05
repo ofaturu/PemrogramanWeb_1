@@ -61,9 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mkdir($upload_dir, 0777, true);
             }
             
-            // Generate filename based on user's name: "bukti pembayaran_namapenyewa"
-            $nama_penyewa = preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', strtolower($rental['nama_user'])));
-            $new_filename = 'bukti pembayaran_' . $nama_penyewa . '.' . $file_ext;
+            // Generate customized filename: bukti pembayaran_namapenyewa_idsewa
+            $sanitized_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $rental['nama_user']));
+            $new_filename = 'bukti pembayaran_' . $sanitized_name . '_' . $id_sewa . '.' . $file_ext;
             if (move_uploaded_file($file_tmp, $upload_dir . '/' . $new_filename)) {
                 // Update database
                 $upd_stmt = mysqli_prepare($mysqli, "UPDATE penyewaan SET bukti_pembayaran = ?, waktu_bayar = NOW() WHERE id_sewa = ?");

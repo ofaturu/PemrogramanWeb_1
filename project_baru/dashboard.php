@@ -11,11 +11,6 @@ $error_add = '';
 $error_edit = '';
 $error_edit_kode = '';
 
-function make_filename_safe($string) {
-    $string = strtolower(trim($string));
-    return preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $string));
-}
-
 $merk_options = [];
 $res_merk = mysqli_query($mysqli, "SELECT id_merk, nama_merk FROM merk_kendaraan ORDER BY nama_merk ASC");
 if ($res_merk) {
@@ -64,8 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $gambar_nama = null;
                 if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
                     $tmp = $_FILES['gambar']['tmp_name'];
-                    $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
-                    $gambar_nama = make_filename_safe($model) . '.' . $ext;
+                    $ext = strtolower(pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION));
+                    $sanitized_model = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $model));
+                    $gambar_nama = $sanitized_model . '.' . $ext;
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
@@ -117,11 +113,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $gambar_baru = $kendaraan_edit['gambar'];
                 if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
                     $tmp = $_FILES['gambar']['tmp_name'];
-                    $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
-                    $nama_file_baru = make_filename_safe($model_baru) . '.' . $ext;
+                    $ext = strtolower(pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION));
+                    $sanitized_model = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $model_baru));
+                    $nama_file_baru = $sanitized_model . '.' . $ext;
                     
                     if (move_uploaded_file($tmp, 'uploads/' . $nama_file_baru)) {
-                        if (!empty($kendaraan_edit['gambar']) && file_exists('uploads/' . $kendaraan_edit['gambar'])) {
+                        if (!empty($kendaraan_edit['gambar']) && file_exists('uploads/' . $kendaraan_edit['gambar']) && $kendaraan_edit['gambar'] !== $nama_file_baru) {
                             unlink('uploads/' . $kendaraan_edit['gambar']);
                         }
                         $gambar_baru = $nama_file_baru;
