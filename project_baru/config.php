@@ -60,6 +60,4 @@ if ($check_empty) {
         ('hero_image', 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80')");
     }
 }
-
 ?>
-<!-- tes -->
