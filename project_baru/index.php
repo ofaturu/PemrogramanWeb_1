@@ -365,13 +365,13 @@ function getCarImageUrl($car) {
                                                 
                                                 <div class="row g-2 mb-4">
                                                     <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-cogs"></i> Otomatis
+                                                        <i class="fa fa-cogs"></i> <?= htmlspecialchars($car['transmisi'] ?? 'Matic') ?>
                                                     </div>
                                                     <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-user"></i> 2 Seater
+                                                        <i class="fa fa-user"></i> <?= htmlspecialchars($car['tempat_duduk'] ?? '5 Seater') ?>
                                                     </div>
                                                     <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-gas-pump"></i> Shell V-Power
+                                                        <i class="fa fa-gas-pump"></i> <?= htmlspecialchars($car['bahan_bakar'] ?? 'Bensin') ?>
                                                     </div>
                                                     <div class="col-6 car-spec-item">
                                                         <i class="fa fa-shield-alt"></i> Asuransi

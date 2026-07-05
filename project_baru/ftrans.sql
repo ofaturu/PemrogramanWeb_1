@@ -33,7 +33,10 @@ CREATE TABLE `kendaraan` (
   `nama_kendaraan` varchar(50) DEFAULT NULL,
   `jenis_kendaraan` enum('roda 2','roda 4') DEFAULT NULL,
   `harga_per_hari` int(10) DEFAULT NULL,
-  `gambar` longblob DEFAULT NULL
+  `gambar` longblob DEFAULT NULL,
+  `transmisi` varchar(20) DEFAULT 'Matic',
+  `tempat_duduk` varchar(20) DEFAULT '5 Seater',
+  `bahan_bakar` varchar(30) DEFAULT 'Bensin'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

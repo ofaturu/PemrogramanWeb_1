@@ -32,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $model = trim($_POST['model_kendaraan']     ?? '');
         $jenis = trim($_POST['jenis_kendaraan']     ?? '');
         $harga = $_POST['harga_per_hari']           ?? '';
+        $transmisi = trim($_POST['transmisi']       ?? 'Matic');
+        $tempat_duduk = trim($_POST['tempat_duduk'] ?? '5 Seater');
+        $bahan_bakar = trim($_POST['bahan_bakar']   ?? 'Bensin');
 
         $brand = '';
         foreach ($merk_options as $mo) {
@@ -65,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
-                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, 'sissss', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama);
+                $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar, transmisi, tempat_duduk, bahan_bakar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, 'sisssssss', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama, $transmisi, $tempat_duduk, $bahan_bakar);
 
                 if (mysqli_stmt_execute($stmt)) {
                     header('Location: dashboard.php?msg=added');
@@ -84,6 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $model_baru = trim($_POST['model_kendaraan'] ?? '');
         $jenis_baru = trim($_POST['jenis_kendaraan'] ?? '');
         $harga_baru = $_POST['harga_per_hari']       ?? '';
+        $transmisi_baru = trim($_POST['transmisi']   ?? 'Matic');
+        $tempat_duduk_baru = trim($_POST['tempat_duduk'] ?? '5 Seater');
+        $bahan_bakar_baru = trim($_POST['bahan_bakar'] ?? 'Bensin');
         $error_edit_kode = $kode;
 
         $brand_baru = '';
@@ -125,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
-                mysqli_stmt_bind_param($upd, 'isssss', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
+                $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ?, transmisi = ?, tempat_duduk = ?, bahan_bakar = ? WHERE kode_unik_kendaraan = ?");
+                mysqli_stmt_bind_param($upd, 'issssssss', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $transmisi_baru, $tempat_duduk_baru, $bahan_bakar_baru, $kode);
 
                 if (mysqli_stmt_execute($upd)) {
                     header('Location: dashboard.php?msg=updated');
@@ -415,6 +421,29 @@ include 'partials/head.php';
                                             <label class="form-label" for="harga_<?= $k['kode_unik_kendaraan'] ?>">Harga per Hari (Rp) *</label>
                                             <input type="number" id="harga_<?= $k['kode_unik_kendaraan'] ?>" name="harga_per_hari" class="form-control" min="0" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['harga_per_hari'] ?? $k['harga_per_hari']) : $k['harga_per_hari']) ?>" required>
                                           </div>
+                                          
+                                          <?php
+                                          $cur_transmisi = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['transmisi'] ?? ($k['transmisi'] ?? 'Matic')) : ($k['transmisi'] ?? 'Matic');
+                                          $cur_tempat_duduk = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['tempat_duduk'] ?? ($k['tempat_duduk'] ?? '5 Seater')) : ($k['tempat_duduk'] ?? '5 Seater');
+                                          $cur_bahan_bakar = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['bahan_bakar'] ?? ($k['bahan_bakar'] ?? 'Bensin')) : ($k['bahan_bakar'] ?? 'Bensin');
+                                          ?>
+                                          
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="transmisi_<?= $k['kode_unik_kendaraan'] ?>">Transmisi *</label>
+                                            <select id="transmisi_<?= $k['kode_unik_kendaraan'] ?>" name="transmisi" class="form-select" required>
+                                              <option value="Matic" <?= $cur_transmisi === 'Matic' ? 'selected' : '' ?>>Matic</option>
+                                              <option value="Manual" <?= $cur_transmisi === 'Manual' ? 'selected' : '' ?>>Manual</option>
+                                            </select>
+                                          </div>
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Seat *</label>
+                                            <input type="text" id="tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>" name="tempat_duduk" class="form-control" value="<?= htmlspecialchars($cur_tempat_duduk) ?>" required>
+                                          </div>
+                                          <div class="col-md-4">
+                                            <label class="form-label" for="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>">Bahan Bakar *</label>
+                                            <input type="text" id="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($cur_bahan_bakar) ?>" required>
+                                          </div>
+                                          
                                           <div class="col-12 my-3">
                                             <label class="form-label d-block">Gambar Saat Ini</label>
                                             <?php if (!empty($k['gambar']) && file_exists('uploads/' . $k['gambar'])): ?>
@@ -560,6 +589,21 @@ include 'partials/head.php';
                 <div class="col-md-6">
                   <label class="form-label" for="add_harga">Harga per Hari (Rp) *</label>
                   <input type="number" id="add_harga" name="harga_per_hari" class="form-control" placeholder="Contoh: 150000" min="0" value="<?= htmlspecialchars($_POST['harga_per_hari'] ?? '') ?>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_transmisi">Transmisi *</label>
+                  <select id="add_transmisi" name="transmisi" class="form-select" required>
+                    <option value="Matic" <?= ($_POST['transmisi'] ?? '') === 'Matic' ? 'selected' : '' ?>>Matic</option>
+                    <option value="Manual" <?= ($_POST['transmisi'] ?? '') === 'Manual' ? 'selected' : '' ?>>Manual</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_tempat_duduk">Jumlah Seat *</label>
+                  <input type="text" id="add_tempat_duduk" name="tempat_duduk" class="form-control" placeholder="Contoh: 5 Seater, 2 Seater" value="<?= htmlspecialchars($_POST['tempat_duduk'] ?? '5 Seater') ?>" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="add_bahan_bakar">Bahan Bakar *</label>
+                  <input type="text" id="add_bahan_bakar" name="bahan_bakar" class="form-control" placeholder="Contoh: Bensin, Solar, Shell V-Power" value="<?= htmlspecialchars($_POST['bahan_bakar'] ?? 'Bensin') ?>" required>
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="add_gambar">Upload Gambar Kendaraan (Opsional)</label>
