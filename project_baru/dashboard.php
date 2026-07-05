@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $stmt = mysqli_prepare($mysqli, "INSERT INTO kendaraan (kode_unik_kendaraan, id_merk, nama_kendaraan, jenis_kendaraan, harga_per_hari, gambar) VALUES (?, ?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, 'sisssd', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama);
+                mysqli_stmt_bind_param($stmt, 'sissss', $kode, $id_merk, $nama, $jenis, $harga, $gambar_nama);
 
                 if (mysqli_stmt_execute($stmt)) {
                     header('Location: dashboard.php?msg=added');
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $upd = mysqli_prepare($mysqli, "UPDATE kendaraan SET id_merk = ?, nama_kendaraan = ?, jenis_kendaraan = ?, harga_per_hari = ?, gambar = ? WHERE kode_unik_kendaraan = ?");
-                mysqli_stmt_bind_param($upd, 'isssds', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
+                mysqli_stmt_bind_param($upd, 'isssss', $id_merk_baru, $nama_baru, $jenis_baru, $harga_baru, $gambar_baru, $kode);
 
                 if (mysqli_stmt_execute($upd)) {
                     header('Location: dashboard.php?msg=updated');
