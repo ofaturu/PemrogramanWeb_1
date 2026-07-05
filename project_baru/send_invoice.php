@@ -115,6 +115,7 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
     // 3. CONFIGURE PHPMailer WITH SMTP SETTINGS
     // ---------------------------------------------------------
     $mail = new PHPMailer(true);
+    $mail->SMTPDebug  = 0;
     
     $mail->isSMTP();
     $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
