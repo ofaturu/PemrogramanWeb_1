@@ -1,7 +1,7 @@
 <div class="sidebar sidebar-dark sidebar-fixed border-end" id="sidebar">
   <div class="sidebar-header border-bottom">
     <div class="sidebar-brand me-auto">
-      <a href="dashboard.php" class="text-decoration-none text-white d-flex align-items-center gap-2">
+      <a href="index.php" class="text-decoration-none text-white d-flex align-items-center gap-2">
         <i class="fa fa-car fa-lg text-primary"></i>
         <span class="fs-4 fw-bold">FTrans</span>
       </a>
@@ -35,6 +35,7 @@
         My Profile
       </a>
     </li>
+
     <li class="nav-divider"></li>
     <li class="nav-item">
       <a class="nav-link text-danger" href="logout.php">

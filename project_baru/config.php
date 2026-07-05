@@ -42,5 +42,24 @@ if (!$mysqli) {
 
 mysqli_set_charset($mysqli, 'utf8');
 
+// Buat tabel landing_settings secara otomatis jika belum ada
+mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `landing_settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+// Isi data default jika tabel masih kosong
+$check_empty = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM landing_settings");
+if ($check_empty) {
+    $row = mysqli_fetch_assoc($check_empty);
+    if ($row['count'] == 0) {
+        mysqli_query($mysqli, "INSERT INTO `landing_settings` (`setting_key`, `setting_value`) VALUES
+        ('hero_title', 'Eksplorasi Perjalanan Kelas Dunia Bersama Kami.'),
+        ('hero_subtitle', 'Nikmati kenyamanan berkendara terbaik dengan armada mobil mewah dan pelayanan VIP yang dirancang khusus untuk memenuhi standar eksklusivitas Anda.'),
+        ('hero_image', 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=1000&q=80')");
+    }
+}
+
 ?>
 <!-- tes -->

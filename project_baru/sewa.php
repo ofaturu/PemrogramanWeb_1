@@ -231,9 +231,14 @@ $total = count($rentals);
 
 $msg = $_GET['msg'] ?? '';
 
+// Retrieve and sanitize GET parameters from landing page
+$get_car_code = isset($_GET['car_code']) ? intval($_GET['car_code']) : '';
+$get_tgl_sewa = isset($_GET['tanggal_sewa']) ? trim($_GET['tanggal_sewa']) : '';
+$get_tgl_kembali = isset($_GET['tanggal_kembali']) ? trim($_GET['tanggal_kembali']) : '';
+
 // Default values for dates in Add modal
-$default_sewa = date('Y-m-d\TH:i');
-$default_kembali = date('Y-m-d\TH:i', strtotime('+1 day'));
+$default_sewa = !empty($get_tgl_sewa) ? date('Y-m-d\TH:i', strtotime($get_tgl_sewa)) : date('Y-m-d\TH:i');
+$default_kembali = !empty($get_tgl_kembali) ? date('Y-m-d\TH:i', strtotime($get_tgl_kembali)) : date('Y-m-d\TH:i', strtotime('+1 day'));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -647,9 +652,9 @@ include 'partials/head.php';
                 <div class="col-md-6">
                   <label class="form-label" for="add_kode_unik">Kendaraan *</label>
                   <select id="add_kode_unik" name="kode_unik_kendaraan" class="form-select" required>
-                    <option value="" disabled selected>-- Pilih Kendaraan --</option>
+                    <option value="" disabled <?= empty($_POST['kode_unik_kendaraan'] ?? $get_car_code) ? 'selected' : '' ?>>-- Pilih Kendaraan --</option>
                     <?php foreach ($vehicles as $k): ?>
-                      <option value="<?= $k['kode_unik_kendaraan'] ?>" data-price="<?= $k['harga_per_hari'] ?>" <?= ($_POST['kode_unik_kendaraan'] ?? '') == $k['kode_unik_kendaraan'] ? 'selected' : '' ?>>
+                      <option value="<?= $k['kode_unik_kendaraan'] ?>" data-price="<?= $k['harga_per_hari'] ?>" <?= (($_POST['kode_unik_kendaraan'] ?? $get_car_code) == $k['kode_unik_kendaraan']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($k['nama_kendaraan']) ?> (Kode: <?= $k['kode_unik_kendaraan'] ?>) - Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?>/hari
                       </option>
                     <?php endforeach; ?>
@@ -762,6 +767,8 @@ include 'partials/head.php';
           vehicleSelect.addEventListener('change', calculateTotal);
           dateSewa.addEventListener('change', calculateTotal);
           dateKembali.addEventListener('change', calculateTotal);
+          // Trigger initial calculation if prefilled on page load
+          calculateTotal();
         }
       })();
 
@@ -776,8 +783,8 @@ include 'partials/head.php';
         }, 3000);
         <?php endif; ?>
 
-        // 2. Open Add Modal on validation error
-        <?php if (!empty($error_add)): ?>
+        // 2. Open Add Modal on validation error or if redirected with booking parameters
+        <?php if (!empty($error_add) || !empty($get_car_code)): ?>
         const addModal = new coreui.Modal(document.getElementById('addSewaModal'));
         addModal.show();
         <?php endif; ?>
