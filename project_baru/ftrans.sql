@@ -61,12 +61,24 @@ CREATE TABLE `merk_kendaraan` (
 INSERT INTO `merk_kendaraan` (`id_merk`, `nama_merk`) VALUES
 (1, 'honda'),
 (2, 'toyota'),
+(3, 'daihatsu'),
+(4, 'kia'),
+(5, 'Suzuki'),
 (6, 'Mitsubishi'),
 (7, 'Nissan'),
 (8, 'Mazda'),
+(9, 'Isuzu'),
+(10, 'Wuling'),
+(11, 'Hyundai'),
 (12, 'BMW'),
 (13, 'Mercedes-Benz'),
 (14, 'Audi'),
+(15, 'Volkswagen'),
+(16, 'Ford'),
+(17, 'Chevrolet'),
+(18, 'Yamaha'),
+(19, 'Kawasaki'),
+(20, 'Vespa'),
 (21, 'porsche');
 
 -- --------------------------------------------------------

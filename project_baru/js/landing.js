@@ -186,5 +186,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 slider.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
             });
         }
+
+        // 4. Mekanisme Penyaringan Kategori Armada (Mobil vs Motor)
+        const filterButtons = document.querySelectorAll('.btn-filter');
+        if (filterButtons.length > 0) {
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Hapus kelas aktif dari semua tombol filter
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    // Tambah kelas aktif ke tombol yang diklik
+                    btn.classList.add('active');
+                    
+                    const filterValue = btn.getAttribute('data-filter');
+                    
+                    // Sembunyikan atau tampilkan slide berdasarkan jenis
+                    slides.forEach(slide => {
+                        const jenis = slide.getAttribute('data-jenis');
+                        if (filterValue === 'all' || jenis === filterValue) {
+                            slide.style.display = 'block';
+                        } else {
+                            slide.style.display = 'none';
+                        }
+                    });
+                    
+                    // Kembalikan slider ke awal tengah jika semua, atau ke ujung kiri jika difilter
+                    if (filterValue === 'all') {
+                        initMiddleScroll();
+                    } else {
+                        slider.style.scrollBehavior = 'auto';
+                        slider.scrollLeft = 0;
+                        slider.style.scrollBehavior = 'smooth';
+                    }
+                    
+                    // Perbarui slide aktif setelah perubahan filter
+                    setTimeout(updateActiveSlide, 100);
+                });
+            });
+        }
     }
 });

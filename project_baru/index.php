@@ -31,6 +31,34 @@ if ($mysqli) {
     }
 }
 
+// Ambil data statistik dari database untuk integrasi dengan dashboard
+$total_armada = 0;
+$transaksi_sukses = 0;
+$pelanggan_aktif = 0;
+
+if ($mysqli) {
+    // Total armada
+    $res_armada = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM kendaraan");
+    if ($res_armada) {
+        $row = mysqli_fetch_assoc($res_armada);
+        $total_armada = $row['count'] ?? 0;
+    }
+
+    // Transaksi sukses (sedang disewa atau selesai)
+    $res_transaksi = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM penyewaan WHERE status IN ('sedang_disewa', 'selesai')");
+    if ($res_transaksi) {
+        $row = mysqli_fetch_assoc($res_transaksi);
+        $transaksi_sukses = $row['count'] ?? 0;
+    }
+
+    // Member aktif
+    $res_pelanggan = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM users WHERE role = 'user'");
+    if ($res_pelanggan) {
+        $row = mysqli_fetch_assoc($res_pelanggan);
+        $pelanggan_aktif = $row['count'] ?? 0;
+    }
+}
+
 // Petakan jenis dan merk kendaraan ke gambar stock berkualitas tinggi
 function getCarImageUrl($car) {
     $brand = strtolower(trim($car['nama_merk'] ?? ''));
@@ -103,8 +131,8 @@ function getCarImageUrl($car) {
             <a class="navbar-brand brand-logo" href="index.php">
                 <i class="fa fa-car me-2"></i>F<span>Trans</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-coreui-toggle="collapse" data-coreui-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler border-0 shadow-none text-main" type="button" data-coreui-toggle="collapse" data-coreui-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
@@ -125,15 +153,53 @@ function getCarImageUrl($car) {
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
-                    <!-- Theme Toggle Switcher -->
-                    <button class="btn-theme-toggle" id="theme-toggle-btn" title="Ganti Tema">
-                        <i class="fas fa-moon" id="theme-icon"></i>
-                    </button>
-                    
+                    <!-- CoreUI Theme Selector Dropdown (Unified with Dashboard) -->
+                    <div class="dropdown">
+                        <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center text-main border-0 bg-transparent shadow-none" type="button" aria-expanded="false" data-coreui-toggle="dropdown" title="Ganti Tema">
+                            <i class="fas fa-adjust fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-secondary border-opacity-25" style="background: var(--bg-card);">
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="light">
+                                    <i class="fas fa-sun text-warning"></i> Terang
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="dark">
+                                    <i class="fas fa-moon text-primary"></i> Gelap
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="auto">
+                                    <i class="fas fa-magic text-info"></i> Otomatis
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <a href="dashboard.php" class="btn btn-outline-gold btn-sm px-4">
-                            <i class="fa fa-user me-1"></i> Dashboard
-                        </a>
+                        <!-- User Dropdown Menu (Unified with Dashboard) -->
+                        <div class="dropdown">
+                            <a class="nav-link py-0 pe-0 d-flex align-items-center gap-2 dropdown-toggle text-decoration-none shadow-none" data-coreui-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                                <div class="avatar avatar-md border border-secondary bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width:36px; height:36px; border-radius:50%;">
+                                    <?= strtoupper(substr(htmlspecialchars($_SESSION['user_nama'] ?? 'U'), 0, 1)) ?>
+                                </div>
+                                <span class="d-none d-md-inline-block text-main fw-semibold"><?= htmlspecialchars($_SESSION['user_nama'] ?? 'User') ?></span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end pt-0 shadow-sm border border-secondary border-opacity-25" style="background: var(--bg-card); overflow: hidden;">
+                                <div class="dropdown-header text-body-secondary fw-semibold bg-body-secondary bg-opacity-25 py-2 px-3 mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Menu Utama</div>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-main" href="dashboard.php">
+                                    <i class="fa fa-table text-muted"></i> Data Kendaraan
+                                </a>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-main" href="profile.php">
+                                    <i class="fa fa-user-edit text-muted"></i> My Profile
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="logout.php">
+                                    <i class="fa fa-sign-out-alt text-danger"></i> Log Out
+                                </a>
+                            </div>
+                        </div>
                     <?php else: ?>
                         <a href="login.php" class="btn btn-outline-gold btn-sm px-4">Sign In</a>
                         <a href="register.php" class="btn btn-gold btn-sm px-4">Sign Up</a>
@@ -202,6 +268,39 @@ function getCarImageUrl($car) {
         </div>
     </div>
 
+    <!-- --- STATS SECTION --- -->
+    <div class="container mt-5 pt-3">
+        <div class="row g-4 justify-content-center text-center">
+            <div class="col-md-4 reveal">
+                <div class="stats-card">
+                    <div class="stats-icon-wrapper">
+                        <i class="fa fa-car-side"></i>
+                    </div>
+                    <h2 class="stats-number fw-extrabold mt-3"><?= number_format($total_armada) ?></h2>
+                    <p class="stats-label text-muted mb-0">Armada Mewah Tersedia</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal">
+                <div class="stats-card">
+                    <div class="stats-icon-wrapper">
+                        <i class="fa fa-handshake"></i>
+                    </div>
+                    <h2 class="stats-number fw-extrabold mt-3"><?= number_format($transaksi_sukses) ?>+</h2>
+                    <p class="stats-label text-muted mb-0">Transaksi Sewa Sukses</p>
+                </div>
+            </div>
+            <div class="col-md-4 reveal">
+                <div class="stats-card">
+                    <div class="stats-icon-wrapper">
+                        <i class="fa fa-user-check"></i>
+                    </div>
+                    <h2 class="stats-number fw-extrabold mt-3"><?= number_format($pelanggan_aktif) ?>+</h2>
+                    <p class="stats-label text-muted mb-0">Pelanggan Aktif Terdaftar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- --- FLEET SECTION --- -->
     <section class="py-5 mt-5" id="armada">
         <div class="container py-4">
@@ -210,6 +309,13 @@ function getCarImageUrl($car) {
                 <h2 class="fw-bold mt-2">Armada Mobil Mewah Kami</h2>
                 <div class="mx-auto bg-primary" style="width: 60px; height: 3px; border-radius: 2px;"></div>
                 <p class="text-muted mt-3 max-w-2xl mx-auto">Kami menyediakan berbagai tipe kendaraan premium berkualitas tinggi yang selalu prima dan siap menemani perjalanan penting Anda.</p>
+            </div>
+
+            <!-- Category Filter Buttons -->
+            <div class="d-flex justify-content-center gap-2 mb-4 mt-n2 reveal">
+                <button class="btn btn-outline-gold px-4 py-2 active btn-filter" data-filter="all">Semua Armada</button>
+                <button class="btn btn-outline-gold px-4 py-2 btn-filter" data-filter="roda 4"><i class="fa fa-car me-2"></i> Mobil (Roda 4)</button>
+                <button class="btn btn-outline-gold px-4 py-2 btn-filter" data-filter="roda 2"><i class="fa fa-motorcycle me-2"></i> Motor (Roda 2)</button>
             </div>
 
             <div class="position-relative reveal">
@@ -235,7 +341,7 @@ function getCarImageUrl($car) {
                                 foreach ($vehicles as $car): 
                                     $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : '';
                                 ?>
-                                    <div class="car-slide">
+                                    <div class="car-slide" data-jenis="<?= htmlspecialchars(strtolower($car['jenis_kendaraan'])) ?>">
                                         <div class="car-card text-start">
                                             <div class="car-img-wrapper">
                                                 <?php if (!empty($car_img)): ?>
