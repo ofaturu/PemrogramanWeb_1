@@ -31,36 +31,45 @@ if ($mysqli) {
     }
 }
 
-// Petakan merk kendaraan ke gambar stock berkualitas tinggi
-function getBrandImageUrl($brand) {
-    $brand = strtolower(trim($brand));
+// Petakan jenis dan merk kendaraan ke gambar stock berkualitas tinggi
+function getCarImageUrl($car) {
+    $brand = strtolower(trim($car['nama_merk'] ?? ''));
+    $name = strtolower(trim($car['nama_kendaraan'] ?? ''));
+    $jenis = strtolower(trim($car['jenis_kendaraan'] ?? ''));
     
-    if (strpos($brand, 'audi') !== false) {
-        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi R8
-    } elseif (strpos($brand, 'bmw') !== false) {
+    // 1. Roda 2 (Motorcycle)
+    if ($jenis === 'roda 2') {
+        if (strpos($name, 'vespa') !== false) {
+            return 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80'; // Vespa Scooter
+        }
+        return 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80'; // Premium Motorcycle
+    }
+    
+    // 2. Roda 4 (Car)
+    if ($brand === 'audi') {
+        // Audi A8 is a luxury sedan, not R8 supercar
+        if (strpos($name, 'a8') !== false || strpos($name, 'sedan') !== false || strpos($name, 'a6') !== false) {
+            return 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=800&q=80'; // Audi Sedan (A8 style)
+        }
+        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi R8 Supercar
+    } elseif ($brand === 'bmw') {
         return 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'; // BMW M8
-    } elseif (strpos($brand, 'honda') !== false) {
+    } elseif ($brand === 'honda') {
         return 'https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=800&q=80'; // Honda NSX
-    } elseif (strpos($brand, 'toyota') !== false) {
+    } elseif ($brand === 'toyota') {
         return 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=80'; // Toyota GR Supra / Land Cruiser
-    } elseif (strpos($brand, 'mitsubishi') !== false) {
+    } elseif ($brand === 'mitsubishi') {
         return 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=800&q=80'; // Mitsubishi Lancer Evolution X
-    } elseif (strpos($brand, 'nissan') !== false) {
+    } elseif ($brand === 'nissan') {
         return 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80'; // Nissan GT-R
-    } elseif (strpos($brand, 'mazda') !== false) {
+    } elseif ($brand === 'mazda') {
         return 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80'; // Mazda RX-7
-    } elseif (strpos($brand, 'mercedes') !== false || strpos($brand, 'benz') !== false) {
+    } elseif ($brand === 'mercedes' || $brand === 'benz' || $brand === 'mercedes-benz') {
         return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80'; // Mercedes-Benz AMG GT
-    } elseif (strpos($brand, 'porsche') !== false) {
+    } elseif ($brand === 'porsche') {
         return 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80'; // Porsche 911 GT3 RS
-    } elseif (strpos($brand, 'ford') !== false) {
+    } elseif ($brand === 'ford') {
         return 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80'; // Ford Mustang
-    } elseif (strpos($brand, 'daihatsu') !== false) {
-        return 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'; // Daihatsu
-    } elseif (strpos($brand, 'kia') !== false) {
-        return 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'; // Kia
-    } elseif (strpos($brand, 'suzuki') !== false) {
-        return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80'; // Suzuki
     }
     
     // Default luxury car image
@@ -224,12 +233,18 @@ function getBrandImageUrl($brand) {
                             // Render tiga set daftar kendaraan untuk mendukung perulangan scroll tak terbatas (infinite loop)
                             for ($set = 0; $set < 3; $set++):
                                 foreach ($vehicles as $car): 
-                                    $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : getBrandImageUrl($car['nama_merk'] ?? '');
+                                    $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : '';
                                 ?>
                                     <div class="car-slide">
                                         <div class="car-card text-start">
                                             <div class="car-img-wrapper">
-                                                <img src="<?= $car_img ?>" alt="<?= htmlspecialchars($car['nama_kendaraan']) ?>" class="car-img">
+                                                <?php if (!empty($car_img)): ?>
+                                                    <img src="<?= $car_img ?>" alt="<?= htmlspecialchars($car['nama_kendaraan']) ?>" class="car-img">
+                                                <?php else: ?>
+                                                    <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-body-secondary text-muted opacity-50">
+                                                        <i class="fa fa-image fa-3x mb-2"></i>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="p-4 d-flex flex-column flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-start mb-3">
