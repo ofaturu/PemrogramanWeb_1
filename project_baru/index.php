@@ -264,10 +264,10 @@ function getCarImageUrl($car) {
                                                     <div class="col-6 car-spec-item">
                                                         <i class="fa fa-user"></i> 2 Seater
                                                     </div>
-                                                    <div class="col-7 car-spec-item">
+                                                    <div class="col-6 car-spec-item">
                                                         <i class="fa fa-gas-pump"></i> Shell V-Power
                                                     </div>
-                                                    <div class="col-5 car-spec-item">
+                                                    <div class="col-6 car-spec-item">
                                                         <i class="fa fa-shield-alt"></i> Asuransi
                                                     </div>
                                                 </div>
