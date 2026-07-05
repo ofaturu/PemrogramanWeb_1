@@ -367,8 +367,8 @@ function getCarImageUrl($car) {
                                                     <div>
                                                         <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
                                                             <span class="badge bg-secondary bg-opacity-10 text-secondary small text-uppercase" style="font-size: 0.65rem;"><?= htmlspecialchars($car['nama_merk'] ?? 'Premium') ?></span>
-                                                            <span class="badge bg-light text-muted border small" style="font-size: 0.6rem; font-weight: normal;"><i class="fa fa-cubes me-1"></i>Stok: <?= intval($car['stok'] ?? 1) ?></span>
-                                                            <span class="badge bg-light text-muted border small" style="font-size: 0.6rem; font-weight: normal;"><i class="fa fa-palette me-1"></i><?= htmlspecialchars($car['warna'] ?? 'Hitam') ?></span>
+                                                            <span class="badge car-meta-badge"><i class="fa fa-cubes me-1"></i>Stok: <?= intval($car['stok'] ?? 1) ?></span>
+                                                            <span class="badge car-meta-badge"><i class="fa fa-palette me-1"></i><?= htmlspecialchars($car['warna'] ?? 'Hitam') ?></span>
                                                         </div>
                                                         <h5 class="fw-bold mb-0 text-truncate" style="max-width: 170px;"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
                                                     </div>

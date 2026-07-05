@@ -354,6 +354,24 @@ h6 {
     color: var(--accent-gold);
 }
 
+.car-meta-badge {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    font-size: 0.65rem !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    transition: all 0.3s ease;
+}
+
+.car-meta-badge i {
+    color: var(--accent-gold);
+}
+
 /* --- HOW IT WORKS STEP --- */
 .step-card {
     text-align: center;

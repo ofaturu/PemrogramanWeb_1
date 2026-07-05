@@ -29,10 +29,22 @@ if (!empty($id_sewa)) {
         }
     }
 
+    // Get vehicle code before deleting
+    $v_stmt = mysqli_prepare($mysqli, "SELECT kode_unik_kendaraan FROM penyewaan WHERE id_sewa = ?");
+    mysqli_stmt_bind_param($v_stmt, 'i', $id_sewa);
+    mysqli_stmt_execute($v_stmt);
+    mysqli_stmt_bind_result($v_stmt, $kode_unik_k);
+    mysqli_stmt_fetch($v_stmt);
+    mysqli_stmt_close($v_stmt);
+
     $stmt = mysqli_prepare($mysqli, "DELETE FROM penyewaan WHERE id_sewa = ?");
     mysqli_stmt_bind_param($stmt, 'i', $id_sewa);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
+
+    if (!empty($kode_unik_k)) {
+        mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'tersedia' WHERE kode_unik_kendaraan = " . intval($kode_unik_k));
+    }
 }
 
 header('Location: sewa.php?msg=deleted');

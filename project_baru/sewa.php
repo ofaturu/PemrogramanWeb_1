@@ -56,6 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (mysqli_stmt_execute($stmt)) {
                 $id_sewa = mysqli_insert_id($mysqli);
 
+                // Update vehicle status to 'disewa'
+                mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($kode_unik));
+
                 require_once 'send_invoice.php';
                 try {
                     send_invoice_email($id_sewa, 'invoice');
@@ -112,6 +115,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (strtotime($tgl_kembali) < strtotime($tgl_sewa)) {
             $error_edit = 'Tanggal kembali tidak boleh mendahului tanggal sewa.';
         } else {
+            // Get current vehicle code before update to see if it changed
+            $orig_stmt = mysqli_prepare($mysqli, "SELECT kode_unik_kendaraan FROM penyewaan WHERE id_sewa = ?");
+            mysqli_stmt_bind_param($orig_stmt, 'i', $id_sewa);
+            mysqli_stmt_execute($orig_stmt);
+            mysqli_stmt_bind_result($orig_stmt, $orig_kode);
+            mysqli_stmt_fetch($orig_stmt);
+            mysqli_stmt_close($orig_stmt);
+
             $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET id_user = ?, kode_unik_kendaraan = ?, tanggal_sewa = ?, tanggal_kembali = ?, total_biaya = ?, status = ? WHERE id_sewa = ?");
             mysqli_stmt_bind_param($upd, 'iissisi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
 
@@ -124,6 +135,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (\Exception $e) {
                         error_log("Failed to send SMTP receipt email from edit modal: " . $e->getMessage());
                     }
+                }
+
+                // If vehicle changed, set original vehicle back to 'tersedia'
+                if ($orig_kode != $kode_unik) {
+                    mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'tersedia' WHERE kode_unik_kendaraan = " . intval($orig_kode));
+                }
+
+                // Update vehicle status based on rental status
+                if ($status === 'selesai' || $status === 'batal') {
+                    mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'tersedia' WHERE kode_unik_kendaraan = " . intval($kode_unik));
+                } else {
+                    mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($kode_unik));
                 }
                 
                 header('Location: sewa.php?msg=updated');
@@ -142,12 +165,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!empty($id_sewa)) {
+            // Get vehicle code first
+            $v_stmt = mysqli_prepare($mysqli, "SELECT kode_unik_kendaraan FROM penyewaan WHERE id_sewa = ?");
+            mysqli_stmt_bind_param($v_stmt, 'i', $id_sewa);
+            mysqli_stmt_execute($v_stmt);
+            mysqli_stmt_bind_result($v_stmt, $v_kode);
+            mysqli_stmt_fetch($v_stmt);
+            mysqli_stmt_close($v_stmt);
+
             // Update status to sedang_disewa
             $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET status = 'sedang_disewa' WHERE id_sewa = ?");
             mysqli_stmt_bind_param($upd, 'i', $id_sewa);
             
             if (mysqli_stmt_execute($upd)) {
                 mysqli_stmt_close($upd);
+
+                if (!empty($v_kode)) {
+                    mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($v_kode));
+                }
 
                 require_once 'send_invoice.php';
                 try {
