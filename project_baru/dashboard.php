@@ -11,6 +11,11 @@ $error_add = '';
 $error_edit = '';
 $error_edit_kode = '';
 
+function make_filename_safe($string) {
+    $string = strtolower(trim($string));
+    return preg_replace('/[^a-zA-Z0-9_-]/', '', str_replace(' ', '_', $string));
+}
+
 $merk_options = [];
 $res_merk = mysqli_query($mysqli, "SELECT id_merk, nama_merk FROM merk_kendaraan ORDER BY nama_merk ASC");
 if ($res_merk) {
@@ -60,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
                     $tmp = $_FILES['gambar']['tmp_name'];
                     $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
-                    $gambar_nama = time() . '_' . $kode . '.' . $ext;
+                    $gambar_nama = make_filename_safe($model) . '.' . $ext;
                     move_uploaded_file($tmp, 'uploads/' . $gambar_nama);
                 }
 
@@ -113,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] === UPLOAD_ERR_OK) {
                     $tmp = $_FILES['gambar']['tmp_name'];
                     $ext = pathinfo($_FILES['gambar']['name'], PATHINFO_EXTENSION);
-                    $nama_file_baru = time() . '_' . $kode . '.' . $ext;
+                    $nama_file_baru = make_filename_safe($model_baru) . '.' . $ext;
                     
                     if (move_uploaded_file($tmp, 'uploads/' . $nama_file_baru)) {
                         if (!empty($kendaraan_edit['gambar']) && file_exists('uploads/' . $kendaraan_edit['gambar'])) {

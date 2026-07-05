@@ -363,18 +363,93 @@ function getCarImageUrl($car) {
                                                     </div>
                                                 </div>
                                                 
-                                                <div class="row g-2 mb-4">
-                                                    <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-cogs"></i> Otomatis
+                                                <?php
+                                                // Tentukan spesifikasi kendaraan secara dinamis berdasarkan jenis/nama/merk
+                                                $jenis = strtolower(trim($car['jenis_kendaraan'] ?? ''));
+                                                $name = strtolower(trim($car['nama_kendaraan'] ?? ''));
+                                                $brand = strtolower(trim($car['nama_merk'] ?? ''));
+
+                                                $transmisi = 'Matic';
+                                                $tempat_duduk = '5';
+                                                $bahan_bakar = 'Bensin';
+                                                $pengemudi = 'Yes';
+
+                                                if ($jenis === 'roda 2') {
+                                                    $transmisi = (strpos($name, 'vespa') !== false) ? 'Matic' : 'Manual';
+                                                    $tempat_duduk = '2';
+                                                    $bahan_bakar = 'Bensin';
+                                                    $pengemudi = 'No';
+                                                } else {
+                                                    // Roda 4
+                                                    if (strpos($name, 'fortuner') !== false || 
+                                                        strpos($name, 'pajero') !== false || 
+                                                        strpos($name, 'land cruiser') !== false || 
+                                                        strpos($name, 'innova') !== false || 
+                                                        strpos($name, 'isuzu') !== false || 
+                                                        strpos($name, 'avanza') !== false || 
+                                                        strpos($name, 'xpander') !== false) {
+                                                        $tempat_duduk = '7';
+                                                        if (strpos($name, 'fortuner') !== false || 
+                                                            strpos($name, 'pajero') !== false || 
+                                                            strpos($name, 'land cruiser') !== false || 
+                                                            strpos($name, 'isuzu') !== false) {
+                                                            $bahan_bakar = 'Solar';
+                                                        } else {
+                                                            $bahan_bakar = 'Bensin';
+                                                        }
+                                                    } else {
+                                                        if (strpos($name, 'r8') !== false || 
+                                                            strpos($name, 'gt3') !== false || 
+                                                            strpos($name, '911') !== false || 
+                                                            strpos($name, 'mustang') !== false || 
+                                                            strpos($name, 'nsx') !== false || 
+                                                            strpos($name, 'rx-7') !== false || 
+                                                            strpos($name, 'amg gt') !== false) {
+                                                            $tempat_duduk = '2';
+                                                        } else {
+                                                            $tempat_duduk = '5';
+                                                        }
+                                                        $bahan_bakar = 'Bensin';
+                                                    }
+                                                }
+                                                ?>
+                                                
+                                                <div class="car-spec-grid">
+                                                    <div class="spec-item-premium">
+                                                        <div class="spec-icon-box">
+                                                            <i class="fa fa-cogs"></i>
+                                                        </div>
+                                                        <div class="spec-text-box">
+                                                            <span class="spec-label">TRANSMISI</span>
+                                                            <span class="spec-value"><?= $transmisi ?></span>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-user"></i> 2 Seater
+                                                    <div class="spec-item-premium">
+                                                        <div class="spec-icon-box">
+                                                            <i class="fa fa-chair"></i>
+                                                        </div>
+                                                        <div class="spec-text-box">
+                                                            <span class="spec-label">TEMPAT DUDUK</span>
+                                                            <span class="spec-value"><?= $tempat_duduk ?></span>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-gas-pump"></i> Shell V-Power
+                                                    <div class="spec-item-premium">
+                                                        <div class="spec-icon-box">
+                                                            <i class="fa fa-gas-pump"></i>
+                                                        </div>
+                                                        <div class="spec-text-box">
+                                                            <span class="spec-label">BAHAN BAKAR</span>
+                                                            <span class="spec-value"><?= $bahan_bakar ?></span>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-6 car-spec-item">
-                                                        <i class="fa fa-shield-alt"></i> Asuransi
+                                                    <div class="spec-item-premium">
+                                                        <div class="spec-icon-box">
+                                                            <i class="fa fa-user-tie"></i>
+                                                        </div>
+                                                        <div class="spec-text-box">
+                                                            <span class="spec-label">PENGEMUDI</span>
+                                                            <span class="spec-value"><?= $pengemudi ?></span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
