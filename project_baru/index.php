@@ -36,25 +36,29 @@ function getBrandImageUrl($brand) {
     $brand = strtolower(trim($brand));
     
     if (strpos($brand, 'audi') !== false) {
-        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi
+        return 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80'; // Audi R8
+    } elseif (strpos($brand, 'bmw') !== false) {
+        return 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'; // BMW M8
+    } elseif (strpos($brand, 'honda') !== false) {
+        return 'https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=800&q=80'; // Honda NSX
+    } elseif (strpos($brand, 'toyota') !== false) {
+        return 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=80'; // Toyota GR Supra / Land Cruiser
+    } elseif (strpos($brand, 'mitsubishi') !== false) {
+        return 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=800&q=80'; // Mitsubishi Lancer Evolution X
+    } elseif (strpos($brand, 'nissan') !== false) {
+        return 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80'; // Nissan GT-R
+    } elseif (strpos($brand, 'mazda') !== false) {
+        return 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80'; // Mazda RX-7
+    } elseif (strpos($brand, 'mercedes') !== false || strpos($brand, 'benz') !== false) {
+        return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80'; // Mercedes-Benz AMG GT
+    } elseif (strpos($brand, 'porsche') !== false) {
+        return 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80'; // Porsche 911 GT3 RS
     } elseif (strpos($brand, 'ford') !== false) {
-        return 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=800&q=80'; // Ford
+        return 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80'; // Ford Mustang
     } elseif (strpos($brand, 'daihatsu') !== false) {
         return 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'; // Daihatsu
     } elseif (strpos($brand, 'kia') !== false) {
         return 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'; // Kia
-    } elseif (strpos($brand, 'mazda') !== false) {
-        return 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80'; // Mazda
-    } elseif (strpos($brand, 'mitsubishi') !== false) {
-        return 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=800&q=80'; // Mitsubishi
-    } elseif (strpos($brand, 'mercedes') !== false || strpos($brand, 'benz') !== false) {
-        return 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80'; // Mercedes Benz
-    } elseif (strpos($brand, 'bmw') !== false) {
-        return 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'; // BMW
-    } elseif (strpos($brand, 'honda') !== false) {
-        return 'https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=800&q=80'; // Honda
-    } elseif (strpos($brand, 'toyota') !== false) {
-        return 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=80'; // Toyota
     } elseif (strpos($brand, 'suzuki') !== false) {
         return 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80'; // Suzuki
     }
