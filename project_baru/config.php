@@ -61,5 +61,3 @@ if ($check_empty) {
     }
 }
 ?>
-
-<!-- tes commit -->
