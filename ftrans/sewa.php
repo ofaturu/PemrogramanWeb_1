@@ -424,7 +424,7 @@ include 'partials/head.php';
                               <div class="modal fade text-start" id="editSewaModal-<?= $r['id_sewa'] ?>" tabindex="-1" aria-labelledby="editSewaModalLabel-<?= $r['id_sewa'] ?>" aria-hidden="true">
                                 <div class="modal-dialog modal-lg modal-dialog-centered">
                                   <div class="modal-content border-0 shadow-lg">
-                                    <div class="modal-header bg-info text-white">
+                                    <div class="modal-header bg-primary text-white">
                                       <h5 class="modal-title" id="editSewaModalLabel-<?= $r['id_sewa'] ?>"><i class="fa fa-edit me-2"></i>Edit Transaksi Penyewaan</h5>
                                       <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
                                     </div>
@@ -495,9 +495,9 @@ include 'partials/head.php';
                                           </div>
                                         </div>
                                       </div>
-                                      <div class="modal-footer bg-light">
+                                      <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
-                                        <button type="submit" class="btn btn-info text-white"><i class="fa fa-save me-1"></i> Simpan Perubahan</button>
+                                        <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Simpan Perubahan</button>
                                       </div>
                                     </form>
                                   </div>
@@ -571,7 +571,7 @@ include 'partials/head.php';
                                         </div>
                                         <p class="text-muted small">Harap pastikan nominal transfer pada bukti di atas sesuai dengan total biaya penyewaan sebelum menekan tombol verifikasi.</p>
                                       </div>
-                                      <div class="modal-footer bg-light justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                      <div class="modal-footer justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
                                         <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
                                         <button type="submit" class="btn btn-success text-white px-4 fw-bold">Setujui & Verifikasi</button>
                                       </div>
@@ -596,7 +596,7 @@ include 'partials/head.php';
                                       <p class="text-muted mb-0">Kendaraan: <b><?= htmlspecialchars($r['nama_kendaraan'] ?? 'N/A') ?></b> (Kode: <?= htmlspecialchars($r['kode_unik_kendaraan']) ?>)</p>
                                       <p class="text-danger small mt-2 mb-0"><i class="fa fa-info-circle"></i> Tindakan ini tidak dapat dibatalkan.</p>
                                     </div>
-                                    <div class="modal-footer bg-light justify-content-center">
+                                    <div class="modal-footer justify-content-center">
                                       <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
                                       <a href="delete_sewa.php?id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-danger px-4">Hapus</a>
                                     </div>
@@ -726,9 +726,9 @@ include 'partials/head.php';
                 </div>
               </div>
             </div>
-            <div class="modal-footer bg-light">
+            <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
-              <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Simpan</button>
+              <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Simpan</button>
             </div>
           </form>
         </div>

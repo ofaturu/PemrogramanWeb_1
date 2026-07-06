@@ -378,7 +378,7 @@ include 'partials/head.php';
                               <div class="modal fade text-start" id="editModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
                                 <div class="modal-dialog modal-lg modal-dialog-centered">
                                   <div class="modal-content border-0 shadow-lg">
-                                    <div class="modal-header bg-info text-white">
+                                    <div class="modal-header bg-primary text-white">
                                       <h5 class="modal-title" id="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>"><i class="fa fa-edit me-2"></i>Edit Data Kendaraan</h5>
                                       <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
                                     </div>
@@ -500,9 +500,9 @@ include 'partials/head.php';
                                           </div>
                                         </div>
                                       </div>
-                                      <div class="modal-footer bg-light">
+                                      <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
-                                        <button type="submit" class="btn btn-info text-white"><i class="fa fa-save me-1"></i> Simpan Perubahan</button>
+                                        <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Simpan Perubahan</button>
                                       </div>
                                     </form>
                                   </div>
@@ -523,7 +523,7 @@ include 'partials/head.php';
                                       <p class="text-muted mb-0"><b><?= htmlspecialchars($k['nama_kendaraan']) ?></b> (Kode: <?= htmlspecialchars($k['kode_unik_kendaraan']) ?>)</p>
                                       <p class="text-danger small mt-2 mb-0"><i class="fa fa-info-circle"></i> Tindakan ini tidak dapat dibatalkan.</p>
                                     </div>
-                                    <div class="modal-footer bg-light justify-content-center">
+                                    <div class="modal-footer justify-content-center">
                                       <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
                                       <a href="delete.php?kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-danger px-4">Hapus</a>
                                     </div>
@@ -671,9 +671,9 @@ include 'partials/head.php';
                 </div>
               </div>
             </div>
-            <div class="modal-footer bg-light">
+            <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
-              <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Simpan</button>
+              <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Simpan</button>
             </div>
           </form>
         </div>
@@ -701,7 +701,7 @@ include 'partials/head.php';
                 <div class="form-text text-muted">Maksimal ukuran file: 5 MB.</div>
               </div>
             </div>
-            <div class="modal-footer bg-light">
+            <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Batal</button>
               <button type="submit" class="btn btn-warning text-white"><i class="fa fa-upload me-1 text-white"></i> Mulai Impor</button>
             </div>

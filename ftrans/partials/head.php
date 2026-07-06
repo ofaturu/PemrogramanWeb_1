@@ -39,4 +39,41 @@
     <!-- Select2 & Theme -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <style>
+        /* Select2 Dark Mode Override to match CoreUI inputs */
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
+            background-color: #222630 !important;
+            color: rgba(255, 255, 255, 0.87) !important;
+            border-color: #323a49 !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            color: rgba(255, 255, 255, 0.87) !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown {
+            background-color: #222630 !important;
+            color: rgba(255, 255, 255, 0.87) !important;
+            border-color: #323a49 !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-results__option {
+            background-color: transparent !important;
+            color: rgba(255, 255, 255, 0.87) !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+            background-color: #323a49 !important;
+            color: #fff !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-results__option[aria-selected="true"] {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #fff !important;
+        }
+        [data-coreui-theme="dark"] .select2-container--bootstrap-5 .select2-search__field {
+            background-color: #1d222b !important;
+            color: #fff !important;
+            border-color: #323a49 !important;
+        }
+        /* Force modal footers to match the active theme's background */
+        .modal-footer, .modal-footer.bg-light {
+            background-color: transparent !important;
+        }
+    </style>
 </head>

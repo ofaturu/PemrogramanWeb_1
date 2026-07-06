@@ -119,7 +119,7 @@ include 'partials/head.php';
                     <div class="form-text text-muted">Hanya isi jika Anda ingin mengganti password akun ini.</div>
                   </div>
                   <div class="col-12 mt-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Simpan Profil</button>
+                    <button type="submit" class="btn btn-success"><i class="fa fa-save me-1"></i> Simpan Profil</button>
                     <a href="dashboard.php" class="btn btn-secondary">Kembali</a>
                   </div>
                 </form>

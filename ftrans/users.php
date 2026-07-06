@@ -331,7 +331,7 @@ include 'partials/head.php';
                   </div>
                 <?php endif; ?>
               </div>
-              <div class="modal-footer bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+              <div class="modal-footer" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
                 <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Tutup</button>
               </div>
             </div>
