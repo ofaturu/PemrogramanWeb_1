@@ -44,6 +44,11 @@ $success = '';
 
 // Check if Xendit Invoice Url is requested and not set
 $xendit_api_key = $_ENV['XENDIT_SECRET_KEY'] ?? getenv('XENDIT_SECRET_KEY') ?? '';
+
+// Force local simulation on localhost since Xendit callbacks require a public HTTPS domain
+if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
+    $xendit_api_key = '';
+}
 $is_simulation = empty($xendit_api_key);
 
 // Fetch updated status and payment proof details
@@ -63,11 +68,18 @@ if (isset($_GET['simulate_payment']) && $status === 'booking') {
         'payment_method' => 'VA_SIMULATOR'
     ];
     
+    // Pass callback token header for security verification check
+    $callback_token = $_ENV['XENDIT_CALLBACK_TOKEN'] ?? getenv('XENDIT_CALLBACK_TOKEN') ?? '';
+    $curl_headers = ['Content-Type: application/json'];
+    if (!empty($callback_token)) {
+        $curl_headers[] = 'x-callback-token: ' . $callback_token;
+    }
+    
     $ch = curl_init($callback_url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $curl_headers);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $res = curl_exec($ch);
     curl_close($ch);
