@@ -293,7 +293,14 @@ include 'partials/head.php';
                           ?>
                           <tr>
                             <td class="ps-4 text-body-secondary"><?= $idx + 1 ?></td>
-                            <td class="fw-bold font-monospace text-body-secondary" style="font-size: 0.85rem;">#INV-<?= str_pad($rent['id_sewa'], 5, '0', STR_PAD_LEFT) ?></td>
+                            <td class="fw-bold font-monospace text-body-secondary" style="font-size: 0.85rem;">
+                               #INV-<?= str_pad($rent['id_sewa'], 5, '0', STR_PAD_LEFT) ?>
+                               <?php if ($rent['status'] === 'sedang_disewa' || $rent['status'] === 'selesai'): ?>
+                                 <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($rent['id_sewa']) ?>" class="btn btn-link p-0 text-success ms-1" title="Cetak Struk" target="_blank">
+                                   <i class="fa fa-print"></i>
+                                 </a>
+                               <?php endif; ?>
+                            </td>
                             <td class="fw-bold text-body-emphasis"><?= htmlspecialchars($rent['nama_kendaraan'] ?? 'N/A') ?></td>
                             <td><?= $diff_days ?> Hari</td>
                             <td class="fw-bold text-success">Rp <?= number_format($rent['total_biaya'], 0, ',', '.') ?></td>

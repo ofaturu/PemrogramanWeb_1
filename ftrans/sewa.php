@@ -388,7 +388,17 @@ include 'partials/head.php';
                       <?php foreach ($rentals as $i => $r): ?>
                       <tr>
                           <td class="ps-4 fw-semibold text-body-secondary"><?= $offset + $i + 1 ?></td>
-                          <td class="text-body fw-bold"><?= htmlspecialchars($r['nama_user'] ?? 'N/A') ?></td>
+                           <td class="text-body fw-bold">
+                              <?= htmlspecialchars($r['nama_user'] ?? 'N/A') ?>
+                              <div class="text-body-secondary font-monospace mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem; font-weight: normal;">
+                                  #INV-<?= str_pad($r['id_sewa'], 5, '0', STR_PAD_LEFT) ?>
+                                  <?php if ($r['status'] === 'sedang_disewa' || $r['status'] === 'selesai'): ?>
+                                      <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="text-success p-0" title="Cetak Struk" target="_blank">
+                                          <i class="fa fa-print"></i>
+                                      </a>
+                                  <?php endif; ?>
+                              </div>
+                           </td>
                           <td>
                               <span class="text-body fw-semibold"><?= htmlspecialchars($r['nama_kendaraan'] ?? 'N/A') ?></span>
                               <span class="badge bg-dark text-warning border border-warning px-2 py-0.5 ms-1"><?= htmlspecialchars($r['kode_unik_kendaraan']) ?></span>

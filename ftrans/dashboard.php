@@ -10,6 +10,7 @@ $nama_user = htmlspecialchars($_SESSION['user_nama']);
 $error_add = '';
 $error_edit = '';
 $error_edit_kode = '';
+$error_booking = '';
 
 $merk_options = [];
 $res_merk = mysqli_query($mysqli, "SELECT id_merk, nama_merk FROM merk_kendaraan ORDER BY nama_merk ASC");
@@ -715,11 +716,14 @@ include 'partials/head.php';
                           </div>
 
                           <?php if ($status === 'tersedia'): ?>
-                            <button class="btn btn-success text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 btn-booking-trigger"
+                            <button type="button"
+                                    class="btn btn-success text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1"
+                                    data-coreui-toggle="modal"
+                                    data-coreui-target="#bookingModal"
                                     data-kode="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>"
                                     data-nama="<?= htmlspecialchars($k['nama_kendaraan']) ?>"
                                     data-harga="<?= htmlspecialchars($k['harga_per_hari']) ?>">
-                              <i class="fa fa-key"></i> Sewa Sekarang
+                              <i class="fa fa-key me-1"></i> Sewa Sekarang
                             </button>
                           <?php else: ?>
                             <button class="btn btn-secondary w-100 py-2 fw-semibold" disabled>
@@ -911,6 +915,7 @@ include 'partials/head.php';
           </div>
         </div>
       </div>
+    </div>
     <!-- Modal Booking Sewa Instan -->
     <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -948,10 +953,10 @@ include 'partials/head.php';
                   <label class="form-label fw-semibold" for="book_tanggal_kembali">Tanggal Pengembalian *</label>
                   <input type="datetime-local" id="book_tanggal_kembali" name="tanggal_kembali" class="form-control" required>
                 </div>
-                <div class="col-12 mt-4 bg-light p-3 rounded border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                <div class="col-12 mt-4 bg-body-secondary p-3 rounded border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
                   <div>
                     <div class="text-muted small">Durasi Sewa:</div>
-                    <div class="fw-bold text-dark"><span id="book_durasi">1</span> Hari</div>
+                    <div class="fw-bold text-body"><span id="book_durasi">1</span> Hari</div>
                   </div>
                   <div class="text-end">
                     <div class="text-muted small">Estimasi Total Biaya:</div>
@@ -972,7 +977,11 @@ include 'partials/head.php';
     <?php include 'partials/footer.php'; ?>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    (function initDashboard() {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboard);
+        return;
+      }
       // 1. Success Modal Trigger
       <?php if (!empty($msg)): ?>
       const successModal = new coreui.Modal(document.getElementById('successModal'));
@@ -1011,55 +1020,54 @@ include 'partials/head.php';
         });
       });
 
-      // 6. Instant Booking Modal Handler
-      document.querySelectorAll('.btn-booking-trigger').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const kode = this.getAttribute('data-kode');
-          const nama = this.getAttribute('data-nama');
-          const harga = parseFloat(this.getAttribute('data-harga')) || 0;
-          
+
+      // 6. Booking Modal - populate fields when modal is about to open
+      //    CoreUI fires 'show.coreui.modal' with event.relatedTarget = the trigger button
+      var bookingModalEl = document.getElementById('bookingModal');
+      if (bookingModalEl) {
+        bookingModalEl.addEventListener('show.coreui.modal', function(event) {
+          var btn = event.relatedTarget;
+          if (!btn) return;
+
+          var kode  = btn.getAttribute('data-kode');
+          var nama  = btn.getAttribute('data-nama');
+          var harga = parseFloat(btn.getAttribute('data-harga')) || 0;
+
           document.getElementById('book_kode_unik').value = kode;
           document.getElementById('book_nama_kendaraan').textContent = nama;
-          document.getElementById('book_harga_per_hari_text').textContent = new Intl.NumberFormat('id-ID').format(harga);
-          
-          // Set default dates (start now + 1 hour, end + 1 day)
-          const now = new Date();
+          document.getElementById('book_harga_per_hari_text').textContent =
+            new Intl.NumberFormat('id-ID').format(harga);
+
+          // Default dates: now+1h for start, now+1d for return
+          var now = new Date();
           now.setHours(now.getHours() + 1, 0, 0, 0);
-          // Adjust timezone offset to local ISO string format
-          const tzoffset = now.getTimezoneOffset() * 60000;
-          const localStart = new Date(now - tzoffset).toISOString().slice(0, 16);
-          
-          const returnDate = new Date(now);
+          var tzoffset   = now.getTimezoneOffset() * 60000;
+          var localStart = new Date(now - tzoffset).toISOString().slice(0, 16);
+          var returnDate = new Date(now);
           returnDate.setDate(returnDate.getDate() + 1);
-          const localReturn = new Date(returnDate - tzoffset).toISOString().slice(0, 16);
-          
-          const inputSewa = document.getElementById('book_tanggal_sewa');
-          const inputKembali = document.getElementById('book_tanggal_kembali');
-          
-          inputSewa.value = localStart;
+          var localReturn = new Date(returnDate - tzoffset).toISOString().slice(0, 16);
+
+          var inputSewa    = document.getElementById('book_tanggal_sewa');
+          var inputKembali = document.getElementById('book_tanggal_kembali');
+          inputSewa.value    = localStart;
           inputKembali.value = localReturn;
-          
+
           function recalc() {
-            const t1 = new Date(inputSewa.value);
-            const t2 = new Date(inputKembali.value);
-            const diffMs = t2 - t1;
-            let diffDays = 1;
-            if (diffMs > 0) {
-              diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-            }
+            var t1 = new Date(inputSewa.value);
+            var t2 = new Date(inputKembali.value);
+            var diffMs   = t2 - t1;
+            var diffDays = diffMs > 0 ? Math.ceil(diffMs / 86400000) : 1;
             document.getElementById('book_durasi').textContent = diffDays;
-            document.getElementById('book_total_biaya_text').textContent = new Intl.NumberFormat('id-ID').format(diffDays * harga);
+            document.getElementById('book_total_biaya_text').textContent =
+              new Intl.NumberFormat('id-ID').format(diffDays * harga);
           }
-          
-          inputSewa.onchange = recalc;
+
+          inputSewa.onchange    = recalc;
           inputKembali.onchange = recalc;
-          
           recalc();
-          
-          const bookingModal = new coreui.Modal(document.getElementById('bookingModal'));
-          bookingModal.show();
         });
-      });
+      }
+
 
       // 7. Auto re-open booking modal on error
       <?php if (!empty($error_booking)): ?>
@@ -1088,8 +1096,8 @@ include 'partials/head.php';
         document.getElementById('book_durasi').textContent = err_days;
         document.getElementById('book_total_biaya_text').textContent = new Intl.NumberFormat('id-ID').format(err_days * err_harga);
 
-        const bookingModalErr = new coreui.Modal(document.getElementById('bookingModal'));
+        const bookingModalErr = coreui.Modal.getOrCreateInstance(document.getElementById('bookingModal'));
         bookingModalErr.show();
       <?php endif; ?>
-    });
+    })();
     </script>

@@ -272,7 +272,7 @@ include 'partials/head.php';
                   </div>
                 </div>
 
-                <div class="mt-4 bg-light p-3 rounded border d-flex justify-content-between align-items-center">
+                <div class="mt-4 bg-body-secondary p-3 rounded border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
                   <h5 class="mb-0 fw-bold text-body">Total Biaya</h5>
                   <h4 class="mb-0 fw-bold text-primary">Rp <?= number_format($rental['total_biaya'], 0, ',', '.') ?></h4>
                 </div>
