@@ -179,6 +179,26 @@ include 'partials/head.php';
     ?>
     <div class="body flex-grow-1">
       <div class="container-lg px-4">
+        <!-- Page Title & Export Actions -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+          <div>
+            <h4 class="mb-0">Laporan Analitik & Grafik</h4>
+            <p class="text-muted small mb-0">Pemantauan data performa operasional, keuangan, dan aset rental kendaraan FTrans.</p>
+          </div>
+          <?php if ($role === 'admin'): ?>
+            <div class="d-flex gap-2">
+              <a href="export.php?target=analytics&format=pdf" target="_blank" class="btn btn-danger d-flex align-items-center gap-2 shadow-sm text-white">
+                <i class="fa fa-file-pdf"></i> Ekspor PDF
+              </a>
+              <a href="export.php?target=analytics&format=excel" class="btn btn-success d-flex align-items-center gap-2 shadow-sm text-white">
+                <i class="fa fa-file-excel"></i> Ekspor Excel
+              </a>
+              <a href="export.php?target=analytics&format=word" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm text-white">
+                <i class="fa fa-file-word"></i> Ekspor Word
+              </a>
+            </div>
+          <?php endif; ?>
+        </div>
         
         <!-- Summary Cards Row -->
         <div class="row g-4 mb-4">

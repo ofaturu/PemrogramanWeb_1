@@ -64,9 +64,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update maintenance record
                 $stmt = mysqli_prepare($mysqli, "UPDATE maintenance SET biaya = ?, tanggal_selesai = ? WHERE id = ?");
                 mysqli_stmt_bind_param($stmt, 'isi', $biaya, $tgl_selesai, $m_id);
-                if (mysqli_stmt_execute($stmt)) {
+                 if (mysqli_stmt_execute($stmt)) {
                     // Update vehicle status back to 'tersedia'
                     mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'tersedia' WHERE kode_unik_kendaraan = " . $kode_unik);
+                    
+                    // Send email notification to Admin for the expense
+                    require_once 'send_invoice.php';
+                    try {
+                        send_expense_notification_email($m_id);
+                    } catch (\Exception $e) {
+                        error_log("Failed to send SMTP expense notification email: " . $e->getMessage());
+                    }
+                    
                     $success = 'Perawatan kendaraan selesai. Kendaraan kini tersedia kembali.';
                 } else {
                     $error = 'Gagal memperbarui data perawatan.';

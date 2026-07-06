@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $target = $_GET['target'] ?? '';
 $format = $_GET['format'] ?? '';
 
-if (!in_array($target, ['kendaraan', 'sewa', 'users']) || !in_array($format, ['excel', 'word', 'pdf'])) {
+if (!in_array($target, ['kendaraan', 'sewa', 'users', 'analytics']) || !in_array($format, ['excel', 'word', 'pdf'])) {
     die("Parameter ekspor tidak valid.");
 }
 
@@ -263,6 +263,109 @@ if (!$is_detail) {
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             mysqli_stmt_close($stmt);
         }
+    } elseif ($target === 'analytics') {
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+            die("Akses ditolak: Hanya admin yang dapat mengekspor laporan analitik.");
+        }
+        $title_text = "Laporan Analitik Keuangan & Operasional — FTrans";
+        
+        // 1. Financial stats
+        $res = mysqli_query($mysqli, "SELECT SUM(total_biaya) AS total FROM penyewaan WHERE status IN ('sedang_disewa', 'selesai')");
+        $row = mysqli_fetch_assoc($res);
+        $total_income = $row['total'] ?? 0;
+
+        $res_m = mysqli_query($mysqli, "SELECT SUM(biaya) AS total FROM maintenance");
+        $row_m = mysqli_fetch_assoc($res_m);
+        $total_maintenance_cost = $row_m['total'] ?? 0;
+        $net_profit = $total_income - $total_maintenance_cost;
+
+        // 2. Active bookings
+        $res = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM penyewaan WHERE status = 'sedang_disewa'");
+        $row = mysqli_fetch_assoc($res);
+        $active_bookings = $row['total'] ?? 0;
+
+        // 3. Vehicles summary
+        $res = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM kendaraan");
+        $row = mysqli_fetch_assoc($res);
+        $total_vehicles = $row['total'] ?? 0;
+
+        // 4. Users summary
+        $res = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM users WHERE role = 'user'");
+        $row = mysqli_fetch_assoc($res);
+        $total_users = $row['total'] ?? 0;
+
+        // 5. Income vs Maintenance (Last 6 Months)
+        $months_list = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $key = date('Y-m', strtotime("-$i months"));
+            $months_list[$key] = [
+                'label' => date('M Y', strtotime("-$i months")),
+                'income' => 0,
+                'maintenance' => 0
+            ];
+        }
+        $res_inc = mysqli_query($mysqli, "
+            SELECT DATE_FORMAT(tanggal_sewa, '%Y-%m') AS raw_month, SUM(total_biaya) AS total
+            FROM penyewaan 
+            WHERE status IN ('sedang_disewa', 'selesai')
+            GROUP BY raw_month
+        ");
+        while ($row = mysqli_fetch_assoc($res_inc)) {
+            if (isset($months_list[$row['raw_month']])) {
+                $months_list[$row['raw_month']]['income'] = intval($row['total']);
+            }
+        }
+        $res_maint = mysqli_query($mysqli, "
+            SELECT DATE_FORMAT(tanggal_selesai, '%Y-%m') AS raw_month, SUM(biaya) AS total
+            FROM maintenance 
+            WHERE tanggal_selesai IS NOT NULL
+            GROUP BY raw_month
+        ");
+        while ($row = mysqli_fetch_assoc($res_maint)) {
+            if (isset($months_list[$row['raw_month']])) {
+                $months_list[$row['raw_month']]['maintenance'] = intval($row['total']);
+            }
+        }
+
+        // 6. Top vehicle brands
+        $top_brands = [];
+        $res = mysqli_query($mysqli, "
+            SELECT m.nama_merk, COUNT(p.id_sewa) AS count 
+            FROM penyewaan p 
+            JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+            JOIN merk_kendaraan m ON k.id_merk = m.id_merk 
+            GROUP BY m.id_merk 
+            ORDER BY count DESC 
+            LIMIT 5
+        ");
+        while ($row = mysqli_fetch_assoc($res)) {
+            $top_brands[] = $row;
+        }
+        
+        // 7. Full data lists for tables in report:
+        $maint_list_res = mysqli_query($mysqli, "
+            SELECT m.*, k.nama_kendaraan 
+            FROM maintenance m 
+            JOIN kendaraan k ON m.kode_unik_kendaraan = k.kode_unik_kendaraan 
+            ORDER BY m.tanggal_mulai DESC
+        ");
+        $maintenance_data = mysqli_fetch_all($maint_list_res, MYSQLI_ASSOC);
+
+        $rentals_list_res = mysqli_query($mysqli, "
+            SELECT p.*, u.nama AS nama_user, k.nama_kendaraan 
+            FROM penyewaan p 
+            LEFT JOIN users u ON p.id_user = u.id 
+            LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+            ORDER BY p.tanggal_sewa DESC
+        ");
+        $rentals_data = mysqli_fetch_all($rentals_list_res, MYSQLI_ASSOC);
+
+        $users_list_res = mysqli_query($mysqli, "
+            SELECT id, nama, email, no_hp, role 
+            FROM users 
+            ORDER BY nama ASC
+        ");
+        $users_data = mysqli_fetch_all($users_list_res, MYSQLI_ASSOC);
     }
 }
 
@@ -274,6 +377,205 @@ if ($format === 'excel') {
         ob_end_clean();
     }
     
+    if ($target === 'analytics') {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->getDefaultStyle()->getFont()->setName('Segoe UI')->setSize(10);
+        
+        // ----------------------------------------------------
+        // SHEET 1: RINGKASAN & KEUANGAN
+        // ----------------------------------------------------
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Ringkasan Keuangan');
+        
+        $sheet->setCellValue('A1', 'LAPORAN RINGKASAN KEUANGAN & OPERASIONAL');
+        $sheet->getStyle('A1')->getFont()->setSize(16)->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('1E293B'));
+        
+        $sheet->setCellValue('A3', 'Metrik Kunci');
+        $sheet->getStyle('A3')->getFont()->setSize(12)->setBold(true);
+        
+        $sheet->setCellValue('A4', 'Total Pendapatan:');
+        $sheet->setCellValue('B4', $total_income);
+        $sheet->getStyle('B4')->getNumberFormat()->setFormatCode('"Rp "#,##0');
+        $sheet->getStyle('B4')->getFont()->setBold(true);
+        
+        $sheet->setCellValue('A5', 'Total Biaya Pemeliharaan:');
+        $sheet->setCellValue('B5', $total_maintenance_cost);
+        $sheet->getStyle('B5')->getNumberFormat()->setFormatCode('"Rp "#,##0');
+        $sheet->getStyle('B5')->getFont()->setBold(true);
+        
+        $sheet->setCellValue('A6', 'Keuntungan Bersih:');
+        $sheet->setCellValue('B6', $net_profit);
+        $sheet->getStyle('B6')->getNumberFormat()->setFormatCode('"Rp "#,##0');
+        $sheet->getStyle('B6')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color($net_profit >= 0 ? '16A34A' : 'DC2626'));
+        
+        $sheet->setCellValue('A8', 'Statistik Operasional');
+        $sheet->getStyle('A8')->getFont()->setSize(12)->setBold(true);
+        
+        $sheet->setCellValue('A9', 'Penyewaan Aktif:');
+        $sheet->setCellValue('B9', $active_bookings);
+        
+        $sheet->setCellValue('A10', 'Total Armada Kendaraan:');
+        $sheet->setCellValue('B10', $total_vehicles);
+        
+        $sheet->setCellValue('A11', 'Total Pelanggan Terdaftar:');
+        $sheet->setCellValue('B11', $total_users);
+        
+        // Income vs Maintenance table
+        $sheet->setCellValue('A13', 'Tren Keuangan 6 Bulan Terakhir');
+        $sheet->getStyle('A13')->getFont()->setSize(12)->setBold(true);
+        
+        $sheet->setCellValue('A14', 'Bulan');
+        $sheet->setCellValue('B14', 'Pendapatan');
+        $sheet->setCellValue('C14', 'Biaya Servis');
+        $sheet->setCellValue('D14', 'Keuntungan Bersih');
+        $sheet->getStyle('A14:D14')->getFont()->setBold(true);
+        $sheet->getStyle('A14:D14')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
+        
+        $rowIdx = 15;
+        foreach ($months_list as $m) {
+            $sheet->setCellValue('A' . $rowIdx, $m['label']);
+            $sheet->setCellValue('B' . $rowIdx, $m['income']);
+            $sheet->setCellValue('C' . $rowIdx, $m['maintenance']);
+            $sheet->setCellValue('D' . $rowIdx, $m['income'] - $m['maintenance']);
+            
+            $sheet->getStyle('B' . $rowIdx)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->getStyle('C' . $rowIdx)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->getStyle('D' . $rowIdx)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $rowIdx++;
+        }
+        
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // ----------------------------------------------------
+        // SHEET 2: LAPORAN SERVIS & PERAWATAN
+        // ----------------------------------------------------
+        $sheet2 = $spreadsheet->createSheet();
+        $sheet2->setTitle('Laporan Perawatan');
+        
+        $sheet2->setCellValue('A1', 'DAFTAR RIWAYAT PERAWATAN KENDARAAN');
+        $sheet2->getStyle('A1')->getFont()->setSize(14)->setBold(true);
+        
+        $sheet2->setCellValue('A3', 'No');
+        $sheet2->setCellValue('B3', 'ID');
+        $sheet2->setCellValue('C3', 'Kode Kendaraan');
+        $sheet2->setCellValue('D3', 'Nama Kendaraan');
+        $sheet2->setCellValue('E3', 'Deskripsi Perawatan');
+        $sheet2->setCellValue('F3', 'Tanggal Mulai');
+        $sheet2->setCellValue('G3', 'Tanggal Selesai');
+        $sheet2->setCellValue('H3', 'Biaya');
+        $sheet2->getStyle('A3:H3')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
+        $sheet2->getStyle('A3:H3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1E293B');
+        
+        $rowIdx = 4;
+        foreach ($maintenance_data as $idx => $m_row) {
+            $sheet2->setCellValue('A' . $rowIdx, $idx + 1);
+            $sheet2->setCellValue('B' . $rowIdx, '#MNT-' . str_pad($m_row['id'], 5, '0', STR_PAD_LEFT));
+            $sheet2->setCellValue('C' . $rowIdx, $m_row['kode_unik_kendaraan']);
+            $sheet2->setCellValue('D' . $rowIdx, $m_row['nama_kendaraan']);
+            $sheet2->setCellValue('E' . $rowIdx, $m_row['deskripsi']);
+            $sheet2->setCellValue('F' . $rowIdx, date('d M Y', strtotime($m_row['tanggal_mulai'])));
+            $sheet2->setCellValue('G' . $rowIdx, $m_row['tanggal_selesai'] ? date('d M Y', strtotime($m_row['tanggal_selesai'])) : '-');
+            $sheet2->setCellValue('H' . $rowIdx, $m_row['biaya']);
+            
+            $sheet2->getStyle('H' . $rowIdx)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $rowIdx++;
+        }
+        foreach (range('A', 'H') as $col) {
+            $sheet2->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // ----------------------------------------------------
+        // SHEET 3: TRANSAKSI PENYEWAAN
+        // ----------------------------------------------------
+        $sheet3 = $spreadsheet->createSheet();
+        $sheet3->setTitle('Data Penyewaan');
+        
+        $sheet3->setCellValue('A1', 'DAFTAR TRANSAKSI PENYEWAAN KENDARAAN');
+        $sheet3->getStyle('A1')->getFont()->setSize(14)->setBold(true);
+        
+        $sheet3->setCellValue('A3', 'No');
+        $sheet3->setCellValue('B3', 'No Invoice');
+        $sheet3->setCellValue('C3', 'Nama Penyewa');
+        $sheet3->setCellValue('D3', 'Nama Kendaraan');
+        $sheet3->setCellValue('E3', 'Kode Kendaraan');
+        $sheet3->setCellValue('F3', 'Tanggal Sewa');
+        $sheet3->setCellValue('G3', 'Tanggal Kembali');
+        $sheet3->setCellValue('H3', 'Total Biaya');
+        $sheet3->setCellValue('I3', 'Status');
+        $sheet3->getStyle('A3:I3')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
+        $sheet3->getStyle('A3:I3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1E293B');
+        
+        $rowIdx = 4;
+        foreach ($rentals_data as $idx => $r_row) {
+            $sheet3->setCellValue('A' . $rowIdx, $idx + 1);
+            $sheet3->setCellValue('B' . $rowIdx, '#INV-' . str_pad($r_row['id_sewa'], 5, '0', STR_PAD_LEFT));
+            $sheet3->setCellValue('C' . $rowIdx, $r_row['nama_user'] ?? 'N/A');
+            $sheet3->setCellValue('D' . $rowIdx, $r_row['nama_kendaraan'] ?? 'N/A');
+            $sheet3->setCellValue('E' . $rowIdx, $r_row['kode_unik_kendaraan']);
+            $sheet3->setCellValue('F' . $rowIdx, date('d M Y H:i', strtotime($r_row['tanggal_sewa'])));
+            $sheet3->setCellValue('G' . $rowIdx, date('d M Y H:i', strtotime($r_row['tanggal_kembali'])));
+            $sheet3->setCellValue('H' . $rowIdx, $r_row['total_biaya']);
+            
+            $status = $r_row['status'];
+            $statusLabel = 'Booking';
+            if ($status === 'sedang_disewa') $statusLabel = 'Sedang Disewa';
+            if ($status === 'selesai') $statusLabel = 'Selesai';
+            if ($status === 'dibatalkan') $statusLabel = 'Dibatalkan';
+            $sheet3->setCellValue('I' . $rowIdx, $statusLabel);
+            
+            $sheet3->getStyle('H' . $rowIdx)->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $rowIdx++;
+        }
+        foreach (range('A', 'I') as $col) {
+            $sheet3->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ----------------------------------------------------
+        // SHEET 4: DATA PENGGUNA
+        // ----------------------------------------------------
+        $sheet4 = $spreadsheet->createSheet();
+        $sheet4->setTitle('Data Pengguna');
+        
+        $sheet4->setCellValue('A1', 'DAFTAR PENGGUNA SISTEM (USERS)');
+        $sheet4->getStyle('A1')->getFont()->setSize(14)->setBold(true);
+        
+        $sheet4->setCellValue('A3', 'No');
+        $sheet4->setCellValue('B3', 'ID User');
+        $sheet4->setCellValue('C3', 'Nama Lengkap');
+        $sheet4->setCellValue('D3', 'Alamat Email');
+        $sheet4->setCellValue('E3', 'Nomor HP');
+        $sheet4->setCellValue('F3', 'Role');
+        $sheet4->getStyle('A3:F3')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
+        $sheet4->getStyle('A3:F3')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1E293B');
+        
+        $rowIdx = 4;
+        foreach ($users_data as $idx => $u_row) {
+            $sheet4->setCellValue('A' . $rowIdx, $idx + 1);
+            $sheet4->setCellValue('B' . $rowIdx, $u_row['id']);
+            $sheet4->setCellValue('C' . $rowIdx, $u_row['nama']);
+            $sheet4->setCellValue('D' . $rowIdx, $u_row['email']);
+            $sheet4->setCellValue('E' . $rowIdx, $u_row['no_hp'] ?? '-');
+            $sheet4->setCellValue('F' . $rowIdx, ucfirst($u_row['role']));
+            $rowIdx++;
+        }
+        foreach (range('A', 'F') as $col) {
+            $sheet4->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        $spreadsheet->setActiveSheetIndex(0);
+        
+        $filename = "Laporan_Analitik_" . date('Ymd_His') . ".xlsx";
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
+
     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
     $sheet->setTitle(substr(ucfirst($target), 0, 30));
@@ -429,6 +731,61 @@ if ($format === 'word') {
         ob_end_clean();
     }
     
+    if ($target === 'analytics') {
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
+        $section = $phpWord->addSection(['paperSize' => 'A4']);
+        
+        $section->addText('LAPORAN RINGKASAN KEUANGAN & OPERASIONAL FTRANS', ['bold' => true, 'size' => 16]);
+        $section->addText('Tanggal Cetak: ' . date('d F Y, H:i:s'), ['italic' => true]);
+        $section->addTextBreak(1);
+        
+        $section->addText('1. Metrik Kunci Keuangan & Operasional:', ['bold' => true, 'size' => 12]);
+        $section->addText('Total Pendapatan: Rp ' . number_format($total_income, 0, ',', '.'));
+        $section->addText('Total Biaya Servis: Rp ' . number_format($total_maintenance_cost, 0, ',', '.'));
+        $section->addText('Keuntungan Bersih: Rp ' . number_format($net_profit, 0, ',', '.'), ['bold' => true]);
+        $section->addText('Penyewaan Aktif: ' . $active_bookings . ' Transaksi');
+        $section->addText('Total Armada: ' . $total_vehicles . ' Unit');
+        $section->addText('Total Pelanggan Terdaftar: ' . $total_users . ' User');
+        $section->addTextBreak(1);
+        
+        $section->addText('2. Rincian Tren Keuangan (6 Bulan Terakhir):', ['bold' => true, 'size' => 12]);
+        $table = $section->addTable(['borderSize' => 6, 'borderColor' => 'CCCCCC', 'cellMargin' => 80]);
+        $table->addRow();
+        $table->addCell(2000)->addText('Bulan', ['bold' => true]);
+        $table->addCell(2500)->addText('Pendapatan', ['bold' => true]);
+        $table->addCell(2500)->addText('Biaya Servis', ['bold' => true]);
+        $table->addCell(2500)->addText('Keuntungan', ['bold' => true]);
+        
+        foreach ($months_list as $m) {
+            $table->addRow();
+            $table->addCell(2000)->addText($m['label']);
+            $table->addCell(2500)->addText('Rp ' . number_format($m['income'], 0, ',', '.'));
+            $table->addCell(2500)->addText('Rp ' . number_format($m['maintenance'], 0, ',', '.'));
+            $table->addCell(2500)->addText('Rp ' . number_format($m['income'] - $m['maintenance'], 0, ',', '.'));
+        }
+        $section->addTextBreak(1);
+
+        $section->addText('3. Distribusi Terpopuler (Top 5 Merk):', ['bold' => true, 'size' => 12]);
+        $table_tb = $section->addTable(['borderSize' => 6, 'borderColor' => 'CCCCCC', 'cellMargin' => 80]);
+        $table_tb->addRow();
+        $table_tb->addCell(4000)->addText('Nama Merk', ['bold' => true]);
+        $table_tb->addCell(4000)->addText('Jumlah Transaksi', ['bold' => true]);
+        foreach ($top_brands as $tb) {
+            $table_tb->addRow();
+            $table_tb->addCell(4000)->addText(ucwords($tb['nama_merk']));
+            $table_tb->addCell(4000)->addText($tb['count'] . ' Kali Sewa');
+        }
+        
+        $filename = "Laporan_Analitik_" . date('Ymd_His') . ".docx";
+        header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save('php://output');
+        exit;
+    }
+
     $phpWord = new \PhpOffice\PhpWord\PhpWord();
     
     $properties = $phpWord->getDocInfo();
@@ -827,9 +1184,252 @@ if ($format === 'pdf') {
             $html .= '</table>';
         }
     } else {
-        // Cetakan List Laporan (All data)
-        $html .= '<div class="title">' . strtoupper($title_text) . '</div>';
-        $html .= '<div class="subtitle">Laporan Rekapitulasi Data Aplikasi FTrans</div>';
+        if ($target === 'analytics') {
+            // QuickChart configuration
+            $chart_labels = [];
+            $chart_income = [];
+            $chart_maint = [];
+            foreach ($months_list as $m) {
+                $chart_labels[] = $m['label'];
+                $chart_income[] = $m['income'];
+                $chart_maint[] = $m['maintenance'];
+            }
+            
+            $chart_config = [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $chart_labels,
+                    'datasets' => [
+                        [
+                            'label' => 'Pendapatan',
+                            'data' => $chart_income,
+                            'backgroundColor' => 'rgba(59, 130, 246, 0.7)',
+                            'borderColor' => 'rgb(59, 130, 246)',
+                            'borderWidth' => 1
+                        ],
+                        [
+                            'label' => 'Biaya Servis',
+                            'data' => $chart_maint,
+                            'backgroundColor' => 'rgba(239, 68, 68, 0.7)',
+                            'borderColor' => 'rgb(239, 68, 68)',
+                            'borderWidth' => 1
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Perbandingan Keuangan (6 Bulan Terakhir)'
+                    ]
+                ]
+            ];
+            
+            $chart_url = "https://quickchart.io/chart?c=" . urlencode(json_encode($chart_config)) . "&w=600&h=300";
+
+            $html .= '
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h2 style="margin-bottom: 5px; color: #0F172A;">LAPORAN ANALITIK KEUANGAN & OPERASIONAL</h2>
+                <div style="font-size: 9pt; color: #64748B;">Tanggal Cetak: ' . date('d F Y, H:i:s') . '</div>
+            </div>
+            
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B;">1. Ringkasan Finansial & Operasional</h3>
+            <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                <tr style="background-color: #F8FAFC;">
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; width: 35%;">Total Pendapatan</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; color: #16A34A; font-size: 11pt;">Rp ' . number_format($total_income, 0, ',', '.') . '</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; width: 35%;">Penyewaan Aktif</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">' . $active_bookings . ' Transaksi</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">Total Pengeluaran Servis</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; color: #DC2626; font-size: 11pt;">Rp ' . number_format($total_maintenance_cost, 0, ',', '.') . '</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">Total Armada</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">' . $total_vehicles . ' Unit</td>
+                </tr>
+                <tr style="background-color: #F1F5F9;">
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; color: #0F172A;">Keuntungan Bersih (Net Profit)</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold; color: ' . ($net_profit >= 0 ? '#16A34A' : '#DC2626') . '; font-size: 12pt;">Rp ' . number_format($net_profit, 0, ',', '.') . '</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">Total Pelanggan Terdaftar</td>
+                    <td style="padding: 10px; border: 1px solid #E2E8F0; font-weight: bold;">' . $total_users . ' User</td>
+                </tr>
+            </table>
+            
+            <div style="text-align: center; margin-top: 15px; margin-bottom: 25px;">
+                <img src="' . $chart_url . '" style="width: 550px; height: 275px; border: 1px solid #E2E8F0; border-radius: 6px;">
+            </div>
+            
+            <pagebreak />
+            
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B; margin-top: 20px;">2. Tren Bulanan (Bulan Berjalan)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">No</th>
+                        <th>Bulan</th>
+                        <th style="text-align: right;">Pendapatan</th>
+                        <th style="text-align: right;">Biaya Servis</th>
+                        <th style="text-align: right;">Keuntungan Bersih</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                $no = 1;
+                foreach ($months_list as $m) {
+                    $profit = $m['income'] - $m['maintenance'];
+                    $profit_color = ($profit >= 0) ? '#16A34A' : '#DC2626';
+                    $html .= '
+                    <tr>
+                        <td class="text-center">' . $no++ . '</td>
+                        <td>' . $m['label'] . '</td>
+                        <td class="text-right">Rp ' . number_format($m['income'], 0, ',', '.') . '</td>
+                        <td class="text-right">Rp ' . number_format($m['maintenance'], 0, ',', '.') . '</td>
+                        <td class="text-right" style="font-weight: bold; color: ' . $profit_color . ';">Rp ' . number_format($profit, 0, ',', '.') . '</td>
+                    </tr>';
+                }
+            $html .= '
+                </tbody>
+            </table>
+            
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B; margin-top: 30px;">3. Distribusi Terpopuler (Top 5 Merk)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">No</th>
+                        <th>Nama Merk Kendaraan</th>
+                        <th style="width: 30%; text-align: center;">Jumlah Transaksi</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                if (!empty($top_brands)) {
+                    $no = 1;
+                    foreach ($top_brands as $tb) {
+                        $html .= '
+                        <tr>
+                            <td class="text-center">' . $no++ . '</td>
+                            <td style="font-weight: bold;">' . htmlspecialchars(ucwords($tb['nama_merk'])) . '</td>
+                            <td class="text-center">' . $tb['count'] . ' Kali Sewa</td>
+                        </tr>';
+                    }
+                } else {
+                    $html .= '<tr><td colspan="3" class="text-center text-muted">Belum ada data distribusi penyewaan.</td></tr>';
+                }
+            $html .= '
+                </tbody>
+            </table>
+
+            <pagebreak />
+            
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B;">4. Detail Pengeluaran Servis / Perawatan</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">No</th>
+                        <th style="width: 15%;">ID Servis</th>
+                        <th style="width: 25%;">Nama Kendaraan</th>
+                        <th>Deskripsi Servis</th>
+                        <th style="width: 15%; text-align: right;">Biaya</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                if (!empty($maintenance_data)) {
+                    $no = 1;
+                    foreach (array_slice($maintenance_data, 0, 15) as $md) {
+                        $html .= '
+                        <tr>
+                            <td class="text-center">' . $no++ . '</td>
+                            <td class="text-center font-monospace">#MNT-' . str_pad($md['id'], 5, '0', STR_PAD_LEFT) . '</td>
+                            <td>' . htmlspecialchars($md['nama_kendaraan']) . '</td>
+                            <td>' . htmlspecialchars($md['deskripsi']) . '</td>
+                            <td class="text-right">Rp ' . number_format($md['biaya'], 0, ',', '.') . '</td>
+                        </tr>';
+                    }
+                    if (count($maintenance_data) > 15) {
+                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($maintenance_data) - 15) . ' data perawatan lainnya ...</td></tr>';
+                    }
+                } else {
+                    $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat pengeluaran servis.</td></tr>';
+                }
+            $html .= '
+                </tbody>
+            </table>
+
+            <pagebreak />
+            
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B;">5. Detail Riwayat Penyewaan Kendaraan</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">No</th>
+                        <th style="width: 15%;">No Invoice</th>
+                        <th style="width: 25%;">Penyewa</th>
+                        <th>Kendaraan</th>
+                        <th style="width: 15%; text-align: right;">Total Biaya</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                if (!empty($rentals_data)) {
+                    $no = 1;
+                    foreach (array_slice($rentals_data, 0, 15) as $rd) {
+                        $html .= '
+                        <tr>
+                            <td class="text-center">' . $no++ . '</td>
+                            <td class="text-center font-monospace">#INV-' . str_pad($rd['id_sewa'], 5, '0', STR_PAD_LEFT) . '</td>
+                            <td>' . htmlspecialchars($rd['nama_user']) . '</td>
+                            <td>' . htmlspecialchars($rd['nama_kendaraan']) . '</td>
+                            <td class="text-right">Rp ' . number_format($rd['total_biaya'], 0, ',', '.') . '</td>
+                        </tr>';
+                    }
+                    if (count($rentals_data) > 15) {
+                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($rentals_data) - 15) . ' data transaksi lainnya ...</td></tr>';
+                    }
+                } else {
+                    $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat penyewaan.</td></tr>';
+                }
+            $html .= '
+                </tbody>
+            </table>
+
+            <h3 style="border-bottom: 1px solid #CBD5E1; padding-bottom: 5px; color: #1E293B; margin-top: 30px;">6. Informasi Anggota Terdaftar (Users)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">No</th>
+                        <th style="width: 12%;">ID User</th>
+                        <th>Nama Pengguna</th>
+                        <th>Email</th>
+                        <th style="width: 20%;">Nomor HP</th>
+                    </tr>
+                </thead>
+                <tbody>';
+                if (!empty($users_data)) {
+                    $no = 1;
+                    foreach (array_slice($users_data, 0, 15) as $ud) {
+                        $html .= '
+                        <tr>
+                            <td class="text-center">' . $no++ . '</td>
+                            <td class="text-center">' . $ud['id'] . '</td>
+                            <td style="font-weight: bold;">' . htmlspecialchars($ud['nama']) . '</td>
+                            <td>' . htmlspecialchars($ud['email']) . '</td>
+                            <td class="text-center">' . htmlspecialchars($ud['no_hp'] ?? '-') . '</td>
+                        </tr>';
+                    }
+                    if (count($users_data) > 15) {
+                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($users_data) - 15) . ' data user lainnya ...</td></tr>';
+                    }
+                } else {
+                    $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada pelanggan terdaftar.</td></tr>';
+                }
+            $html .= '
+                </tbody>
+            </table>
+            
+            <div class="footer-note" style="margin-top: 80px;">
+                <p>Laporan Resmi FTrans Car Rental — Dicetak secara otomatis</p>
+            </div>
+            ';
+        } else {
+            // Cetakan List Laporan (All data)
+            $html .= '<div class="title">' . strtoupper($title_text) . '</div>';
+            $html .= '<div class="subtitle">Laporan Rekapitulasi Data Aplikasi FTrans</div>';
         
         $html .= '<table class="data-table">';
         $html .= '<thead>';
@@ -880,6 +1480,7 @@ if ($format === 'pdf') {
         }
         $html .= '</tbody>';
         $html .= '</table>';
+        }
     }
     
     $mpdf->WriteHTML($html);

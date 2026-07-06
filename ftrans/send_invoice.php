@@ -205,3 +205,108 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
     $mail->send();
     return true;
 }
+
+/**
+ * Sends an email notification to all admin users when there is a maintenance expenditure.
+ */
+function send_expense_notification_email($maintenance_id) {
+    global $mysqli;
+    
+    // Fetch maintenance and vehicle details
+    $stmt = mysqli_prepare($mysqli, "
+        SELECT m.*, k.nama_kendaraan, k.warna 
+        FROM maintenance m
+        JOIN kendaraan k ON m.kode_unik_kendaraan = k.kode_unik_kendaraan
+        WHERE m.id = ?
+    ");
+    mysqli_stmt_bind_param($stmt, 'i', $maintenance_id);
+    mysqli_stmt_execute($stmt);
+    $res = mysqli_stmt_get_result($stmt);
+    $m = mysqli_fetch_assoc($res);
+    mysqli_stmt_close($stmt);
+    
+    if (!$m) {
+        return false;
+    }
+    
+    // Fetch all admin emails
+    $admin_res = mysqli_query($mysqli, "SELECT email, nama FROM users WHERE role = 'admin'");
+    $admins = mysqli_fetch_all($admin_res, MYSQLI_ASSOC);
+    
+    if (empty($admins)) {
+        return false;
+    }
+    
+    $mail = new PHPMailer(true);
+    $mail->SMTPDebug  = 0;
+    $mail->isSMTP();
+    $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $_ENV['SMTP_USER'] ?? '';
+    $mail->Password   = $_ENV['SMTP_PASS'] ?? '';
+    
+    $port = intval($_ENV['SMTP_PORT'] ?? 465);
+    $mail->Port       = $port;
+    if ($port === 465) {
+        $mail->SMTPSecure = 'ssl';
+    } else {
+        $mail->SMTPSecure = 'tls';
+    }
+    
+    $mail->Timeout    = 10;
+    $mail->CharSet    = 'UTF-8';
+    
+    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@ftrans.com', 'FTrans System Notification');
+    
+    // Add all admin email addresses
+    foreach ($admins as $admin) {
+        $mail->addAddress($admin['email'], $admin['nama']);
+    }
+    
+    $mail->isHTML(true);
+    $mail->Subject = 'Pemberitahuan Pengeluaran Servis/Perawatan #' . $maintenance_id;
+    
+    $mail->Body = '
+    <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #dc2626; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Laporan Pengeluaran Baru</h2>
+        <p>Halo Admin,</p>
+        <p>Sistem mencatat adanya pengeluaran baru untuk pemeliharaan/servis unit kendaraan. Berikut adalah detail lengkap pengeluaran:</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold; width: 40%;">ID Perawatan:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">#MNT-' . str_pad($m['id'], 5, '0', STR_PAD_LEFT) . '</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Kendaraan:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">' . htmlspecialchars($m['nama_kendaraan']) . ' (' . htmlspecialchars($m['warna']) . ')</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Kode Kendaraan:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">' . htmlspecialchars($m['kode_unik_kendaraan']) . '</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Deskripsi Servis:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">' . htmlspecialchars($m['deskripsi']) . '</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Tanggal Masuk:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">' . date('d F Y', strtotime($m['tanggal_mulai'])) . '</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">Tanggal Selesai:</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">' . date('d F Y', strtotime($m['tanggal_selesai'])) . '</td>
+            </tr>
+            <tr style="background-color: #fef2f2;">
+                <td style="padding: 8px; font-weight: bold; color: #dc2626;">Biaya Pengeluaran:</td>
+                <td style="padding: 8px; font-weight: bold; color: #dc2626;">Rp ' . number_format($m['biaya'], 0, ',', '.') . '</td>
+            </tr>
+        </table>
+        <p>Pencatatan ini telah dimasukkan ke dalam histori pembukuan dan bagan analitik keuangan.</p>
+        <br>
+        <p>Salam hangat,<br><strong>Sistem Pemantauan FTrans</strong></p>
+    </div>
+    ';
+    
+    $mail->send();
+    return true;
+}
