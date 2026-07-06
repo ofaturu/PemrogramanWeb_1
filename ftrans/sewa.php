@@ -10,6 +10,10 @@ $error_add = '';
 $error_edit = '';
 $error_edit_id = '';
 
+$get_car_code = trim($_GET['rent_vehicle'] ?? '');
+$default_sewa = date('Y-m-d\TH:i', strtotime('+1 hour'));
+$default_kembali = date('Y-m-d\TH:i', strtotime('+1 day +1 hour'));
+
 // Fetch users for dropdown
 if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     $users_query = "SELECT id, nama FROM users ORDER BY nama ASC";
@@ -707,7 +711,7 @@ include 'partials/head.php';
 
               <input type="hidden" name="action" value="add">
 
-              <div class="row g-3">
+              <div class="row g-3">                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                 <div class="col-md-6">
                   <label class="form-label" for="add_id_user">Nama Penyewa (User) *</label>
                   <select id="add_id_user" name="id_user" class="form-select" required>
@@ -731,6 +735,31 @@ include 'partials/head.php';
                     <?php endforeach; ?>
                   </select>
                 </div>
+                <?php else: ?>
+                <input type="hidden" name="id_user" value="<?= $_SESSION['user_id'] ?>">
+                <div class="col-md-12">
+                  <label class="form-label" for="add_kode_unik">Kendaraan Pilihan *</label>
+                  <?php if (!empty($get_car_code)): ?>
+                    <input type="hidden" name="kode_unik_kendaraan" value="<?= htmlspecialchars($get_car_code) ?>">
+                    <select id="add_kode_unik" class="form-select" disabled>
+                      <?php foreach ($vehicles as $k): ?>
+                        <option value="<?= $k['kode_unik_kendaraan'] ?>" data-price="<?= $k['harga_per_hari'] ?>" <?= ($get_car_code == $k['kode_unik_kendaraan']) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($k['nama_kendaraan']) ?> - Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?>/hari
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                  <?php else: ?>
+                    <select id="add_kode_unik" name="kode_unik_kendaraan" class="form-select" required>
+                      <option value="" disabled selected>-- Pilih Kendaraan --</option>
+                      <?php foreach ($vehicles as $k): ?>
+                        <option value="<?= $k['kode_unik_kendaraan'] ?>" data-price="<?= $k['harga_per_hari'] ?>" <?= (($_POST['kode_unik_kendaraan'] ?? '') == $k['kode_unik_kendaraan']) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($k['nama_kendaraan']) ?> - Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?>/hari
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                  <?php endif; ?>
+                </div>
+                <?php endif; ?>
 
                 <div class="col-md-6">
                   <label class="form-label" for="add_tanggal_sewa">Tanggal Sewa *</label>

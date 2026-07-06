@@ -99,7 +99,7 @@ include 'partials/head.php';
                 <i class="fa fa-exclamation-triangle me-1"></i> Anda tidak dapat menghapus akun Anda sendiri.
             </div>
         <?php endif; ?>
-
+        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 bg-body-tertiary">
             <h5 class="mb-0 text-body"><i class="fa fa-users me-2 text-primary"></i>Daftar User</h5>
@@ -114,7 +114,6 @@ include 'partials/head.php';
                   <?php endif; ?>
                 </div>
               </form>
-              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
               <div class="dropdown mt-2 mt-sm-0">
                 <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
                   <i class="fa fa-download me-1"></i> Export
@@ -125,7 +124,6 @@ include 'partials/head.php';
                   <li><a class="dropdown-item" href="export.php?target=users&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
-              <?php endif; ?>
             </div>
           </div>
           <div class="card-body p-0">
@@ -181,7 +179,7 @@ include 'partials/head.php';
                       <?php endforeach; ?>
                   <?php else: ?>
                       <tr>
-                          <td colspan="7" class="text-center py-5 text-muted">
+                          <td colspan="8" class="text-center py-5 text-muted">
                               <i class="fa fa-folder-open fa-2x mb-3 text-muted d-block"></i>
                               Belum ada data user.
                           </td>
@@ -222,6 +220,114 @@ include 'partials/head.php';
             <?php endif; ?>
           </div>
         </div>
+        <?php else: ?>
+        <!-- Standard User Inline Personal Details (User Mode) -->
+        <?php 
+        $u = $users_list[0] ?? ['id' => $_SESSION['user_id'], 'nama' => $_SESSION['user_nama'], 'email' => '', 'no_hp' => ''];
+        $user_id = $u['id'];
+        $rental_query = "SELECT p.id_sewa, p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, p.status, k.nama_kendaraan
+                         FROM penyewaan p
+                         LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
+                         WHERE p.id_user = ?
+                         ORDER BY p.tanggal_sewa DESC";
+        $r_stmt = mysqli_prepare($mysqli, $rental_query);
+        mysqli_stmt_bind_param($r_stmt, 'i', $user_id);
+        mysqli_stmt_execute($r_stmt);
+        $r_res = mysqli_stmt_get_result($r_stmt);
+        $user_rentals = mysqli_fetch_all($r_res, MYSQLI_ASSOC);
+        mysqli_stmt_close($r_stmt);
+        ?>
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border border-secondary border-opacity-10 h-100">
+              <div class="card-header bg-body-tertiary">
+                <h6 class="mb-0 text-body"><i class="fa fa-user me-2 text-primary"></i>Informasi Akun</h6>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="text-muted small">Nama Pengguna</div>
+                  <div class="fw-bold fs-5 text-body-emphasis"><?= htmlspecialchars($u['nama']) ?></div>
+                </div>
+                <div class="mb-3">
+                  <div class="text-muted small">Alamat Email</div>
+                  <div class="text-body-emphasis fw-semibold"><?= htmlspecialchars($u['email']) ?></div>
+                </div>
+                <div class="mb-3">
+                  <div class="text-muted small">Nomor Handphone</div>
+                  <div class="text-body-emphasis fw-semibold"><?= htmlspecialchars($u['no_hp'] ?? '-') ?></div>
+                </div>
+                <hr class="text-body-secondary my-3">
+                <a href="profile.php" class="btn btn-outline-primary btn-sm w-100"><i class="fa fa-edit me-1"></i> Edit Data Diri</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-8 mb-4">
+            <div class="card shadow-sm border border-secondary border-opacity-10 h-100">
+              <div class="card-header d-flex align-items-center justify-content-between bg-body-tertiary">
+                <h6 class="mb-0 text-body"><i class="fa fa-history me-2 text-success"></i>Riwayat Transaksi Rental</h6>
+                <span class="badge bg-success bg-opacity-10 text-success"><?= count($user_rentals) ?> Transaksi</span>
+              </div>
+              <div class="card-body p-0">
+                <?php if (count($user_rentals) > 0): ?>
+                  <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                      <thead class="table-light text-body-secondary fw-semibold small">
+                        <tr>
+                          <th scope="col" class="ps-4">No</th>
+                          <th scope="col">Nama Kendaraan</th>
+                          <th scope="col">Lama Sewa</th>
+                          <th scope="col">Total Biaya</th>
+                          <th scope="col">Status</th>
+                          <th scope="col" class="pe-4 text-end">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <?php foreach ($user_rentals as $idx => $rent): ?>
+                          <?php
+                          $t_sewa = strtotime($rent['tanggal_sewa']);
+                          $t_kembali = strtotime($rent['tanggal_kembali']);
+                          $diff_days = ceil(($t_kembali - $t_sewa) / 86400);
+                          if ($diff_days <= 0) $diff_days = 1;
+                          ?>
+                          <tr>
+                            <td class="ps-4 text-body-secondary"><?= $idx + 1 ?></td>
+                            <td class="fw-bold text-body-emphasis"><?= htmlspecialchars($rent['nama_kendaraan'] ?? 'N/A') ?></td>
+                            <td><?= $diff_days ?> Hari</td>
+                            <td class="fw-bold text-success">Rp <?= number_format($rent['total_biaya'], 0, ',', '.') ?></td>
+                            <td>
+                              <?php
+                              $st = $rent['status'];
+                              if ($st === 'booking') {
+                                  echo '<span class="badge bg-warning text-dark px-2 py-1">Booking</span>';
+                              } elseif ($st === 'sedang_disewa') {
+                                  echo '<span class="badge bg-info text-white px-2 py-1">Sedang Disewa</span>';
+                              } elseif ($st === 'selesai') {
+                                  echo '<span class="badge bg-success text-white px-2 py-1">Selesai</span>';
+                              } else {
+                                  echo '<span class="badge bg-danger text-white px-2 py-1">Dibatalkan</span>';
+                              }
+                              ?>
+                            </td>
+                            <td class="pe-4 text-end">
+                              <a href="bayar.php?id=<?= $rent['id_sewa'] ?>" class="btn btn-sm btn-primary text-white"><i class="fa fa-receipt me-1"></i> Rincian & Bayar</a>
+                            </td>
+                          </tr>
+                        <?php endforeach; ?>
+                      </tbody>
+                    </table>
+                  </div>
+                <?php else: ?>
+                  <div class="text-center py-5 text-muted">
+                    <i class="fa fa-folder-open fa-3x mb-3 text-secondary"></i>
+                    <p class="mb-0">Belum ada riwayat transaksi penyewaan yang tercatat.</p>
+                  </div>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
+        </div>
+        <?php endif; ?>
 
       </div>
     </div>

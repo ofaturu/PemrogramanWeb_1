@@ -49,20 +49,6 @@
     </li>
 
 
-    <li class="nav-item">
-      <a class="nav-link <?= ($activePage ?? '') === 'profile' ? 'active' : '' ?>" href="profile.php">
-        <i class="nav-icon fa fa-user-edit me-2"></i>
-        My Profile
-      </a>
-    </li>
-
-    <li class="nav-divider"></li>
-    <li class="nav-item">
-      <a class="nav-link text-danger" href="logout.php">
-        <i class="nav-icon fa fa-sign-out-alt me-2 text-danger"></i>
-        Logout
-      </a>
-    </li>
   </ul>
   <div class="sidebar-footer border-top d-none d-md-flex">
     <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>

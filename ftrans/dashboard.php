@@ -303,6 +303,7 @@ include 'partials/head.php';
               <?php endif; ?>
             </div>
           </div>
+          <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover table-striped align-middle mb-0">
@@ -363,17 +364,14 @@ include 'partials/head.php';
                                   <a href="export.php?target=kendaraan&format=pdf&kode=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak PDF" target="_blank">
                                       <i class="fa fa-print"></i> Cetak
                                   </a>
-                                  <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                                      <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
-                                          <i class="fa fa-edit"></i> Edit
-                                      </button>
-                                      <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteModal-<?= $k['kode_unik_kendaraan'] ?>">
-                                          <i class="fa fa-trash"></i> Hapus
-                                      </button>
-                                  <?php endif; ?>
+                                  <button type="button" class="btn btn-outline-info d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#editModal-<?= $k['kode_unik_kendaraan'] ?>">
+                                      <i class="fa fa-edit"></i> Edit
+                                  </button>
+                                  <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#deleteModal-<?= $k['kode_unik_kendaraan'] ?>">
+                                      <i class="fa fa-trash"></i> Hapus
+                                  </button>
                               </div>
 
-                              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                               <!-- Edit Modal -->
                               <div class="modal fade text-start" id="editModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="editModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
                                 <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -384,119 +382,75 @@ include 'partials/head.php';
                                     </div>
                                     <form method="POST" action="" enctype="multipart/form-data" novalidate>
                                       <div class="modal-body p-4">
-                                        <?php if (!empty($error_edit) && $error_edit_kode == $k['kode_unik_kendaraan']): ?>
-                                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
-                                                <i class="fa fa-exclamation-triangle me-1"></i> <?= htmlspecialchars($error_edit) ?>
-                                            </div>
-                                        <?php endif; ?>
-
                                         <input type="hidden" name="action" value="edit">
                                         <input type="hidden" name="kode_unik_kendaraan" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>">
 
                                         <div class="row g-3">
                                           <div class="col-md-6">
-                                            <label class="form-label" for="kode_unik_<?= $k['kode_unik_kendaraan'] ?>">Kode Unik Kendaraan</label>
-                                            <input type="text" id="kode_unik_<?= $k['kode_unik_kendaraan'] ?>" class="form-control text-warning bg-dark border border-secondary" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>" readonly disabled>
+                                            <label class="form-label" for="edit_kode_unik_<?= $k['kode_unik_kendaraan'] ?>">Kode Unik Kendaraan</label>
+                                            <input type="text" id="edit_kode_unik_<?= $k['kode_unik_kendaraan'] ?>" class="form-control text-warning bg-dark border border-secondary" value="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>" readonly disabled>
                                           </div>
-                                          <?php
-                                          if ($error_edit_kode == $k['kode_unik_kendaraan']) {
-                                              $cur_id_merk = intval($_POST['id_merk'] ?? 0);
-                                              $cur_model = $_POST['model_kendaraan'] ?? '';
-                                          } else {
-                                              $cur_id_merk = $k['id_merk'];
-                                              // Get the brand name for this vehicle's id_merk to strip it from nama_kendaraan
-                                              $cur_brand_name = '';
-                                              foreach ($merk_options as $mo) {
-                                                  if ($mo['id_merk'] == $cur_id_merk) {
-                                                      $cur_brand_name = $mo['nama_merk'];
-                                                      break;
-                                                  }
-                                              }
-                                              $cur_model = $k['nama_kendaraan'];
-                                              if (!empty($cur_brand_name) && stripos($k['nama_kendaraan'], $cur_brand_name) === 0) {
-                                                  $cur_model = trim(substr($k['nama_kendaraan'], strlen($cur_brand_name)));
-                                              }
-                                          }
-                                          ?>
                                           <div class="col-md-6">
-                                            <label class="form-label" for="merk_<?= $k['kode_unik_kendaraan'] ?>">Merk Kendaraan *</label>
-                                            <select id="merk_<?= $k['kode_unik_kendaraan'] ?>" name="id_merk" class="form-select select2-brand-edit" data-modal-id="editModal-<?= $k['kode_unik_kendaraan'] ?>" required>
+                                            <label class="form-label" for="edit_id_merk_<?= $k['kode_unik_kendaraan'] ?>">Merk Kendaraan *</label>
+                                            <select id="edit_id_merk_<?= $k['kode_unik_kendaraan'] ?>" name="id_merk" class="form-select select2-brand-edit" data-modal-id="editModal-<?= $k['kode_unik_kendaraan'] ?>" required>
                                               <option value="" disabled>-- Pilih Merk Kendaraan --</option>
                                               <?php foreach ($merk_options as $option): ?>
-                                                <option value="<?= $option['id_merk'] ?>" <?= ($cur_id_merk == $option['id_merk']) ? 'selected' : '' ?>><?= htmlspecialchars(ucwords($option['nama_merk'])) ?></option>
+                                                <option value="<?= $option['id_merk'] ?>" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['id_merk'] ?? $k['id_merk']) : $k['id_merk']) == $option['id_merk']) ? 'selected' : '' ?>><?= htmlspecialchars(ucwords($option['nama_merk'])) ?></option>
                                               <?php endforeach; ?>
                                             </select>
                                           </div>
                                           <div class="col-md-6">
-                                            <label class="form-label" for="model_<?= $k['kode_unik_kendaraan'] ?>">Model Kendaraan *</label>
-                                            <input type="text" id="model_<?= $k['kode_unik_kendaraan'] ?>" name="model_kendaraan" class="form-control" placeholder="Contoh: Avanza atau Vario 150" value="<?= htmlspecialchars($cur_model) ?>" required>
+                                            <label class="form-label" for="edit_model_<?= $k['kode_unik_kendaraan'] ?>">Model Kendaraan *</label>
+                                            <input type="text" id="edit_model_<?= $k['kode_unik_kendaraan'] ?>" name="model_kendaraan" class="form-control" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['model_kendaraan'] ?? '') : substr($k['nama_kendaraan'], strpos($k['nama_kendaraan'], ' ') + 1)) ?>" required>
                                           </div>
                                           <div class="col-md-6">
-                                            <label class="form-label" for="jenis_<?= $k['kode_unik_kendaraan'] ?>">Jenis Kendaraan *</label>
-                                            <select id="jenis_<?= $k['kode_unik_kendaraan'] ?>" name="jenis_kendaraan" class="form-select" required>
-                                              <?php 
-                                              $curr_jenis = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['jenis_kendaraan'] ?? $k['jenis_kendaraan']) : $k['jenis_kendaraan'];
-                                              $j_curr = strtolower(trim($curr_jenis)); 
-                                              ?>
-                                              <option value="Roda 2" <?= $j_curr === 'roda 2' ? 'selected' : '' ?>>Roda 2 (Motor)</option>
-                                              <option value="Roda 4" <?= $j_curr === 'roda 4' ? 'selected' : '' ?>>Roda 4 (Mobil)</option>
+                                            <label class="form-label" for="edit_jenis_<?= $k['kode_unik_kendaraan'] ?>">Jenis Kendaraan *</label>
+                                            <select id="edit_jenis_<?= $k['kode_unik_kendaraan'] ?>" name="jenis_kendaraan" class="form-select" required>
+                                              <option value="Roda 2" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['jenis_kendaraan'] ?? $k['jenis_kendaraan']) : $k['jenis_kendaraan']) === 'Roda 2') ? 'selected' : '' ?>>Roda 2 (Motor)</option>
+                                              <option value="Roda 4" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['jenis_kendaraan'] ?? $k['jenis_kendaraan']) : $k['jenis_kendaraan']) === 'Roda 4') ? 'selected' : '' ?>>Roda 4 (Mobil)</option>
                                             </select>
                                           </div>
                                           <div class="col-md-6">
-                                            <label class="form-label" for="harga_<?= $k['kode_unik_kendaraan'] ?>">Harga per Hari (Rp) *</label>
-                                            <input type="number" id="harga_<?= $k['kode_unik_kendaraan'] ?>" name="harga_per_hari" class="form-control" min="0" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['harga_per_hari'] ?? $k['harga_per_hari']) : $k['harga_per_hari']) ?>" required>
+                                            <label class="form-label" for="edit_harga_<?= $k['kode_unik_kendaraan'] ?>">Harga per Hari (Rp) *</label>
+                                            <input type="number" id="edit_harga_<?= $k['kode_unik_kendaraan'] ?>" name="harga_per_hari" class="form-control" min="0" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['harga_per_hari'] ?? $k['harga_per_hari']) : $k['harga_per_hari']) ?>" required>
                                           </div>
-                                          
-                                          <?php
-                                          $cur_transmisi = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['transmisi'] ?? ($k['transmisi'] ?? 'Matic')) : ($k['transmisi'] ?? 'Matic');
-                                          $cur_tempat_duduk = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['tempat_duduk'] ?? ($k['tempat_duduk'] ?? '5 Seater')) : ($k['tempat_duduk'] ?? '5 Seater');
-                                          $cur_bahan_bakar = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['bahan_bakar'] ?? ($k['bahan_bakar'] ?? 'Bensin')) : ($k['bahan_bakar'] ?? 'Bensin');
-                                          $cur_status_kendaraan = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['status_kendaraan'] ?? ($k['status_kendaraan'] ?? 'tersedia')) : ($k['status_kendaraan'] ?? 'tersedia');
-                                          $cur_stok = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['stok'] ?? ($k['stok'] ?? 1)) : ($k['stok'] ?? 1);
-                                          $cur_warna = $error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['warna'] ?? ($k['warna'] ?? 'Hitam')) : ($k['warna'] ?? 'Hitam');
-                                          ?>
-                                          
                                           <div class="col-md-4">
-                                            <label class="form-label" for="transmisi_<?= $k['kode_unik_kendaraan'] ?>">Transmisi *</label>
-                                            <select id="transmisi_<?= $k['kode_unik_kendaraan'] ?>" name="transmisi" class="form-select" required>
-                                              <option value="Matic" <?= $cur_transmisi === 'Matic' ? 'selected' : '' ?>>Matic</option>
-                                              <option value="Manual" <?= $cur_transmisi === 'Manual' ? 'selected' : '' ?>>Manual</option>
+                                            <label class="form-label" for="edit_transmisi_<?= $k['kode_unik_kendaraan'] ?>">Transmisi *</label>
+                                            <select id="edit_transmisi_<?= $k['kode_unik_kendaraan'] ?>" name="transmisi" class="form-select" required>
+                                              <option value="Matic" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['transmisi'] ?? $k['transmisi']) : $k['transmisi']) === 'Matic') ? 'selected' : '' ?>>Matic</option>
+                                              <option value="Manual" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['transmisi'] ?? $k['transmisi']) : $k['transmisi']) === 'Manual') ? 'selected' : '' ?>>Manual</option>
                                             </select>
                                           </div>
                                           <div class="col-md-4">
-                                            <label class="form-label" for="tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Seat *</label>
-                                            <input type="text" id="tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>" name="tempat_duduk" class="form-control" value="<?= htmlspecialchars($cur_tempat_duduk) ?>" required>
+                                            <label class="form-label" for="edit_tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Seat *</label>
+                                            <input type="text" id="edit_tempat_duduk_<?= $k['kode_unik_kendaraan'] ?>" name="tempat_duduk" class="form-control" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['tempat_duduk'] ?? $k['tempat_duduk']) : ($k['tempat_duduk'] ?? '5 Seater')) ?>" required>
                                           </div>
                                           <div class="col-md-4">
-                                            <label class="form-label" for="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>">Bahan Bakar *</label>
-                                            <input type="text" id="bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($cur_bahan_bakar) ?>" required>
+                                            <label class="form-label" for="edit_bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>">Bahan Bakar *</label>
+                                            <input type="text" id="edit_bahan_bakar_<?= $k['kode_unik_kendaraan'] ?>" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['bahan_bakar'] ?? $k['bahan_bakar']) : ($k['bahan_bakar'] ?? 'Bensin')) ?>" required>
                                           </div>
                                           <div class="col-md-4">
-                                            <label class="form-label" for="status_<?= $k['kode_unik_kendaraan'] ?>">Status Ketersediaan *</label>
-                                            <select id="status_<?= $k['kode_unik_kendaraan'] ?>" name="status_kendaraan" class="form-select" required>
-                                              <option value="tersedia" <?= $cur_status_kendaraan === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
-                                              <option value="disewa" <?= $cur_status_kendaraan === 'disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
-                                              <option value="perawatan" <?= $cur_status_kendaraan === 'perawatan' ? 'selected' : '' ?>>Dalam Perawatan</option>
+                                            <label class="form-label" for="edit_status_<?= $k['kode_unik_kendaraan'] ?>">Status Ketersediaan *</label>
+                                            <select id="edit_status_<?= $k['kode_unik_kendaraan'] ?>" name="status_kendaraan" class="form-select" required>
+                                              <option value="tersedia" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['status_kendaraan'] ?? $k['status_kendaraan']) : $k['status_kendaraan']) === 'tersedia') ? 'selected' : '' ?>>Tersedia</option>
+                                              <option value="disewa" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['status_kendaraan'] ?? $k['status_kendaraan']) : $k['status_kendaraan']) === 'disewa') ? 'selected' : '' ?>>Sedang Disewa</option>
+                                              <option value="perawatan" <?= (($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['status_kendaraan'] ?? $k['status_kendaraan']) : $k['status_kendaraan']) === 'perawatan') ? 'selected' : '' ?>>Dalam Perawatan</option>
                                             </select>
                                           </div>
                                           <div class="col-md-4">
-                                            <label class="form-label" for="stok_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Stok *</label>
-                                            <input type="number" id="stok_<?= $k['kode_unik_kendaraan'] ?>" name="stok" class="form-control" min="0" value="<?= htmlspecialchars($cur_stok) ?>" required>
+                                            <label class="form-label" for="edit_stok_<?= $k['kode_unik_kendaraan'] ?>">Jumlah Stok *</label>
+                                            <input type="number" id="edit_stok_<?= $k['kode_unik_kendaraan'] ?>" name="stok" class="form-control" min="0" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['stok'] ?? $k['stok']) : ($k['stok'] ?? 1)) ?>" required>
                                           </div>
                                           <div class="col-md-4">
-                                            <label class="form-label" for="warna_<?= $k['kode_unik_kendaraan'] ?>">Warna Tersedia *</label>
-                                            <input type="text" id="warna_<?= $k['kode_unik_kendaraan'] ?>" name="warna" class="form-control" value="<?= htmlspecialchars($cur_warna) ?>" required>
+                                            <label class="form-label" for="edit_warna_<?= $k['kode_unik_kendaraan'] ?>">Warna Tersedia *</label>
+                                            <input type="text" id="edit_warna_<?= $k['kode_unik_kendaraan'] ?>" name="warna" class="form-control" value="<?= htmlspecialchars($error_edit_kode == $k['kode_unik_kendaraan'] ? ($_POST['warna'] ?? $k['warna']) : ($k['warna'] ?? 'Hitam')) ?>" required>
                                           </div>
-                                          
-                                          <div class="col-12 my-3">
-                                            <label class="form-label d-block">Gambar Saat Ini</label>
-                                            <?php if (!empty($k['gambar']) && file_exists('uploads/' . $k['gambar'])): ?>
-                                                <img src="uploads/<?= htmlspecialchars($k['gambar']) ?>" alt="Mobil" class="rounded mb-2 img-thumbnail" style="width: 150px; height: 100px; object-fit: cover;">
-                                            <?php else: ?>
-                                                <span class="badge bg-dark mb-2 py-2 px-3">Belum ada gambar</span>
+                                          <div class="col-12">
+                                            <label class="form-label" for="edit_gambar_<?= $k['kode_unik_kendaraan'] ?>">Ganti Gambar Kendaraan (Opsional)</label>
+                                            <input type="file" id="edit_gambar_<?= $k['kode_unik_kendaraan'] ?>" name="gambar" class="form-control" accept="image/*">
+                                            <?php if (!empty($k['gambar'])): ?>
+                                                <div class="form-text">Gambar saat ini: <code><?= htmlspecialchars($k['gambar']) ?></code></div>
                                             <?php endif; ?>
-                                            <input type="file" id="gambar_<?= $k['kode_unik_kendaraan'] ?>" name="gambar" class="form-control" accept="image/*">
-                                            <div class="form-text text-muted">Biarkan kosong jika tidak ingin mengubah gambar.</div>
                                           </div>
                                         </div>
                                       </div>
@@ -509,7 +463,7 @@ include 'partials/head.php';
                                 </div>
                               </div>
 
-                              <!-- Delete Confirmation Modal -->
+                              <!-- Delete Modal -->
                               <div class="modal fade text-start" id="deleteModal-<?= $k['kode_unik_kendaraan'] ?>" tabindex="-1" aria-labelledby="deleteModalLabel-<?= $k['kode_unik_kendaraan'] ?>" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                   <div class="modal-content border-0 shadow-lg">
@@ -519,9 +473,9 @@ include 'partials/head.php';
                                     </div>
                                     <div class="modal-body p-4 text-center">
                                       <i class="fa fa-trash fa-3x text-danger mb-3"></i>
-                                      <h5 class="mb-2">Apakah Anda yakin ingin menghapus kendaraan ini?</h5>
-                                      <p class="text-muted mb-0"><b><?= htmlspecialchars($k['nama_kendaraan']) ?></b> (Kode: <?= htmlspecialchars($k['kode_unik_kendaraan']) ?>)</p>
-                                      <p class="text-danger small mt-2 mb-0"><i class="fa fa-info-circle"></i> Tindakan ini tidak dapat dibatalkan.</p>
+                                      <h5 class="mb-2">Apakah Anda yakin ingin menghapus data kendaraan ini?</h5>
+                                      <h6 class="text-body fw-bold mb-0"><?= htmlspecialchars($k['nama_kendaraan']) ?> (Kode: <?= htmlspecialchars($k['kode_unik_kendaraan']) ?>)</h6>
+                                      <p class="text-danger small mt-2 mb-0"><i class="fa fa-info-circle"></i> Seluruh riwayat transaksi sewa kendaraan ini juga akan dihapus.</p>
                                     </div>
                                     <div class="modal-footer justify-content-center">
                                       <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
@@ -530,20 +484,14 @@ include 'partials/head.php';
                                   </div>
                                 </div>
                               </div>
-                              <?php endif; ?>
                           </td>
                       </tr>
                       <?php endforeach; ?>
                   <?php else: ?>
                       <tr>
-                          <td colspan="7" class="text-center py-5 text-muted">
-                              <?php if(!empty($search)): ?>
-                                  <i class="fa fa-info-circle fa-2x mb-3 text-muted d-block"></i>
-                                  Kendaraan dengan kata kunci "<b><?= htmlspecialchars($search) ?></b>" tidak ditemukan.
-                              <?php else: ?>
-                                  <i class="fa fa-folder-open fa-2x mb-3 text-muted d-block"></i>
-                                  Belum ada data kendaraan.
-                              <?php endif; ?>
+                          <td colspan="8" class="text-center py-5 text-muted">
+                              <i class="fa fa-folder-open fa-2x mb-3 text-muted d-block"></i>
+                              Belum ada data kendaraan.
                           </td>
                       </tr>
                   <?php endif; ?>
@@ -581,12 +529,112 @@ include 'partials/head.php';
               </nav>
             <?php endif; ?>
           </div>
+          <?php else: ?>
+          <!-- Standard User Grid Layout (Card representation) -->
+          <div class="card-body p-4 bg-body-tertiary">
+            <div class="row g-4">
+              <?php if ($total > 0): ?>
+                <?php foreach ($kendaraan as $k): ?>
+                  <?php
+                  $status = strtolower(trim($k['status_kendaraan'] ?? 'tersedia'));
+                  ?>
+                  <div class="col-sm-6 col-md-4 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 overflow-hidden" style="border-radius: 12px;">
+                      <!-- Image Header -->
+                      <div class="position-relative bg-dark" style="height: 180px; overflow: hidden;">
+                        <?php if (!empty($k['gambar']) && file_exists('uploads/' . $k['gambar'])): ?>
+                          <img src="uploads/<?= htmlspecialchars($k['gambar']) ?>" alt="<?= htmlspecialchars($k['nama_kendaraan']) ?>" class="w-100 h-100" style="object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <?php else: ?>
+                          <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                            <i class="fa fa-car fa-2x mb-1"></i>
+                            <span class="small">No Image</span>
+                          </div>
+                        <?php endif; ?>
+                        
+                        <!-- Status Badge -->
+                        <div class="position-absolute top-0 end-0 m-2.5">
+                          <?php if ($status === 'disewa'): ?>
+                            <span class="badge bg-warning text-dark px-2.5 py-1.5 fw-semibold"><i class="fa fa-key me-1"></i>Disewa</span>
+                          <?php elseif ($status === 'perawatan'): ?>
+                            <span class="badge bg-danger text-white px-2.5 py-1.5 fw-semibold"><i class="fa fa-tools me-1"></i>Perawatan</span>
+                          <?php else: ?>
+                            <span class="badge bg-success text-white px-2.5 py-1.5 fw-semibold"><i class="fa fa-check me-1"></i>Tersedia</span>
+                          <?php endif; ?>
+                        </div>
+
+                        <!-- Brand / Type Tag -->
+                        <div class="position-absolute bottom-0 start-0 m-2.5">
+                          <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1.5 text-uppercase" style="font-size: 0.7rem;">
+                            <?= htmlspecialchars($k['jenis_kendaraan'] ?? 'Roda 4') ?>
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Card Body -->
+                      <div class="card-body p-3 d-flex flex-column justify-content-between">
+                        <div>
+                          <div class="small text-muted font-monospace text-uppercase" style="font-size: 0.75rem;">Kode: <?= htmlspecialchars($k['kode_unik_kendaraan']) ?></div>
+                          <h6 class="fw-bold mb-2 text-body-emphasis mt-0.5" style="font-size: 1.1rem; line-height: 1.3;"><?= htmlspecialchars($k['nama_kendaraan']) ?></h6>
+                          
+                          <div class="d-flex flex-wrap gap-1 mb-3 text-muted small" style="font-size: 0.8rem;">
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa fa-palette me-1"></i><?= htmlspecialchars($k['warna'] ?? 'Hitam') ?></span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa fa-cogs me-1"></i><?= htmlspecialchars($k['transmisi'] ?? 'Matic') ?></span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa fa-users me-1"></i><?= htmlspecialchars($k['tempat_duduk'] ?? '5 Seat') ?></span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fa fa-gas-pump me-1"></i><?= htmlspecialchars($k['bahan_bakar'] ?? 'Bensin') ?></span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div class="border-top pt-2 d-flex align-items-center justify-content-between mb-3">
+                            <span class="text-muted small">Tarif Harian</span>
+                            <span class="fs-5 fw-bold text-primary">Rp <?= number_format($k['harga_per_hari'], 0, ',', '.') ?><span class="text-muted fw-normal" style="font-size: 0.75rem;">/hari</span></span>
+                          </div>
+
+                          <?php if ($status === 'tersedia'): ?>
+                            <a href="sewa.php?rent_vehicle=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-success text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1">
+                              <i class="fa fa-key"></i> Sewa Sekarang
+                            </a>
+                          <?php else: ?>
+                            <button class="btn btn-secondary w-100 py-2 fw-semibold" disabled>
+                              Tidak Tersedia
+                            </button>
+                          <?php endif; ?>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <div class="col-12 py-5 text-center text-muted">
+                  <i class="fa fa-folder-open fa-3x mb-3 text-muted"></i>
+                  <p class="mb-0">Tidak ada kendaraan yang sesuai dengan kriteria pencarian.</p>
+                </div>
+              <?php endif; ?>
+            </div>
+            
+            <!-- User Pagination -->
+            <?php if ($total_pages > 1): ?>
+              <div class="d-flex justify-content-center mt-4">
+                <nav aria-label="Page navigation">
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">&laquo;</a>
+                    </li>
+                    <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+                      <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= $p ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $p ?></a>
+                      </li>
+                    <?php endfor; ?>
+                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                      <a class="page-link" href="?page=<?= $page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">&raquo;</a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
         </div>
-
-      </div>
-    </div>
-
-    <!-- Tambah Kendaraan Modal -->
     <div class="modal fade" id="addKendaraanModal" tabindex="-1" aria-labelledby="addKendaraanModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">

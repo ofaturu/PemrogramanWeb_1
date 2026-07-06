@@ -84,6 +84,7 @@ $nama_user_header = htmlspecialchars($_SESSION['user_nama'] ?? 'User');
             <?= strtoupper(substr($nama_user_header, 0, 1)) ?>
           </div>
           <span class="d-none d-md-inline-block text-body fw-semibold"><?= $nama_user_header ?></span>
+          <i class="fa fa-caret-down ms-1 text-muted" style="font-size: 0.8rem;"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-end pt-0 shadow-sm border border-secondary border-opacity-25">
           <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">Settings</div>
