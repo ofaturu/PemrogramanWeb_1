@@ -18,10 +18,65 @@ if ($res_merk) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Restrict modifications to Admin role
-    if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-        header('Location: dashboard.php?error=unauthorized');
-        exit;
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'add_booking') {
+        $id_user = $_SESSION['user_id'];
+        $status = 'booking';
+        $kode_unik = $_POST['kode_unik_kendaraan'] ?? '';
+        $tgl_sewa = $_POST['tanggal_sewa'] ?? '';
+        $tgl_kembali = $_POST['tanggal_kembali'] ?? '';
+
+        // Fetch vehicle details
+        $v_res = mysqli_query($mysqli, "SELECT harga_per_hari, nama_kendaraan FROM kendaraan WHERE kode_unik_kendaraan = " . intval($kode_unik));
+        $v_data = mysqli_fetch_assoc($v_res);
+        $harga_per_hari = $v_data['harga_per_hari'] ?? 0;
+        $veh_name = $v_data['nama_kendaraan'] ?? 'Kendaraan';
+
+        $durasi_hari = ceil((strtotime($tgl_kembali) - strtotime($tgl_sewa)) / 86400);
+        if ($durasi_hari <= 0) $durasi_hari = 1;
+        $total_biaya = $durasi_hari * $harga_per_hari;
+
+        if (empty($kode_unik) || empty($tgl_sewa) || empty($tgl_kembali)) {
+            $error_booking = 'Semua field wajib diisi.';
+        } elseif (strtotime($tgl_kembali) < strtotime($tgl_sewa)) {
+            $error_booking = 'Tanggal kembali tidak boleh mendahului tanggal sewa.';
+        } else {
+            $stmt = mysqli_prepare($mysqli, "INSERT INTO penyewaan (id_user, kode_unik_kendaraan, tanggal_sewa, tanggal_kembali, total_biaya, status) VALUES (?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, 'iissis', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status);
+
+            if (mysqli_stmt_execute($stmt)) {
+                $id_sewa = mysqli_insert_id($mysqli);
+
+                // Update vehicle status to 'disewa'
+                mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($kode_unik));
+
+                // Add notifications
+                add_notification($id_user, "Pemesanan Kendaraan Berhasil", "Pemesanan kendaraan {$veh_name} Anda berhasil dibuat. Silakan selesaikan pembayaran.");
+                
+                $user_name = $_SESSION['user_nama'] ?? 'User';
+                add_notification(null, "Pemesanan Baru Masuk", "Penyewa {$user_name} baru saja melakukan pemesanan kendaraan {$veh_name}.");
+
+                require_once 'send_invoice.php';
+                try {
+                    send_invoice_email($id_sewa, 'invoice');
+                } catch (\Exception $e) {
+                    error_log("Failed to send SMTP invoice email: " . $e->getMessage());
+                }
+
+                header('Location: bayar.php?id=' . $id_sewa . '&msg=booking_success');
+                exit;
+            } else {
+                $error_booking = 'Gagal menyimpan transaksi. Coba lagi.';
+            }
+            mysqli_stmt_close($stmt);
+        }
+    } else {
+        // Restrict modifications to Admin role
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+            header('Location: dashboard.php?error=unauthorized');
+            exit;
+        }
     }
 
     $action = $_POST['action'] ?? '';
@@ -162,54 +217,90 @@ if ($page < 1) {
 }
 $offset = ($page - 1) * $limit;
 
-// Menangkap keyword pencarian dari URL
+// Menangkap parameter search dan filter dari URL
 $search = trim($_GET['search'] ?? '');
+$f_jenis = trim($_GET['jenis'] ?? '');
+$f_status = trim($_GET['status'] ?? '');
+$f_merk = trim($_GET['merk'] ?? '');
+
+$export_qs = "";
+if (!empty($search)) $export_qs .= '&search=' . urlencode($search);
+if (!empty($f_jenis)) $export_qs .= '&jenis=' . urlencode($f_jenis);
+if (!empty($f_status)) $export_qs .= '&status=' . urlencode($f_status);
+if (!empty($f_merk)) $export_qs .= '&merk=' . urlencode($f_merk);
+
+$where_clauses = [];
+$params = [];
+$types = "";
 
 if (!empty($search)) {
+    $where_clauses[] = "(kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ?)";
     $search_param = "%" . $search . "%";
-    
-    // Count total matching items
-    $count_stmt = mysqli_prepare($mysqli, "SELECT COUNT(*) FROM kendaraan WHERE kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ?");
-    mysqli_stmt_bind_param($count_stmt, 'sss', $search_param, $search_param, $search_param);
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $types .= "sss";
+}
+
+if (!empty($f_jenis)) {
+    $where_clauses[] = "jenis_kendaraan = ?";
+    $params[] = $f_jenis;
+    $types .= "s";
+}
+
+if (!empty($f_status)) {
+    $where_clauses[] = "status_kendaraan = ?";
+    $params[] = $f_status;
+    $types .= "s";
+}
+
+if (!empty($f_merk)) {
+    $where_clauses[] = "id_merk = ?";
+    $params[] = intval($f_merk);
+    $types .= "i";
+}
+
+$where_sql = "";
+if (count($where_clauses) > 0) {
+    $where_sql = "WHERE " . implode(" AND ", $where_clauses);
+}
+
+// Count total matching items
+if (count($params) > 0) {
+    $count_stmt = mysqli_prepare($mysqli, "SELECT COUNT(*) FROM kendaraan $where_sql");
+    mysqli_stmt_bind_param($count_stmt, $types, ...$params);
     mysqli_stmt_execute($count_stmt);
     mysqli_stmt_bind_result($count_stmt, $total_items);
     mysqli_stmt_fetch($count_stmt);
     mysqli_stmt_close($count_stmt);
-    
-    $total_pages = ceil($total_items / $limit);
-    if ($page > $total_pages && $total_pages > 0) {
-        $page = $total_pages;
-        $offset = ($page - 1) * $limit;
-    }
-
-    $stmt = mysqli_prepare($mysqli, "SELECT * FROM kendaraan WHERE kode_unik_kendaraan LIKE ? OR nama_kendaraan LIKE ? OR jenis_kendaraan LIKE ? ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?");
-    mysqli_stmt_bind_param($stmt, 'sssii', $search_param, $search_param, $search_param, $limit, $offset);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $kendaraan = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    mysqli_stmt_close($stmt);
 } else {
-    // Count total items
     $count_res = mysqli_query($mysqli, "SELECT COUNT(*) FROM kendaraan");
     $count_row = mysqli_fetch_row($count_res);
     $total_items = $count_row[0];
-    
-    $total_pages = ceil($total_items / $limit);
-    if ($page > $total_pages && $total_pages > 0) {
-        $page = $total_pages;
-        $offset = ($page - 1) * $limit;
-    }
-
-    $stmt = mysqli_prepare($mysqli, "SELECT * FROM kendaraan ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?");
-    mysqli_stmt_bind_param($stmt, 'ii', $limit, $offset);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $kendaraan = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    mysqli_stmt_close($stmt);
 }
+
+$total_pages = ceil($total_items / $limit);
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $limit;
+}
+
+// Fetch matching items
+$query = "SELECT * FROM kendaraan $where_sql ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?";
+$stmt = mysqli_prepare($mysqli, $query);
+
+$bind_params = array_merge($params, [$limit, $offset]);
+$bind_types = $types . "ii";
+
+mysqli_stmt_bind_param($stmt, $bind_types, ...$bind_params);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$kendaraan = mysqli_fetch_all($result, MYSQLI_ASSOC);
+mysqli_stmt_close($stmt);
 
 $total = count($kendaraan);
 $msg = $_GET['msg'] ?? '';
+$error_booking = '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -276,21 +367,14 @@ include 'partials/head.php';
             <h5 class="mb-0 text-body"><i class="fa fa-list me-2 text-primary"></i>Daftar Kendaraan</h5>
             
             <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-end align-items-sm-center">
-              <form action="dashboard.php" method="GET" class="d-flex w-100 w-sm-auto">
-                <input type="text" name="search" class="form-control form-control-sm me-2" placeholder="Cari nama, kode, jenis..." value="<?= htmlspecialchars($search) ?>" style="min-width: 200px;">
-                <button type="submit" class="btn btn-primary btn-sm me-1"><i class="fa fa-search"></i></button>
-                <?php if(!empty($search)): ?>
-                    <a href="dashboard.php" class="btn btn-danger btn-sm" title="Reset Pencarian"><i class="fa fa-times"></i></a>
-                <?php endif; ?>
-              </form>
-              <div class="dropdown mt-2 mt-sm-0">
+              <div class="dropdown">
                 <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
                   <i class="fa fa-download me-1"></i> Export
                 </button>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
-                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=excel<?= $export_qs ?>" target="_blank"><i class="fa fa-file-excel text-success me-2"></i> Excel (.xlsx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=word<?= $export_qs ?>" target="_blank"><i class="fa fa-file-word text-primary me-2"></i> Word (.docx)</a></li>
+                  <li><a class="dropdown-item" href="export.php?target=kendaraan&format=pdf<?= $export_qs ?>" target="_blank"><i class="fa fa-file-pdf text-danger me-2"></i> PDF (.pdf)</a></li>
                 </ul>
               </div>
               <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
@@ -302,6 +386,46 @@ include 'partials/head.php';
                 </button>
               <?php endif; ?>
             </div>
+          </div>
+          <!-- Filter Row -->
+          <div class="p-3 bg-body-tertiary border-bottom">
+            <form action="dashboard.php" method="GET" class="row g-2 align-items-center">
+              <div class="col-md-3 col-sm-6">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text"><i class="fa fa-search"></i></span>
+                  <input type="text" name="search" class="form-control" placeholder="Cari nama, kode..." value="<?= htmlspecialchars($search) ?>">
+                </div>
+              </div>
+              <div class="col-md-2 col-sm-6">
+                <select name="jenis" class="form-select form-select-sm">
+                  <option value="">-- Semua Jenis --</option>
+                  <option value="Roda 2" <?= $f_jenis === 'Roda 2' ? 'selected' : '' ?>>Roda 2 (Motor)</option>
+                  <option value="Roda 4" <?= $f_jenis === 'Roda 4' ? 'selected' : '' ?>>Roda 4 (Mobil)</option>
+                </select>
+              </div>
+              <div class="col-md-2 col-sm-6">
+                <select name="status" class="form-select form-select-sm">
+                  <option value="">-- Semua Status --</option>
+                  <option value="tersedia" <?= $f_status === 'tersedia' ? 'selected' : '' ?>>Tersedia</option>
+                  <option value="disewa" <?= $f_status === 'disewa' ? 'selected' : '' ?>>Sedang Disewa</option>
+                  <option value="perawatan" <?= $f_status === 'perawatan' ? 'selected' : '' ?>>Dalam Perawatan</option>
+                </select>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <select name="merk" class="form-select form-select-sm">
+                  <option value="">-- Semua Merk --</option>
+                  <?php foreach ($merk_options as $mo): ?>
+                    <option value="<?= $mo['id_merk'] ?>" <?= $f_merk == $mo['id_merk'] ? 'selected' : '' ?>><?= htmlspecialchars(ucwords($mo['nama_merk'])) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-md-2 col-sm-12 d-flex gap-1 justify-content-end">
+                <button type="submit" class="btn btn-primary btn-sm px-3 w-100"><i class="fa fa-filter me-1"></i>Filter</button>
+                <?php if(!empty($search) || !empty($f_jenis) || !empty($f_status) || !empty($f_merk)): ?>
+                    <a href="dashboard.php" class="btn btn-danger btn-sm text-white px-2.5" title="Reset Filter"><i class="fa fa-sync"></i></a>
+                <?php endif; ?>
+              </div>
+            </form>
           </div>
           <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
           <div class="card-body p-0">
@@ -591,9 +715,12 @@ include 'partials/head.php';
                           </div>
 
                           <?php if ($status === 'tersedia'): ?>
-                            <a href="sewa.php?rent_vehicle=<?= urlencode($k['kode_unik_kendaraan']) ?>" class="btn btn-success text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1">
+                            <button class="btn btn-success text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 btn-booking-trigger"
+                                    data-kode="<?= htmlspecialchars($k['kode_unik_kendaraan']) ?>"
+                                    data-nama="<?= htmlspecialchars($k['nama_kendaraan']) ?>"
+                                    data-harga="<?= htmlspecialchars($k['harga_per_hari']) ?>">
                               <i class="fa fa-key"></i> Sewa Sekarang
-                            </a>
+                            </button>
                           <?php else: ?>
                             <button class="btn btn-secondary w-100 py-2 fw-semibold" disabled>
                               Tidak Tersedia
@@ -784,6 +911,62 @@ include 'partials/head.php';
           </div>
         </div>
       </div>
+    <!-- Modal Booking Sewa Instan -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+          <div class="modal-header bg-success text-white" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+            <h5 class="modal-title" id="bookingModalLabel"><i class="fa fa-key me-2"></i>Sewa Kendaraan</h5>
+            <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="">
+            <input type="hidden" name="action" value="add_booking">
+            <input type="hidden" name="kode_unik_kendaraan" id="book_kode_unik">
+            
+            <div class="modal-body p-4">
+              <?php if (!empty($error_booking)): ?>
+                  <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-3">
+                      <i class="fa fa-exclamation-triangle me-1"></i> <?= htmlspecialchars($error_booking) ?>
+                  </div>
+              <?php endif; ?>
+
+              <div class="text-center mb-3">
+                <h6 class="text-muted mb-1 text-uppercase font-monospace" style="font-size: 0.75rem;">Kendaraan Pilihan Anda:</h6>
+                <h4 class="fw-bold text-body-emphasis mb-2" id="book_nama_kendaraan">Nama Kendaraan</h4>
+                <div class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
+                  Rp <span id="book_harga_per_hari_text">0</span><span class="fs-7 fw-normal">/hari</span>
+                </div>
+              </div>
+              <hr class="text-body-secondary my-3">
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="book_tanggal_sewa">Tanggal Mulai Sewa *</label>
+                  <input type="datetime-local" id="book_tanggal_sewa" name="tanggal_sewa" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="book_tanggal_kembali">Tanggal Pengembalian *</label>
+                  <input type="datetime-local" id="book_tanggal_kembali" name="tanggal_kembali" class="form-control" required>
+                </div>
+                <div class="col-12 mt-4 bg-light p-3 rounded border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                  <div>
+                    <div class="text-muted small">Durasi Sewa:</div>
+                    <div class="fw-bold text-dark"><span id="book_durasi">1</span> Hari</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="text-muted small">Estimasi Total Biaya:</div>
+                    <div class="fw-bold fs-5 text-success">Rp <span id="book_total_biaya_text">0</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+              <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-success text-white px-5 fw-bold"><i class="fa fa-check me-1"></i>Konfirmasi Sewa</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <?php include 'partials/footer.php'; ?>
@@ -827,5 +1010,86 @@ include 'partials/head.php';
           dropdownParent: $('#' + modalId)
         });
       });
+
+      // 6. Instant Booking Modal Handler
+      document.querySelectorAll('.btn-booking-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const kode = this.getAttribute('data-kode');
+          const nama = this.getAttribute('data-nama');
+          const harga = parseFloat(this.getAttribute('data-harga')) || 0;
+          
+          document.getElementById('book_kode_unik').value = kode;
+          document.getElementById('book_nama_kendaraan').textContent = nama;
+          document.getElementById('book_harga_per_hari_text').textContent = new Intl.NumberFormat('id-ID').format(harga);
+          
+          // Set default dates (start now + 1 hour, end + 1 day)
+          const now = new Date();
+          now.setHours(now.getHours() + 1, 0, 0, 0);
+          // Adjust timezone offset to local ISO string format
+          const tzoffset = now.getTimezoneOffset() * 60000;
+          const localStart = new Date(now - tzoffset).toISOString().slice(0, 16);
+          
+          const returnDate = new Date(now);
+          returnDate.setDate(returnDate.getDate() + 1);
+          const localReturn = new Date(returnDate - tzoffset).toISOString().slice(0, 16);
+          
+          const inputSewa = document.getElementById('book_tanggal_sewa');
+          const inputKembali = document.getElementById('book_tanggal_kembali');
+          
+          inputSewa.value = localStart;
+          inputKembali.value = localReturn;
+          
+          function recalc() {
+            const t1 = new Date(inputSewa.value);
+            const t2 = new Date(inputKembali.value);
+            const diffMs = t2 - t1;
+            let diffDays = 1;
+            if (diffMs > 0) {
+              diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            }
+            document.getElementById('book_durasi').textContent = diffDays;
+            document.getElementById('book_total_biaya_text').textContent = new Intl.NumberFormat('id-ID').format(diffDays * harga);
+          }
+          
+          inputSewa.onchange = recalc;
+          inputKembali.onchange = recalc;
+          
+          recalc();
+          
+          const bookingModal = new coreui.Modal(document.getElementById('bookingModal'));
+          bookingModal.show();
+        });
+      });
+
+      // 7. Auto re-open booking modal on error
+      <?php if (!empty($error_booking)): ?>
+        <?php
+        $err_kode = $_POST['kode_unik_kendaraan'] ?? '';
+        $err_v_res = mysqli_query($mysqli, "SELECT harga_per_hari, nama_kendaraan FROM kendaraan WHERE kode_unik_kendaraan = " . intval($err_kode));
+        $err_v_data = mysqli_fetch_assoc($err_v_res);
+        $err_nama = $err_v_data['nama_kendaraan'] ?? 'Kendaraan';
+        $err_harga = $err_v_data['harga_per_hari'] ?? 0;
+        ?>
+        document.getElementById('book_kode_unik').value = "<?= htmlspecialchars($err_kode) ?>";
+        document.getElementById('book_nama_kendaraan').textContent = "<?= htmlspecialchars($err_nama) ?>";
+        document.getElementById('book_harga_per_hari_text').textContent = new Intl.NumberFormat('id-ID').format(<?= $err_harga ?>);
+        document.getElementById('book_tanggal_sewa').value = "<?= htmlspecialchars($_POST['tanggal_sewa'] ?? '') ?>";
+        document.getElementById('book_tanggal_kembali').value = "<?= htmlspecialchars($_POST['tanggal_kembali'] ?? '') ?>";
+        
+        // Initial recalc
+        const err_harga = <?= $err_harga ?>;
+        const err_t1 = new Date(document.getElementById('book_tanggal_sewa').value);
+        const err_t2 = new Date(document.getElementById('book_tanggal_kembali').value);
+        const err_diff = err_t2 - err_t1;
+        let err_days = 1;
+        if (err_diff > 0) {
+          err_days = Math.ceil(err_diff / (1000 * 60 * 60 * 24));
+        }
+        document.getElementById('book_durasi').textContent = err_days;
+        document.getElementById('book_total_biaya_text').textContent = new Intl.NumberFormat('id-ID').format(err_days * err_harga);
+
+        const bookingModalErr = new coreui.Modal(document.getElementById('bookingModal'));
+        bookingModalErr.show();
+      <?php endif; ?>
     });
     </script>

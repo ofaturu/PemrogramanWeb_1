@@ -123,32 +123,64 @@ if ($is_detail && $format !== 'pdf') {
 if (!$is_detail) {
     if ($target === 'kendaraan') {
         $search = trim($_GET['search'] ?? '');
+        $f_jenis = trim($_GET['jenis'] ?? '');
+        $f_status = trim($_GET['status'] ?? '');
+        $f_merk = trim($_GET['merk'] ?? '');
         $title_text = "Laporan Data Kendaraan — FTrans";
         $headers = ['No', 'Kode Unik', 'Merk Kendaraan', 'Model / Nama Kendaraan', 'Jenis Kendaraan', 'Harga per Hari'];
         
+        $where_clauses = [];
+        $params = [];
+        $types = "";
+
         if (!empty($search)) {
+            $where_clauses[] = "(k.kode_unik_kendaraan LIKE ? OR k.nama_kendaraan LIKE ? OR k.jenis_kendaraan LIKE ?)";
             $search_param = "%" . $search . "%";
-            $stmt = mysqli_prepare($mysqli, "
-                SELECT k.*, m.nama_merk 
-                FROM kendaraan k 
-                LEFT JOIN merk_kendaraan m ON k.id_merk = m.id_merk 
-                WHERE k.kode_unik_kendaraan LIKE ? 
-                   OR k.nama_kendaraan LIKE ? 
-                   OR k.jenis_kendaraan LIKE ? 
-                ORDER BY k.kode_unik_kendaraan ASC
-            ");
-            mysqli_stmt_bind_param($stmt, 'sss', $search_param, $search_param, $search_param);
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $types .= "sss";
+        }
+
+        if (!empty($f_jenis)) {
+            $where_clauses[] = "k.jenis_kendaraan = ?";
+            $params[] = $f_jenis;
+            $types .= "s";
+        }
+
+        if (!empty($f_status)) {
+            $where_clauses[] = "k.status_kendaraan = ?";
+            $params[] = $f_status;
+            $types .= "s";
+        }
+
+        if (!empty($f_merk)) {
+            $where_clauses[] = "k.id_merk = ?";
+            $params[] = intval($f_merk);
+            $types .= "i";
+        }
+
+        $where_sql = "";
+        if (count($where_clauses) > 0) {
+            $where_sql = "WHERE " . implode(" AND ", $where_clauses);
+        }
+
+        $query = "
+            SELECT k.*, m.nama_merk 
+            FROM kendaraan k 
+            LEFT JOIN merk_kendaraan m ON k.id_merk = m.id_merk 
+            $where_sql
+            ORDER BY k.kode_unik_kendaraan ASC
+        ";
+
+        if (count($params) > 0) {
+            $stmt = mysqli_prepare($mysqli, $query);
+            mysqli_stmt_bind_param($stmt, $types, ...$params);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             mysqli_stmt_close($stmt);
         } else {
-            $query = "
-                SELECT k.*, m.nama_merk 
-                FROM kendaraan k 
-                LEFT JOIN merk_kendaraan m ON k.id_merk = m.id_merk 
-                ORDER BY k.kode_unik_kendaraan ASC
-            ";
             $result = mysqli_query($mysqli, $query);
             $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         }

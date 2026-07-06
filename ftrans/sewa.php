@@ -414,9 +414,11 @@ include 'partials/head.php';
                           </td>
                           <td class="pe-4 text-end">
                               <div class="btn-group btn-group-sm" role="group">
-                                  <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak Struk/Invoice PDF" target="_blank">
-                                      <i class="fa fa-print"></i> Struk
-                                  </a>
+                                   <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                   <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($r['id_sewa']) ?>" class="btn btn-outline-secondary d-flex align-items-center gap-1" title="Cetak Struk/Invoice PDF" target="_blank">
+                                       <i class="fa fa-print"></i> Struk
+                                   </a>
+                                   <?php endif; ?>
 
                                   <!-- Payment Action -->
                                   <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>

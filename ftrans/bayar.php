@@ -212,10 +212,17 @@ include 'partials/head.php';
               <div class="card-body p-4">
                 
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                  <div>
-                    <h6 class="text-muted small mb-1">Nomor Invoice</h6>
-                    <h5 class="fw-bold mb-0">#INV-<?= str_pad($id_sewa, 5, '0', STR_PAD_LEFT) ?></h5>
-                  </div>
+                   <div>
+                     <h6 class="text-muted small mb-1">Nomor Invoice</h6>
+                     <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                       #INV-<?= str_pad($id_sewa, 5, '0', STR_PAD_LEFT) ?>
+                       <?php if ($status === 'sedang_disewa' || $status === 'selesai'): ?>
+                         <a href="export.php?target=sewa&format=pdf&id=<?= urlencode($id_sewa) ?>" class="btn btn-outline-success btn-sm py-0.5 px-2.5 fs-7 d-inline-flex align-items-center gap-1" target="_blank">
+                           <i class="fa fa-print"></i> Cetak Struk
+                         </a>
+                       <?php endif; ?>
+                     </h5>
+                   </div>
                   <div>
                     <h6 class="text-muted small mb-1">Status Transaksi</h6>
                     <?php

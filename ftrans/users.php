@@ -275,6 +275,7 @@ include 'partials/head.php';
                       <thead class="table-light text-body-secondary fw-semibold small">
                         <tr>
                           <th scope="col" class="ps-4">No</th>
+                          <th scope="col">No Invoice</th>
                           <th scope="col">Nama Kendaraan</th>
                           <th scope="col">Lama Sewa</th>
                           <th scope="col">Total Biaya</th>
@@ -292,6 +293,7 @@ include 'partials/head.php';
                           ?>
                           <tr>
                             <td class="ps-4 text-body-secondary"><?= $idx + 1 ?></td>
+                            <td class="fw-bold font-monospace text-body-secondary" style="font-size: 0.85rem;">#INV-<?= str_pad($rent['id_sewa'], 5, '0', STR_PAD_LEFT) ?></td>
                             <td class="fw-bold text-body-emphasis"><?= htmlspecialchars($rent['nama_kendaraan'] ?? 'N/A') ?></td>
                             <td><?= $diff_days ?> Hari</td>
                             <td class="fw-bold text-success">Rp <?= number_format($rent['total_biaya'], 0, ',', '.') ?></td>
