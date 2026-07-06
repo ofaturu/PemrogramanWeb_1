@@ -25,6 +25,14 @@ if ($role === 'admin') {
     $row = mysqli_fetch_assoc($res);
     $total_income = $row['total'] ?? 0;
 
+    // Total maintenance cost
+    $res_m = mysqli_query($mysqli, "SELECT SUM(biaya) AS total FROM maintenance");
+    $row_m = mysqli_fetch_assoc($res_m);
+    $total_maintenance_cost = $row_m['total'] ?? 0;
+
+    // Net profit
+    $net_profit = $total_income - $total_maintenance_cost;
+
     // Active bookings
     $res = mysqli_query($mysqli, "SELECT COUNT(*) AS total FROM penyewaan WHERE status = 'sedang_disewa'");
     $row = mysqli_fetch_assoc($res);
@@ -40,20 +48,50 @@ if ($role === 'admin') {
     $row = mysqli_fetch_assoc($res);
     $total_users = $row['total'] ?? 0;
 
-    // Monthly income (Last 6 Months)
-    $monthly_income_data = [];
-    $monthly_income_labels = [];
-    $res = mysqli_query($mysqli, "
-        SELECT DATE_FORMAT(tanggal_sewa, '%M %Y') AS month, SUM(total_biaya) AS total, DATE_FORMAT(tanggal_sewa, '%Y-%m') AS raw_month
+    // Synced Monthly Income vs Maintenance Costs (Last 6 Months)
+    $months_list = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $key = date('Y-m', strtotime("-$i months"));
+        $months_list[$key] = [
+            'label' => date('M Y', strtotime("-$i months")),
+            'income' => 0,
+            'maintenance' => 0
+        ];
+    }
+
+    // Populate monthly income
+    $res_inc = mysqli_query($mysqli, "
+        SELECT DATE_FORMAT(tanggal_sewa, '%Y-%m') AS raw_month, SUM(total_biaya) AS total
         FROM penyewaan 
         WHERE status IN ('sedang_disewa', 'selesai')
-        GROUP BY raw_month 
-        ORDER BY raw_month ASC 
-        LIMIT 6
+        GROUP BY raw_month
     ");
-    while ($row = mysqli_fetch_assoc($res)) {
-        $monthly_income_labels[] = $row['month'];
-        $monthly_income_data[] = intval($row['total']);
+    while ($row = mysqli_fetch_assoc($res_inc)) {
+        if (isset($months_list[$row['raw_month']])) {
+            $months_list[$row['raw_month']]['income'] = intval($row['total']);
+        }
+    }
+
+    // Populate monthly maintenance costs
+    $res_maint = mysqli_query($mysqli, "
+        SELECT DATE_FORMAT(tanggal_selesai, '%Y-%m') AS raw_month, SUM(biaya) AS total
+        FROM maintenance 
+        WHERE tanggal_selesai IS NOT NULL
+        GROUP BY raw_month
+    ");
+    while ($row = mysqli_fetch_assoc($res_maint)) {
+        if (isset($months_list[$row['raw_month']])) {
+            $months_list[$row['raw_month']]['maintenance'] = intval($row['total']);
+        }
+    }
+
+    $monthly_income_labels = [];
+    $monthly_income_data = [];
+    $monthly_maint_data = [];
+    foreach ($months_list as $m) {
+        $monthly_income_labels[] = $m['label'];
+        $monthly_income_data[] = $m['income'];
+        $monthly_maint_data[] = $m['maintenance'];
     }
 
     // Top Vehicle Brands
@@ -145,15 +183,37 @@ include 'partials/head.php';
         <!-- Summary Cards Row -->
         <div class="row g-4 mb-4">
           <?php if ($role === 'admin'): ?>
-            <!-- Admin Widgets -->
+            <!-- Admin Widgets - Financial & Operational Statistics -->
             <div class="col-sm-6 col-xl-3">
               <div class="card border-0 shadow-sm bg-primary text-white h-100 overflow-hidden position-relative">
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                   <div>
                     <div class="text-white-50 small fw-semibold text-uppercase mb-2">Total Pendapatan</div>
-                    <div class="fs-3 fw-bold">Rp <?= number_format($total_income, 0, ',', '.') ?></div>
+                    <div class="fs-4 fw-bold">Rp <?= number_format($total_income, 0, ',', '.') ?></div>
                   </div>
-                  <i class="fa fa-wallet position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                  <i class="fa fa-wallet position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 3.5rem;"></i>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card border-0 shadow-sm bg-danger text-white h-100 overflow-hidden position-relative">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="text-white-50 small fw-semibold text-uppercase mb-2">Pengeluaran Servis</div>
+                    <div class="fs-4 fw-bold">Rp <?= number_format($total_maintenance_cost, 0, ',', '.') ?></div>
+                  </div>
+                  <i class="fa fa-tools position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 3.5rem;"></i>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="card border-0 shadow-sm bg-success text-white h-100 overflow-hidden position-relative">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                  <div>
+                    <div class="text-white-50 small fw-semibold text-uppercase mb-2">Keuntungan Bersih</div>
+                    <div class="fs-4 fw-bold">Rp <?= number_format($net_profit, 0, ',', '.') ?></div>
+                  </div>
+                  <i class="fa fa-hand-holding-usd position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 3.5rem;"></i>
                 </div>
               </div>
             </div>
@@ -162,31 +222,33 @@ include 'partials/head.php';
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                   <div>
                     <div class="text-white-50 small fw-semibold text-uppercase mb-2">Sewa Aktif</div>
-                    <div class="fs-3 fw-bold"><?= $active_bookings ?> Kendaraan</div>
+                    <div class="fs-4 fw-bold"><?= $active_bookings ?> Kendaraan</div>
                   </div>
-                  <i class="fa fa-key position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                  <i class="fa fa-key position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 3.5rem;"></i>
                 </div>
               </div>
             </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card border-0 shadow-sm bg-success text-white h-100 overflow-hidden position-relative">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
+
+            <!-- Sub Widgets for Vehicles and Users -->
+            <div class="col-md-6 mt-3">
+              <div class="card border-0 shadow-sm bg-warning text-dark h-100 overflow-hidden position-relative">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
                   <div>
-                    <div class="text-white-50 small fw-semibold text-uppercase mb-2">Armada Kendaraan</div>
-                    <div class="fs-3 fw-bold"><?= $total_vehicles ?> Unit</div>
+                    <div class="text-dark-50 small fw-semibold text-uppercase">Armada Kendaraan</div>
+                    <div class="fs-5 fw-bold"><?= $total_vehicles ?> Unit Kendaraan</div>
                   </div>
-                  <i class="fa fa-car position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                  <i class="fa fa-car me-3 text-dark-50 opacity-25" style="font-size: 2.2rem;"></i>
                 </div>
               </div>
             </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card border-0 shadow-sm bg-warning text-white h-100 overflow-hidden position-relative">
-                <div class="card-body p-4 d-flex flex-column justify-content-between">
+            <div class="col-md-6 mt-3">
+              <div class="card border-0 shadow-sm bg-secondary text-white h-100 overflow-hidden position-relative">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
                   <div>
-                    <div class="text-white-50 small fw-semibold text-uppercase mb-2">Pelanggan Terdaftar</div>
-                    <div class="fs-3 fw-bold"><?= $total_users ?> Pengguna</div>
+                    <div class="text-white-50 small fw-semibold text-uppercase">Pelanggan Terdaftar</div>
+                    <div class="fs-5 fw-bold"><?= $total_users ?> Pengguna</div>
                   </div>
-                  <i class="fa fa-users position-absolute end-0 bottom-0 mb-3 me-3 text-white-50 opacity-25" style="font-size: 4rem;"></i>
+                  <i class="fa fa-users me-3 text-white-50 opacity-25" style="font-size: 2.2rem;"></i>
                 </div>
               </div>
             </div>
@@ -314,29 +376,44 @@ include 'partials/head.php';
         }
       };
 
+      let incomeChartInstance = null;
+      let brandChartInstance = null;
+      let personalChartInstance = null;
+
       <?php if ($role === 'admin'): ?>
-      // 1. Income Chart (Admin)
+      // 1. Income vs Maintenance Cost Chart (Admin)
       const ctxIncome = document.getElementById('incomeChart').getContext('2d');
-      new Chart(ctxIncome, {
+      incomeChartInstance = new Chart(ctxIncome, {
         type: 'line',
         data: {
           labels: <?= json_encode($monthly_income_labels) ?>,
-          datasets: [{
-            label: 'Pendapatan (Rp)',
-            data: <?= json_encode($monthly_income_data) ?>,
-            borderColor: '#5856d6',
-            backgroundColor: 'rgba(88, 86, 214, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.3
-          }]
+          datasets: [
+            {
+              label: 'Pendapatan (Rp)',
+              data: <?= json_encode($monthly_income_data) ?>,
+              borderColor: '#5856d6',
+              backgroundColor: 'rgba(88, 86, 214, 0.08)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Biaya Servis (Rp)',
+              data: <?= json_encode($monthly_maint_data) ?>,
+              borderColor: '#e55353',
+              backgroundColor: 'rgba(229, 83, 83, 0.08)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3
+            }
+          ]
         },
         options: chartOptions
       });
 
       // 2. Popular Brand Chart (Admin)
       const ctxBrand = document.getElementById('brandChart').getContext('2d');
-      new Chart(ctxBrand, {
+      brandChartInstance = new Chart(ctxBrand, {
         type: 'doughnut',
         data: {
           labels: <?= json_encode($top_brands_labels) ?>,
@@ -370,7 +447,7 @@ include 'partials/head.php';
       <?php if (count($personal_bookings_data) > 0): ?>
       // 3. Personal Rent Activity (User)
       const ctxPersonal = document.getElementById('personalChart').getContext('2d');
-      new Chart(ctxPersonal, {
+      personalChartInstance = new Chart(ctxPersonal, {
         type: 'bar',
         data: {
           labels: <?= json_encode($personal_bookings_labels) ?>,
@@ -387,6 +464,40 @@ include 'partials/head.php';
       });
       <?php endif; ?>
       <?php endif; ?>
+
+      // MutationObserver to update chart colors dynamically when toggling dark/light mode
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'data-coreui-theme') {
+            const newIsDark = document.documentElement.getAttribute('data-coreui-theme') === 'dark';
+            const newTextColor = newIsDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(33, 37, 41, 0.7)';
+            const newGridColor = newIsDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+
+            [incomeChartInstance, brandChartInstance, personalChartInstance].forEach(chart => {
+              if (chart) {
+                // Update grid and text labels
+                if (chart.config.type === 'doughnut') {
+                  chart.options.plugins.legend.labels.color = newTextColor;
+                  chart.data.datasets[0].borderColor = newIsDark ? '#212631' : '#fff';
+                  chart.data.datasets[0].borderWidth = newIsDark ? 2 : 1;
+                } else {
+                  chart.options.plugins.legend.labels.color = newTextColor;
+                  if (chart.options.scales && chart.options.scales.x) {
+                    chart.options.scales.x.ticks.color = newTextColor;
+                    chart.options.scales.x.grid.color = newGridColor;
+                  }
+                  if (chart.options.scales && chart.options.scales.y) {
+                    chart.options.scales.y.ticks.color = newTextColor;
+                    chart.options.scales.y.grid.color = newGridColor;
+                  }
+                }
+                chart.update();
+              }
+            });
+          }
+        });
+      });
+      observer.observe(document.documentElement, { attributes: true });
     });
   </script>
 </body>
