@@ -13,8 +13,18 @@ if (!$data) {
     exit;
 }
 
-// Check callback token if set (optional security check)
-// $callback_token = $_ENV['XENDIT_CALLBACK_TOKEN'] ?? getenv('XENDIT_CALLBACK_TOKEN') ?? '';
+// Check callback token if set (security check)
+$callback_token = $_ENV['XENDIT_CALLBACK_TOKEN'] ?? getenv('XENDIT_CALLBACK_TOKEN') ?? '';
+if (!empty($callback_token)) {
+    // Get all HTTP headers
+    $headers = getallheaders();
+    $incoming_token = $headers['x-callback-token'] ?? $headers['X-Callback-Token'] ?? '';
+    if ($incoming_token !== $callback_token) {
+        header('HTTP/1.1 401 Unauthorized');
+        echo json_encode(['error' => 'Unauthorized: Invalid callback token']);
+        exit;
+    }
+}
 
 $external_id = $data['external_id'] ?? '';
 $status = $data['status'] ?? '';
