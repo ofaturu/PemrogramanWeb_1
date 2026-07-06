@@ -155,7 +155,7 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
         : 'Konfirmasi Pembayaran Lunas #' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT);
     
     if ($email_type === 'invoice') {
-        $payment_url = "http://localhost/PemrogramanWeb_1/project_baru/bayar.php?id=" . $id_sewa;
+        $payment_url = "http://localhost/PemrogramanWeb_1/ftrans/bayar.php?id=" . $id_sewa;
         $email_content = '
         <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
             <h2 style="color: #3b82f6; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Tagihan Pembayaran Penyewaan Kendaraan</h2>
