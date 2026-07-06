@@ -7,10 +7,11 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama     = trim($_POST['nama']     ?? '');
     $email    = trim($_POST['email']    ?? '');
+    $no_hp    = trim($_POST['no_hp']    ?? '');
     $password = $_POST['password']      ?? '';
     $konfirm  = $_POST['konfirmasi']    ?? '';
 
-    if (empty($nama) || empty($email) || empty($password) || empty($konfirm)) {
+    if (empty($nama) || empty($email) || empty($no_hp) || empty($password) || empty($konfirm)) {
         $error = 'Semua field wajib diisi.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
@@ -28,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Email sudah terdaftar. Gunakan email lain.';
         } else {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $ins = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($ins, 'sss', $nama, $email, $hashed);
+            $ins = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password, no_hp) VALUES (?, ?, ?, ?)");
+            mysqli_stmt_bind_param($ins, 'ssss', $nama, $email, $hashed, $no_hp);
 
             if (mysqli_stmt_execute($ins)) {
                 $success = 'Akun berhasil dibuat! Silakan <a href="login.php" class="text-primary fw-bold">login di sini</a>.';
@@ -90,6 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="col-12">
                   <label class="form-label" for="email">Email Address</label>
                   <input class="form-control" id="email" name="email" type="email" placeholder="your@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="no_hp">Nomor Handphone</label>
+                  <input class="form-control" id="no_hp" name="no_hp" type="text" placeholder="Contoh: 08123456789" value="<?= htmlspecialchars($_POST['no_hp'] ?? '') ?>" required>
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="password">Password (Min. 6 characters)</label>

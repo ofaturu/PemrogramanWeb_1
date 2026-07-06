@@ -42,6 +42,92 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] !== 'admin' && $rent
 $error = '';
 $success = '';
 
+// Check if Xendit Invoice Url is requested and not set
+$xendit_api_key = $_ENV['XENDIT_SECRET_KEY'] ?? getenv('XENDIT_SECRET_KEY') ?? '';
+$is_simulation = empty($xendit_api_key);
+
+// Fetch updated status and payment proof details
+$status = $rental['status'] ?? 'booking';
+$bukti = $rental['bukti_pembayaran'] ?? '';
+
+// Handle Simulation Payment Success Trigger
+if (isset($_GET['simulate_payment']) && $status === 'booking') {
+    $dir = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
+    if ($dir === '/') $dir = '';
+    $callback_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $dir . '/xendit_callback.php';
+    
+    $payload = [
+        'external_id' => 'sewa-' . $id_sewa . '-' . time(),
+        'status' => 'PAID',
+        'amount' => intval($rental['total_biaya']),
+        'payment_method' => 'VA_SIMULATOR'
+    ];
+    
+    $ch = curl_init($callback_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $res = curl_exec($ch);
+    curl_close($ch);
+    
+    // Refresh page with success state
+    header("Location: bayar.php?id={$id_sewa}&xendit_status=success");
+    exit;
+}
+
+// Generate Xendit Invoice if required
+if ($status === 'booking' && empty($bukti) && empty($rental['xendit_invoice_url'])) {
+    if (!$is_simulation) {
+        $external_id = "sewa-" . $id_sewa . "-" . time();
+        $payload = [
+            'external_id' => $external_id,
+            'amount' => intval($rental['total_biaya']),
+            'payer_email' => $rental['email_user'],
+            'description' => "Pembayaran Rental Kendaraan #INV-" . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . " - " . $rental['nama_kendaraan'],
+            'success_redirect_url' => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . str_replace('\\', '/', dirname($_SERVER['PHP_SELF'])) . "/bayar.php?id=" . $id_sewa . "&xendit_status=success"
+        ];
+
+        $ch = curl_init('https://api.xendit.co/v2/invoices');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Basic ' . base64_encode($xendit_api_key . ':')
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        
+        if (!curl_errno($ch)) {
+            $res_data = json_decode($response, true);
+            if (isset($res_data['invoice_url'])) {
+                $inv_url = $res_data['invoice_url'];
+                $inv_id = $res_data['id'];
+                
+                // Save invoice details to db
+                $upd_inv = mysqli_prepare($mysqli, "UPDATE penyewaan SET xendit_invoice_id = ?, xendit_invoice_url = ? WHERE id_sewa = ?");
+                mysqli_stmt_bind_param($upd_inv, 'ssi', $inv_id, $inv_url, $id_sewa);
+                mysqli_stmt_execute($upd_inv);
+                mysqli_stmt_close($upd_inv);
+                
+                $rental['xendit_invoice_url'] = $inv_url;
+                $rental['xendit_invoice_id'] = $inv_id;
+            }
+        }
+        curl_close($ch);
+    } else {
+        // Fallback simulated payment url
+        $rental['xendit_invoice_url'] = "bayar.php?id=" . $id_sewa . "&simulate_payment=1";
+    }
+}
+
+// Check success status query string
+if (isset($_GET['xendit_status']) && $_GET['xendit_status'] === 'success') {
+    $success = 'Pembayaran Anda berhasil diproses melalui Xendit!';
+}
+
 // Handle upload receipt submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($rental['status'] !== 'booking') {
@@ -209,6 +295,27 @@ include 'partials/head.php';
               <div class="card-body p-4">
                 
                 <?php if ($status === 'booking' && empty($bukti)): ?>
+                    
+                    <!-- Xendit Payment Option -->
+                    <div class="mb-4">
+                      <h6 class="fw-bold mb-3"><i class="fa fa-bolt text-warning me-1"></i>PEMBAYARAN INSTAN:</h6>
+                      <?php if ($is_simulation): ?>
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 text-info py-2.5 px-3 mb-3 small">
+                          <i class="fa fa-info-circle me-1"></i> <strong>Mode Simulasi:</strong> Klik tombol pembayaran di bawah untuk mensimulasikan alur pembayaran otomatis Xendit pada server lokal Anda.
+                        </div>
+                      <?php endif; ?>
+                      <a href="<?= htmlspecialchars($rental['xendit_invoice_url'] ?? '') ?>" class="btn btn-success w-100 py-3 fw-bold text-white shadow-sm mb-3">
+                        <i class="fa fa-credit-card me-2"></i> Bayar Sekarang via Xendit
+                      </a>
+                      <div class="text-center text-muted small">Mendukung E-Wallet, QRIS, Virtual Account, Kartu Kredit, dll.</div>
+                    </div>
+
+                    <div class="d-flex align-items-center my-4">
+                      <hr class="flex-grow-1 text-body-secondary">
+                      <span class="mx-3 text-muted small fw-bold">ATAU TRANSFER MANUAL</span>
+                      <hr class="flex-grow-1 text-body-secondary">
+                    </div>
+
                     <!-- Form for uploading transfer receipt -->
                     <div class="mb-4">
                       <h6 class="fw-bold mb-2">PILIHAN REKENING BANK:</h6>
@@ -229,7 +336,7 @@ include 'partials/head.php';
                         <div class="form-text text-muted">Harap unggah tangkapan layar (screenshot) bukti transfer resmi dengan nominal yang sesuai. Format: JPG, JPEG, PNG.</div>
                       </div>
                       <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold"><i class="fa fa-upload me-2"></i>Kirim Bukti Pembayaran</button>
+                        <button type="submit" class="btn btn-outline-secondary w-100 py-2.5 fw-semibold"><i class="fa fa-upload me-2"></i>Kirim Bukti Pembayaran Manual</button>
                       </div>
                     </form>
 

@@ -10,7 +10,7 @@ $user_id = $_SESSION['user_id'];
 $error   = '';
 $success = '';
 
-$stmt = mysqli_prepare($mysqli, "SELECT nama, email FROM users WHERE id = ?");
+$stmt = mysqli_prepare($mysqli, "SELECT nama, email, no_hp FROM users WHERE id = ?");
 mysqli_stmt_bind_param($stmt, 'i', $user_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
@@ -20,10 +20,11 @@ mysqli_stmt_close($stmt);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama_baru  = trim($_POST['nama'] ?? '');
     $email_baru = trim($_POST['email'] ?? '');
+    $no_hp_baru = trim($_POST['no_hp'] ?? '');
     $pass_baru  = $_POST['password'] ?? '';
 
-    if (empty($nama_baru) || empty($email_baru)) {
-        $error = 'Nama dan Email wajib diisi.';
+    if (empty($nama_baru) || empty($email_baru) || empty($no_hp_baru)) {
+        $error = 'Nama, Email, dan Nomor Handphone wajib diisi.';
     } elseif (!filter_var($email_baru, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
     } else {
@@ -36,15 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Email tersebut sudah digunakan oleh akun lain.';
         } else {
             if (empty($pass_baru)) {
-                $upd = mysqli_prepare($mysqli, "UPDATE users SET nama = ?, email = ? WHERE id = ?");
-                mysqli_stmt_bind_param($upd, 'ssi', $nama_baru, $email_baru, $user_id);
+                $upd = mysqli_prepare($mysqli, "UPDATE users SET nama = ?, email = ?, no_hp = ? WHERE id = ?");
+                mysqli_stmt_bind_param($upd, 'sssi', $nama_baru, $email_baru, $no_hp_baru, $user_id);
             } else {
                 if(strlen($pass_baru) < 6) {
                     $error = 'Password baru minimal 6 karakter.';
                 } else {
                     $hashed = password_hash($pass_baru, PASSWORD_DEFAULT);
-                    $upd = mysqli_prepare($mysqli, "UPDATE users SET nama = ?, email = ?, password = ? WHERE id = ?");
-                    mysqli_stmt_bind_param($upd, 'sssi', $nama_baru, $email_baru, $hashed, $user_id);
+                    $upd = mysqli_prepare($mysqli, "UPDATE users SET nama = ?, email = ?, password = ?, no_hp = ? WHERE id = ?");
+                    mysqli_stmt_bind_param($upd, 'ssssi', $nama_baru, $email_baru, $hashed, $no_hp_baru, $user_id);
                 }
             }
 
@@ -54,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_nama'] = $nama_baru;
                     $user['nama'] = $nama_baru;
                     $user['email'] = $email_baru;
+                    $user['no_hp'] = $no_hp_baru;
                 } else {
                     $error = 'Gagal memperbarui profil.';
                 }
@@ -92,6 +94,12 @@ include 'partials/head.php';
                 <h5 class="mb-0 text-body"><i class="fa fa-user-edit me-2 text-primary"></i>My Profile</h5>
               </div>
               <div class="card-body p-4">
+                <?php if (isset($_GET['incomplete']) || empty($user['no_hp'])): ?>
+                    <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning py-3 px-3 mb-4">
+                        <i class="fa fa-exclamation-triangle me-1"></i> <strong>Pemberitahuan:</strong> Silakan lengkapi data diri Anda (terutama Nomor Handphone) terlebih dahulu sebelum dapat melanjutkan penggunaan fitur lainnya.
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($error): ?>
                     <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
                         <i class="fa fa-exclamation-triangle me-1"></i> <?= htmlspecialchars($error) ?>
@@ -104,13 +112,17 @@ include 'partials/head.php';
                 <?php endif; ?>
 
                 <form method="POST" action="" novalidate class="row g-3">
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <label class="form-label" for="nama">Nama Lengkap</label>
                     <input type="text" id="nama" name="nama" class="form-control" value="<?= htmlspecialchars($user['nama']) ?>" required>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <label class="form-label" for="email">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="no_hp">Nomor Handphone</label>
+                    <input type="text" id="no_hp" name="no_hp" class="form-control" value="<?= htmlspecialchars($user['no_hp'] ?? '') ?>" placeholder="Contoh: 08123456789" required>
                   </div>
                   <div class="col-12"><hr class="my-3 text-body-secondary"></div>
                   <div class="col-12">

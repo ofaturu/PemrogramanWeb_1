@@ -37,7 +37,7 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     }
 
     // Fetch matching users
-    $query = "SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, COUNT(p.id_sewa) AS jumlah_sewa
               FROM users u
               LEFT JOIN penyewaan p ON u.id = p.id_user
               WHERE u.nama LIKE ? OR u.email LIKE ?
@@ -56,7 +56,7 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     $total_pages = 1;
     $offset = 0;
 
-    $query = "SELECT u.id, u.nama, u.email, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, COUNT(p.id_sewa) AS jumlah_sewa
               FROM users u
               LEFT JOIN penyewaan p ON u.id = p.id_user
               WHERE u.id = ?
@@ -137,6 +137,7 @@ include 'partials/head.php';
                     <th scope="col" style="width: 100px;">ID</th>
                     <th scope="col">Nama User</th>
                     <th scope="col">Email</th>
+                    <th scope="col" style="width: 150px;">No HP</th>
                     <th scope="col" style="width: 120px;">Role</th>
                     <th scope="col" style="width: 200px;">Jumlah Sewa</th>
                     <th scope="col" class="pe-4 text-end" style="width: 150px;">Aksi</th>
@@ -150,6 +151,7 @@ include 'partials/head.php';
                           <td class="text-body-secondary">#<?= htmlspecialchars($u['id']) ?></td>
                           <td class="text-body fw-bold"><?= htmlspecialchars($u['nama']) ?></td>
                           <td class="text-body-secondary"><?= htmlspecialchars($u['email']) ?></td>
+                          <td class="text-body-secondary"><?= htmlspecialchars($u['no_hp'] ?? '-') ?></td>
                           <td>
                               <span class="badge bg-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> bg-opacity-10 text-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> px-2.5 py-1.5 fw-semibold" style="font-size: 0.85rem;">
                                   <?= htmlspecialchars(ucfirst($u['role'])) ?>
@@ -257,13 +259,17 @@ include 'partials/head.php';
               <div class="modal-body p-4">
                 <div class="mb-4">
                   <div class="row g-2">
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                       <div class="text-muted small">Nama User</div>
                       <div class="fw-bold text-body-emphasis"><?= htmlspecialchars($u['nama']) ?></div>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                       <div class="text-muted small">Alamat Email</div>
                       <div class="fw-bold text-body-emphasis"><?= htmlspecialchars($u['email']) ?></div>
+                    </div>
+                    <div class="col-sm-4">
+                      <div class="text-muted small">Nomor Handphone</div>
+                      <div class="fw-bold text-body-emphasis"><?= htmlspecialchars($u['no_hp'] ?? '-') ?></div>
                     </div>
                   </div>
                 </div>

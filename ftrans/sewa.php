@@ -59,6 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update vehicle status to 'disewa'
                 mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($kode_unik));
 
+                // Fetch vehicle and user details to draft custom notification messages
+                $user_info_res = mysqli_query($mysqli, "SELECT nama FROM users WHERE id = " . intval($id_user));
+                $user_info = mysqli_fetch_assoc($user_info_res);
+                $user_name = $user_info['nama'] ?? 'User';
+
+                $veh_info_res = mysqli_query($mysqli, "SELECT nama_kendaraan FROM kendaraan WHERE kode_unik_kendaraan = " . intval($kode_unik));
+                $veh_info = mysqli_fetch_assoc($veh_info_res);
+                $veh_name = $veh_info['nama_kendaraan'] ?? 'Kendaraan';
+
+                // Add notifications
+                add_notification($id_user, "Pemesanan Kendaraan Berhasil", "Pemesanan kendaraan {$veh_name} Anda berhasil dibuat. Silakan selesaikan pembayaran.");
+                add_notification(null, "Pemesanan Baru Masuk", "Penyewa {$user_name} baru saja melakukan pemesanan kendaraan {$veh_name}.");
+
                 require_once 'send_invoice.php';
                 try {
                     send_invoice_email($id_sewa, 'invoice');
@@ -127,6 +140,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_bind_param($upd, 'iissisi', $id_user, $kode_unik, $tgl_sewa, $tgl_kembali, $total_biaya, $status, $id_sewa);
 
             if (mysqli_stmt_execute($upd)) {
+                // Fetch vehicle name for notification
+                $veh_info_res = mysqli_query($mysqli, "SELECT nama_kendaraan FROM kendaraan WHERE kode_unik_kendaraan = " . intval($kode_unik));
+                $veh_info = mysqli_fetch_assoc($veh_info_res);
+                $veh_name = $veh_info['nama_kendaraan'] ?? 'Kendaraan';
+
+                // Map status label for notification message
+                $status_clean = str_replace('_', ' ', $status);
+                add_notification($id_user, "Pembaruan Transaksi #INV-{$id_sewa}", "Transaksi sewa kendaraan {$veh_name} Anda telah diperbarui. Status saat ini: " . ucfirst($status_clean));
+
                 // If status was changed to sedang_disewa, trigger receipt email
                 if ($status === 'sedang_disewa') {
                     require_once 'send_invoice.php';
@@ -179,6 +201,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (mysqli_stmt_execute($upd)) {
                 mysqli_stmt_close($upd);
+
+                // Fetch id_user and vehicle name for notification
+                $rental_details_res = mysqli_query($mysqli, "
+                    SELECT p.id_user, k.nama_kendaraan 
+                    FROM penyewaan p 
+                    JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+                    WHERE p.id_sewa = " . intval($id_sewa)
+                );
+                $rental_details = mysqli_fetch_assoc($rental_details_res);
+                $notif_user_id = $rental_details['id_user'] ?? 0;
+                $veh_name = $rental_details['nama_kendaraan'] ?? 'Kendaraan';
+
+                // Add notification
+                add_notification($notif_user_id, "Pembayaran Terverifikasi", "Pembayaran sewa kendaraan {$veh_name} Anda telah diverifikasi oleh Admin. Selamat berkendara!");
 
                 if (!empty($v_kode)) {
                     mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'disewa' WHERE kode_unik_kendaraan = " . intval($v_kode));

@@ -57,6 +57,26 @@ $nama_user_header = htmlspecialchars($_SESSION['user_nama'] ?? 'User');
         <div class="vr h-100 mx-2 text-body text-opacity-75"></div>
       </li>
 
+      <!-- Notification Dropdown -->
+      <li class="nav-item dropdown" id="notificationDropdownContainer">
+        <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center position-relative text-body" type="button" aria-expanded="false" data-coreui-toggle="dropdown" id="notificationBellBtn">
+          <i class="fa fa-bell" style="font-size: 1.15rem;"></i>
+          <span class="position-absolute top-2 start-75 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge" style="font-size: 0.65rem;">
+            0
+          </span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end pt-0 shadow-sm border border-secondary border-opacity-25" style="width: 320px; max-height: 400px; overflow-y: auto;" id="notificationList">
+          <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top d-flex justify-content-between align-items-center mb-2">
+            <span>Pemberitahuan</span>
+            <button class="btn btn-link p-0 text-decoration-none" style="font-size: 0.75rem;" id="markAllReadBtn">Tandai semua dibaca</button>
+          </div>
+          <div id="notificationItemsContainer">
+            <!-- Notifications loaded here dynamically -->
+            <li class="text-center text-muted py-3 small">Tidak ada pemberitahuan baru.</li>
+          </div>
+        </ul>
+      </li>
+
       <!-- User Dropdown Menu -->
       <li class="nav-item dropdown">
         <a class="nav-link py-0 pe-0 d-flex align-items-center gap-2" data-coreui-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
@@ -79,3 +99,87 @@ $nama_user_header = htmlspecialchars($_SESSION['user_nama'] ?? 'User');
     </ul>
   </div>
 </header>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const badge = document.getElementById("notificationBadge");
+    const container = document.getElementById("notificationItemsContainer");
+    const markAllBtn = document.getElementById("markAllReadBtn");
+
+    // Request browser notification permission
+    if (window.Notification && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+
+    let loadedIds = new Set();
+
+    function fetchNotifications() {
+        fetch("get_notifications.php")
+            .then(res => res.json())
+            .then(data => {
+                const notifs = data.notifications || [];
+                if (notifs.length > 0) {
+                    badge.innerText = notifs.length;
+                    badge.classList.remove("d-none");
+
+                    container.innerHTML = "";
+                    notifs.forEach(n => {
+                        const li = document.createElement("li");
+                        li.className = "dropdown-item py-2 border-bottom";
+                        li.style.whiteSpace = "normal";
+                        li.style.cursor = "pointer";
+                        li.innerHTML = `
+                            <div class="fw-bold small text-body-emphasis">${n.title}</div>
+                            <div class="small text-body-secondary mb-1">${n.message}</div>
+                            <div class="text-muted" style="font-size: 0.7rem;">${new Date(n.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})}</div>
+                        `;
+                        
+                        li.addEventListener("click", () => {
+                            const formData = new FormData();
+                            formData.append("action", "read");
+                            formData.append("id", n.id);
+                            fetch("get_notifications.php", {
+                                method: "POST",
+                                body: formData
+                            }).then(() => {
+                                fetchNotifications();
+                            });
+                        });
+                        
+                        container.appendChild(li);
+
+                        // Trigger native push
+                        if (!loadedIds.has(n.id)) {
+                            loadedIds.add(n.id);
+                            if (window.Notification && Notification.permission === "granted") {
+                                new Notification(n.title, {
+                                    body: n.message
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    badge.innerText = "0";
+                    badge.classList.add("d-none");
+                    container.innerHTML = `<li class="text-center text-muted py-3 small">Tidak ada pemberitahuan baru.</li>`;
+                }
+            })
+            .catch(err => console.error("Error fetching notifications:", err));
+    }
+
+    markAllBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const formData = new FormData();
+        formData.append("action", "read_all");
+        fetch("get_notifications.php", {
+            method: "POST",
+            body: formData
+        }).then(() => {
+            fetchNotifications();
+        });
+    });
+
+    fetchNotifications();
+    setInterval(fetchNotifications, 15000);
+});
+</script>

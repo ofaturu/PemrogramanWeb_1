@@ -10,6 +10,26 @@
   </div>
   <ul class="sidebar-nav" data-coreui="navigation" data-simplebar>
     <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'analytics' ? 'active' : '' ?>" href="analytics.php">
+        <i class="nav-icon fa fa-chart-line me-2"></i>
+        Analitik & Grafik
+      </a>
+    </li>
+    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'calendar' ? 'active' : '' ?>" href="calendar.php">
+        <i class="nav-icon fa fa-calendar-alt me-2"></i>
+        Kalender Sewa
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'maintenance' ? 'active' : '' ?>" href="maintenance.php">
+        <i class="nav-icon fa fa-tools me-2"></i>
+        Perawatan Kendaraan
+      </a>
+    </li>
+    <?php endif; ?>
+    <li class="nav-item">
       <a class="nav-link <?= ($activePage ?? '') === 'dashboard' ? 'active' : '' ?>" href="dashboard.php">
         <i class="nav-icon fa fa-table me-2"></i>
         Data Kendaraan
