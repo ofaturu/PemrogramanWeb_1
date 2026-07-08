@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Pagination settings
-$limit = 10;
+$limit = 12;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) {
     $page = 1;
@@ -287,7 +287,7 @@ if ($page > $total_pages && $total_pages > 0) {
 }
 
 // Fetch matching items
-$query = "SELECT * FROM kendaraan $where_sql ORDER BY kode_unik_kendaraan ASC LIMIT ? OFFSET ?";
+$query = "SELECT * FROM kendaraan $where_sql ORDER BY CASE WHEN status_kendaraan = 'tersedia' THEN 1 WHEN status_kendaraan = 'perawatan' THEN 2 WHEN status_kendaraan = 'disewa' THEN 3 ELSE 4 END ASC, kode_unik_kendaraan ASC LIMIT ? OFFSET ?";
 $stmt = mysqli_prepare($mysqli, $query);
 
 $bind_params = array_merge($params, [$limit, $offset]);
