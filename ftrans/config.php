@@ -129,4 +129,49 @@ function add_notification($user_id, $title, $message) {
         mysqli_stmt_close($stmt);
     }
 }
+
+// Fungsi pembantu untuk mendapatkan tier membership dan diskon loyalitas
+function getUserMembership($id_user, $mysqli) {
+    // Hitung total sewa selesai (sukses) oleh user
+    $q = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM penyewaan WHERE id_user = " . intval($id_user) . " AND status = 'selesai'");
+    $row = mysqli_fetch_assoc($q);
+    $count = $row['count'] ?? 0;
+
+    // Ambil data tier eksplisit dari database
+    $q2 = mysqli_query($mysqli, "SELECT membership_tier FROM users WHERE id = " . intval($id_user));
+    $row2 = mysqli_fetch_assoc($q2);
+    $db_tier = strtolower(trim($row2['membership_tier'] ?? 'basic'));
+    if (empty($db_tier)) $db_tier = 'basic';
+
+    // Kalkulasi upgrade tier otomatis berdasarkan jumlah sewa
+    $auto_tier = 'basic';
+    if ($count >= 10) {
+        $auto_tier = 'gold';
+    } elseif ($count >= 6) {
+        $auto_tier = 'silver';
+    } elseif ($count >= 3) {
+        $auto_tier = 'bronze';
+    }
+
+    // Tentukan tier akhir (ambil yang tertinggi)
+    $tiers = ['basic' => 0, 'bronze' => 1, 'silver' => 2, 'gold' => 3];
+    $final_tier = ($tiers[$db_tier] > $tiers[$auto_tier]) ? $db_tier : $auto_tier;
+
+    // Tentukan diskon
+    $discounts = ['basic' => 0.0, 'bronze' => 0.05, 'silver' => 0.10, 'gold' => 0.15];
+    $discount = $discounts[$final_tier] ?? 0.0;
+
+    return [
+        'tier' => $final_tier,
+        'discount' => $discount,
+        'completed_rentals' => $count
+    ];
+}
+
+// Sinkronkan data membership user ke session saat masuk halaman
+if (isset($_SESSION['user_id'])) {
+    $membership = getUserMembership($_SESSION['user_id'], $mysqli);
+    $_SESSION['user_tier'] = $membership['tier'];
+    $_SESSION['user_discount'] = $membership['discount'];
+}
 ?>

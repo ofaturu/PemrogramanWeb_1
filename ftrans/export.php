@@ -1126,12 +1126,50 @@ if ($format === 'pdf') {
             $html .= '<td class="text-center">' . $diff_days . ' Hari</td>';
             $html .= '<td class="text-right" style="font-weight: bold;">Rp ' . number_format($detail_data['total_biaya'], 0, ',', '.') . '</td>';
             $html .= '</tr>';
+            $denda = intval($detail_data['denda'] ?? 0);
+            $sewa_cost = intval($detail_data['total_biaya'] ?? 0);
+            $total_bayar = $sewa_cost + $denda;
+
+            if ($denda > 0) {
+                $html .= '<tr>';
+                $html .= '<td colspan="3" class="text-right" style="padding: 10px;">Subtotal Sewa:</td>';
+                $html .= '<td class="text-right" style="padding: 10px; font-weight: bold;">Rp ' . number_format($sewa_cost, 0, ',', '.') . '</td>';
+                $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td colspan="3" class="text-right" style="padding: 10px; color: #DC2626;">Denda Keterlambatan:</td>';
+                $html .= '<td class="text-right" style="padding: 10px; font-weight: bold; color: #DC2626;">Rp ' . number_format($denda, 0, ',', '.') . '</td>';
+                $html .= '</tr>';
+            }
+
             $html .= '<tr class="grand-total-row">';
             $html .= '<td colspan="3" class="text-right" style="padding: 10px;">Total Pembayaran:</td>';
-            $html .= '<td class="text-right grand-total-val" style="padding: 10px;">Rp ' . number_format($detail_data['total_biaya'], 0, ',', '.') . '</td>';
+            $html .= '<td class="text-right grand-total-val" style="padding: 10px;">Rp ' . number_format($total_bayar, 0, ',', '.') . '</td>';
             $html .= '</tr>';
             $html .= '</tbody>';
             $html .= '</table>';
+
+            // Validasi QR Code Receipt
+            $receipt_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/PemrogramanWeb_1/ftrans/bayar.php?id=" . $detail_data['id_sewa'];
+            $qr_code_src = "https://quickchart.io/qr?text=" . urlencode($receipt_url) . "&size=100&margin=1";
+
+            $html .= '
+            <table style="width: 100%; border: none; margin-top: 30px;">
+                <tr>
+                    <td style="width: 70%; vertical-align: top; border: none; padding: 0;">
+                        <div style="font-weight: bold; color: #475569; margin-bottom: 5px;">CATATAN:</div>
+                        <div style="font-size: 8.5pt; color: #64748B; line-height: 1.4;">
+                            * Struk ini adalah bukti pembayaran digital resmi dari FTrans.<br>
+                            * Silakan tunjukkan QR Code di samping kepada petugas kami saat melakukan pengambilan/pengembalian armada.<br>
+                            * Hubungi support@ftrans.com jika Anda memerlukan bantuan lebih lanjut.
+                        </div>
+                    </td>
+                    <td style="width: 30%; text-align: right; vertical-align: top; border: none; padding: 0;">
+                        <div style="font-weight: bold; color: #475569; font-size: 8pt; margin-bottom: 5px;">VALIDASI STRUK:</div>
+                        <img src="' . $qr_code_src . '" style="width: 100px; height: 100px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                    </td>
+                </tr>
+            </table>
+            ';
             
             $html .= '<div class="footer-note">';
             $html .= '<p>Terima kasih telah mempercayakan perjalanan Anda bersama FTrans.</p>';

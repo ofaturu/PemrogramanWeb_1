@@ -111,6 +111,49 @@ include 'partials/head.php';
                     </div>
                 <?php endif; ?>
 
+                <!-- Membership Card Info -->
+                <?php
+                $membership = getUserMembership($user_id, $mysqli);
+                $tier = $membership['tier'];
+                $discount_pct = $membership['discount'] * 100;
+                $rentals_count = $membership['completed_rentals'];
+
+                $badge_class = 'bg-secondary';
+                $border_style = '';
+                if ($tier === 'bronze') {
+                    $badge_class = 'bg-warning text-dark';
+                    $border_style = 'border: 2px dashed #CD7F32;';
+                } elseif ($tier === 'silver') {
+                    $badge_class = 'bg-info text-dark';
+                    $border_style = 'border: 2px dashed #C0C0C0;';
+                } elseif ($tier === 'gold') {
+                    $badge_class = 'bg-warning text-dark fw-bold';
+                    $border_style = 'border: 2px dashed #FFD700;';
+                }
+                ?>
+                <div class="card mb-4 border shadow-sm bg-body-tertiary" style="border-radius: 12px; <?= $border_style ?>">
+                  <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa fa-id-card fa-2x"></i>
+                      </div>
+                      <div>
+                        <h6 class="text-uppercase font-monospace text-muted mb-1" style="font-size: 0.75rem;">Status Keanggotaan</h6>
+                        <h4 class="fw-bold text-body-emphasis mb-0 d-flex align-items-center gap-2">
+                          <?= ucfirst($tier) ?> Member 
+                          <span class="badge <?= $badge_class ?> fs-7 px-2.5 py-1 rounded-pill">
+                            Diskon <?= $discount_pct ?>%
+                          </span>
+                        </h4>
+                      </div>
+                    </div>
+                    <div class="text-md-end">
+                      <div class="text-muted small">Total Rental Selesai:</div>
+                      <div class="fw-bold fs-5 text-primary"><i class="fa fa-car me-1"></i><?= $rentals_count ?> Transaksi</div>
+                    </div>
+                  </div>
+                </div>
+
                 <form method="POST" action="" novalidate class="row g-3">
                   <div class="col-md-4">
                     <label class="form-label" for="nama">Nama Lengkap</label>

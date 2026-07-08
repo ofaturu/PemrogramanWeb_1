@@ -36,7 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $durasi_hari = ceil((strtotime($tgl_kembali) - strtotime($tgl_sewa)) / 86400);
         if ($durasi_hari <= 0) $durasi_hari = 1;
-        $total_biaya = $durasi_hari * $harga_per_hari;
+        $original_total = $durasi_hari * $harga_per_hari;
+
+        // Apply loyalty membership discount
+        $membership = getUserMembership($id_user, $mysqli);
+        $discount_rate = $membership['discount'];
+        $total_biaya = $original_total - ($original_total * $discount_rate);
 
         if (empty($kode_unik) || empty($tgl_sewa) || empty($tgl_kembali)) {
             $error_booking = 'Semua field wajib diisi.';
@@ -309,7 +314,7 @@ $error_booking = '';
 $title = 'Dashboard — FTrans';
 include 'partials/head.php';
 ?>
-<body>
+<body data-user-discount="<?= $_SESSION['user_discount'] ?? 0 ?>" data-user-tier="<?= $_SESSION['user_tier'] ?? 'basic' ?>">
   <?php 
   $activePage = 'dashboard';
   include 'partials/sidebar.php'; 
@@ -960,7 +965,11 @@ include 'partials/head.php';
                   </div>
                   <div class="text-end">
                     <div class="text-muted small">Estimasi Total Biaya:</div>
+                    <div class="text-decoration-line-through text-muted small d-none" id="book_original_total_container" style="font-size: 0.85rem;">
+                      Rp <span id="book_original_total_text">0</span>
+                    </div>
                     <div class="fw-bold fs-5 text-success">Rp <span id="book_total_biaya_text">0</span></div>
+                    <div class="text-success small d-none" id="book_discount_label" style="font-size: 0.75rem; font-weight: 600;">Diskon Member (0%)</div>
                   </div>
                 </div>
               </div>
@@ -1052,14 +1061,33 @@ include 'partials/head.php';
           inputSewa.value    = localStart;
           inputKembali.value = localReturn;
 
+          const discountRate = parseFloat(document.body.getAttribute('data-user-discount') || '0');
+          const tier = document.body.getAttribute('data-user-tier') || 'basic';
+
           function recalc() {
             var t1 = new Date(inputSewa.value);
             var t2 = new Date(inputKembali.value);
             var diffMs   = t2 - t1;
             var diffDays = diffMs > 0 ? Math.ceil(diffMs / 86400000) : 1;
+            
+            var originalTotal = diffDays * harga;
+            var discountAmount = originalTotal * discountRate;
+            var finalTotal = originalTotal - discountAmount;
+            
             document.getElementById('book_durasi').textContent = diffDays;
+            
+            if (discountRate > 0) {
+              document.getElementById('book_original_total_container').classList.remove('d-none');
+              document.getElementById('book_original_total_text').textContent = new Intl.NumberFormat('id-ID').format(originalTotal);
+              document.getElementById('book_discount_label').classList.remove('d-none');
+              document.getElementById('book_discount_label').textContent = 'Diskon ' + tier.charAt(0).toUpperCase() + tier.slice(1) + ' (' + (discountRate * 100) + '%)';
+            } else {
+              document.getElementById('book_original_total_container').classList.add('d-none');
+              document.getElementById('book_discount_label').classList.add('d-none');
+            }
+            
             document.getElementById('book_total_biaya_text').textContent =
-              new Intl.NumberFormat('id-ID').format(diffDays * harga);
+              new Intl.NumberFormat('id-ID').format(finalTotal);
           }
 
           inputSewa.onchange    = recalc;

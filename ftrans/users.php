@@ -8,6 +8,29 @@ if (!isset($_SESSION['user_id'])) {
 
 $nama_user = htmlspecialchars($_SESSION['user_nama']);
 
+// Handle update membership tier from admin
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'update_tier') {
+    if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+        $u_id = intval($_POST['user_id'] ?? 0);
+        $new_tier = trim($_POST['membership_tier'] ?? 'basic');
+        if ($u_id > 0 && in_array($new_tier, ['basic', 'bronze', 'silver', 'gold'])) {
+            $upd = mysqli_prepare($mysqli, "UPDATE users SET membership_tier = ? WHERE id = ?");
+            mysqli_stmt_bind_param($upd, 'si', $new_tier, $u_id);
+            mysqli_stmt_execute($upd);
+            mysqli_stmt_close($upd);
+            
+            if ($u_id == $_SESSION['user_id']) {
+                $membership = getUserMembership($u_id, $mysqli);
+                $_SESSION['user_tier'] = $membership['tier'];
+                $_SESSION['user_discount'] = $membership['discount'];
+            }
+            
+            header("Location: users.php?msg=tier_updated");
+            exit;
+        }
+    }
+}
+
 // Pagination settings
 $limit = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -37,7 +60,7 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     }
 
     // Fetch matching users
-    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, u.membership_tier, COUNT(p.id_sewa) AS jumlah_sewa
               FROM users u
               LEFT JOIN penyewaan p ON u.id = p.id_user
               WHERE u.nama LIKE ? OR u.email LIKE ?
@@ -56,7 +79,7 @@ if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
     $total_pages = 1;
     $offset = 0;
 
-    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, COUNT(p.id_sewa) AS jumlah_sewa
+    $query = "SELECT u.id, u.nama, u.email, u.no_hp, u.role, u.membership_tier, COUNT(p.id_sewa) AS jumlah_sewa
               FROM users u
               LEFT JOIN penyewaan p ON u.id = p.id_user
               WHERE u.id = ?
@@ -93,6 +116,10 @@ include 'partials/head.php';
         <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
             <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small py-2 px-3 mb-4">
                 <i class="fa fa-check-circle me-1"></i> User berhasil dihapus dari sistem.
+            </div>
+        <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'tier_updated'): ?>
+            <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small py-2 px-3 mb-4">
+                <i class="fa fa-check-circle me-1"></i> Tier membership user berhasil diperbarui.
             </div>
         <?php elseif (isset($_GET['error']) && $_GET['error'] === 'self_delete'): ?>
             <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small py-2 px-3 mb-4">
@@ -136,6 +163,7 @@ include 'partials/head.php';
                     <th scope="col">Nama User</th>
                     <th scope="col">Email</th>
                     <th scope="col" style="width: 150px;">No HP</th>
+                    <th scope="col" style="width: 130px;">Membership</th>
                     <th scope="col" style="width: 120px;">Role</th>
                     <th scope="col" style="width: 200px;">Jumlah Sewa</th>
                     <th scope="col" class="pe-4 text-end" style="width: 150px;">Aksi</th>
@@ -150,6 +178,18 @@ include 'partials/head.php';
                           <td class="text-body fw-bold"><?= htmlspecialchars($u['nama']) ?></td>
                           <td class="text-body-secondary"><?= htmlspecialchars($u['email']) ?></td>
                           <td class="text-body-secondary"><?= htmlspecialchars($u['no_hp'] ?? '-') ?></td>
+                          <td>
+                              <?php
+                              $utier = strtolower(trim($u['membership_tier'] ?? 'basic'));
+                              $tier_color = 'secondary';
+                              if ($utier === 'bronze') $tier_color = 'warning text-dark';
+                              elseif ($utier === 'silver') $tier_color = 'info text-dark';
+                              elseif ($utier === 'gold') $tier_color = 'warning text-dark fw-bold';
+                              ?>
+                              <span class="badge bg-<?= $tier_color ?> px-2.5 py-1.5 rounded-pill text-uppercase" style="font-size: 0.75rem;">
+                                  <?= $utier ?>
+                              </span>
+                          </td>
                           <td>
                               <span class="badge bg-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> bg-opacity-10 text-<?= ($u['role'] === 'admin') ? 'danger' : 'success' ?> px-2.5 py-1.5 fw-semibold" style="font-size: 0.85rem;">
                                   <?= htmlspecialchars(ucfirst($u['role'])) ?>
@@ -389,6 +429,24 @@ include 'partials/head.php';
                   </div>
                 </div>
                 
+                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                <div class="mb-4 bg-body-tertiary p-3 rounded border border-secondary border-opacity-10">
+                  <h6 class="fw-bold mb-2 text-body"><i class="fa fa-id-card me-1 text-primary"></i>Manajemen Tier Membership</h6>
+                  <form method="POST" action="users.php?action=update_tier" class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                    <div class="flex-grow-1" style="min-width: 200px;">
+                      <select name="membership_tier" class="form-select form-select-sm">
+                        <option value="basic" <?= ($u['membership_tier'] === 'basic') ? 'selected' : '' ?>>Basic (Diskon 0%)</option>
+                        <option value="bronze" <?= ($u['membership_tier'] === 'bronze') ? 'selected' : '' ?>>Bronze (Diskon 5%)</option>
+                        <option value="silver" <?= ($u['membership_tier'] === 'silver') ? 'selected' : '' ?>>Silver (Diskon 10%)</option>
+                        <option value="gold" <?= ($u['membership_tier'] === 'gold') ? 'selected' : '' ?>>Gold (Diskon 15%)</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm text-white px-3"><i class="fa fa-save me-1 text-white"></i> Simpan Tier</button>
+                  </form>
+                </div>
+                <?php endif; ?>
+
                 <h6 class="fw-bold mb-3 text-body-secondary"><i class="fa fa-list me-1"></i> Daftar Kendaraan Yang Disewa</h6>
                 
                 <?php if (count($user_rentals) > 0): ?>

@@ -193,7 +193,9 @@ CREATE TABLE `penyewaan` (
   `bukti_pembayaran` varchar(255) DEFAULT NULL,
   `waktu_bayar` datetime DEFAULT NULL,
   `xendit_invoice_id` varchar(255) DEFAULT NULL,
-  `xendit_invoice_url` varchar(500) DEFAULT NULL
+  `xendit_invoice_url` varchar(500) DEFAULT NULL,
+  `tanggal_kembali_aktual` datetime DEFAULT NULL,
+  `denda` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -225,7 +227,8 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `role` varchar(20) DEFAULT 'user',
-  `no_hp` varchar(20) DEFAULT NULL
+  `no_hp` varchar(20) DEFAULT NULL,
+  `membership_tier` varchar(20) DEFAULT 'basic'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --

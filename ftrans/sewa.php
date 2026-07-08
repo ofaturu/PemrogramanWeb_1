@@ -49,6 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tgl_kembali = $_POST['tanggal_kembali'] ?? '';
         $total_biaya = $_POST['total_biaya'] ?? '';
 
+        // Recalculate cost with membership discount
+        if (!empty($id_user) && !empty($kode_unik) && !empty($tgl_sewa) && !empty($tgl_kembali)) {
+            $v_res = mysqli_query($mysqli, "SELECT harga_per_hari FROM kendaraan WHERE kode_unik_kendaraan = " . intval($kode_unik));
+            $v_data = mysqli_fetch_assoc($v_res);
+            $harga_per_hari = $v_data['harga_per_hari'] ?? 0;
+
+            $durasi_hari = ceil((strtotime($tgl_kembali) - strtotime($tgl_sewa)) / 86400);
+            if ($durasi_hari <= 0) $durasi_hari = 1;
+            $original_total = $durasi_hari * $harga_per_hari;
+
+            $membership = getUserMembership($id_user, $mysqli);
+            $discount_rate = $membership['discount'];
+            $total_biaya = $original_total - ($original_total * $discount_rate);
+        }
+
         if (empty($id_user) || empty($kode_unik) || empty($tgl_sewa) || empty($tgl_kembali) || $total_biaya === '') {
             $error_add = 'Semua field wajib diisi.';
         } elseif (strtotime($tgl_kembali) < strtotime($tgl_sewa)) {
@@ -124,6 +139,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tgl_sewa = $_POST['tanggal_sewa'] ?? '';
         $tgl_kembali = $_POST['tanggal_kembali'] ?? '';
         $total_biaya = $_POST['total_biaya'] ?? '';
+
+        // Recalculate cost with membership discount
+        if (!empty($id_user) && !empty($kode_unik) && !empty($tgl_sewa) && !empty($tgl_kembali)) {
+            $v_res = mysqli_query($mysqli, "SELECT harga_per_hari FROM kendaraan WHERE kode_unik_kendaraan = " . intval($kode_unik));
+            $v_data = mysqli_fetch_assoc($v_res);
+            $harga_per_hari = $v_data['harga_per_hari'] ?? 0;
+
+            $durasi_hari = ceil((strtotime($tgl_kembali) - strtotime($tgl_sewa)) / 86400);
+            if ($durasi_hari <= 0) $durasi_hari = 1;
+            $original_total = $durasi_hari * $harga_per_hari;
+
+            $membership = getUserMembership($id_user, $mysqli);
+            $discount_rate = $membership['discount'];
+            $total_biaya = $original_total - ($original_total * $discount_rate);
+        }
 
         if (empty($id_sewa)) {
             $error_edit = 'ID transaksi penyewaan tidak ditemukan.';
@@ -237,6 +267,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($upd);
                 $error_edit = 'Gagal memverifikasi pembayaran. Coba lagi.';
             }
+        }
+    } elseif ($action === 'process_return') {
+        $id_sewa = intval($_POST['id_sewa'] ?? 0);
+        $tgl_kembali_aktual = trim($_POST['tanggal_kembali_aktual'] ?? '');
+        
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+            header('Location: sewa.php?error=unauthorized');
+            exit;
+        }
+
+        if ($id_sewa > 0 && !empty($tgl_kembali_aktual)) {
+            $v_q = mysqli_query($mysqli, "
+                SELECT p.tanggal_kembali, p.id_user, p.kode_unik_kendaraan, k.harga_per_hari, k.nama_kendaraan 
+                FROM penyewaan p 
+                JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan 
+                WHERE p.id_sewa = " . intval($id_sewa)
+            );
+            $v_data = mysqli_fetch_assoc($v_q);
+            if ($v_data) {
+                $tgl_kembali_scheduled = $v_data['tanggal_kembali'];
+                $harga_per_hari = $v_data['harga_per_hari'];
+                $id_user = $v_data['id_user'];
+                $kode_unik = $v_data['kode_unik_kendaraan'];
+                $veh_name = $v_data['nama_kendaraan'];
+
+                $t_scheduled = strtotime($tgl_kembali_scheduled);
+                $t_aktual = strtotime($tgl_kembali_aktual);
+                $denda = 0;
+                if ($t_aktual > $t_scheduled) {
+                    $diff_seconds = $t_aktual - $t_scheduled;
+                    $diff_days = ceil($diff_seconds / 86400);
+                    $denda = $diff_days * $harga_per_hari;
+                }
+
+                $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET status = 'selesai', tanggal_kembali_aktual = ?, denda = ? WHERE id_sewa = ?");
+                mysqli_stmt_bind_param($upd, 'sii', $tgl_kembali_aktual, $denda, $id_sewa);
+                
+                if (mysqli_stmt_execute($upd)) {
+                    mysqli_stmt_close($upd);
+                    mysqli_query($mysqli, "UPDATE kendaraan SET status_kendaraan = 'tersedia' WHERE kode_unik_kendaraan = " . intval($kode_unik));
+
+                    $msg_notif = "Kendaraan {$veh_name} telah berhasil dikembalikan.";
+                    if ($denda > 0) {
+                        $msg_notif .= " Denda keterlambatan Anda: Rp " . number_format($denda, 0, ',', '.') . ".";
+                    }
+                    add_notification($id_user, "Pengembalian Armada Sukses", $msg_notif);
+
+                    header('Location: sewa.php?msg=returned');
+                    exit;
+                } else {
+                    mysqli_stmt_close($upd);
+                    $error_edit = 'Gagal memproses pengembalian. Coba lagi.';
+                }
+            } else {
+                $error_edit = 'Data penyewaan tidak ditemukan.';
+            }
+        } else {
+            $error_edit = 'ID sewa dan tanggal kembali aktual wajib diisi.';
         }
     }
 }
@@ -404,7 +492,19 @@ include 'partials/head.php';
                               <span class="badge bg-dark text-warning border border-warning px-2 py-0.5 ms-1"><?= htmlspecialchars($r['kode_unik_kendaraan']) ?></span>
                           </td>
                           <td class="text-body-secondary small"><?= date('d M Y H:i', strtotime($r['tanggal_sewa'])) ?></td>
-                          <td class="text-body-secondary small"><?= date('d M Y H:i', strtotime($r['tanggal_kembali'])) ?></td>
+                           <td class="text-body-secondary small">
+                               <?= date('d M Y H:i', strtotime($r['tanggal_kembali'])) ?>
+                               <?php if ($r['status'] === 'selesai' && !empty($r['tanggal_kembali_aktual'])): ?>
+                                   <div class="text-success mt-1" style="font-size: 0.75rem; font-weight: 600;">
+                                       <i class="fa fa-check-circle me-0.5"></i> Aktual: <?= date('d M Y H:i', strtotime($r['tanggal_kembali_aktual'])) ?>
+                                   </div>
+                                   <?php if ($r['denda'] > 0): ?>
+                                       <div class="text-danger font-monospace mt-0.5" style="font-size: 0.75rem; font-weight: 700;">
+                                           Denda: Rp <?= number_format($r['denda'], 0, ',', '.') ?>
+                                       </div>
+                                   <?php endif; ?>
+                               <?php endif; ?>
+                           </td>
                           <td class="text-body fw-bold">
                               <?= $r['total_biaya'] !== null ? 'Rp ' . number_format($r['total_biaya'], 0, ',', '.') : '<span class="text-muted small">Belum dihitung</span>' ?>
                           </td>
@@ -435,6 +535,11 @@ include 'partials/head.php';
                                       <?php if ($r['status'] === 'booking' && !empty($r['bukti_pembayaran'])): ?>
                                           <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#verifyPaymentModal-<?= $r['id_sewa'] ?>" title="Verifikasi Pembayaran">
                                               <i class="fa fa-check"></i> Verifikasi
+                                          </button>
+                                      <?php endif; ?>
+                                      <?php if ($r['status'] === 'sedang_disewa'): ?>
+                                          <button type="button" class="btn btn-outline-success d-flex align-items-center gap-1" data-coreui-toggle="modal" data-coreui-target="#returnModal-<?= $r['id_sewa'] ?>" title="Proses Pengembalian Kendaraan">
+                                              <i class="fa fa-undo"></i> Kembalikan
                                           </button>
                                       <?php endif; ?>
                                   <?php else: ?>
@@ -626,6 +731,57 @@ include 'partials/head.php';
                                       <div class="modal-footer justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
                                         <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
                                         <button type="submit" class="btn btn-success text-white px-4 fw-bold">Setujui & Verifikasi</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+                              <?php endif; ?>
+
+                              <!-- Return Vehicle Modal (Admin Only) -->
+                              <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin' && $r['status'] === 'sedang_disewa'): ?>
+                              <div class="modal fade text-start return-modal-el" id="returnModal-<?= $r['id_sewa'] ?>" tabindex="-1" aria-labelledby="returnModalLabel-<?= $r['id_sewa'] ?>" aria-hidden="true" data-price-per-day="<?= $r['harga_per_hari'] ?>" data-scheduled-return="<?= $r['tanggal_kembali'] ?>">
+                                <div class="modal-dialog modal-dialog-centered">
+                                  <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+                                    <div class="modal-header bg-success text-white" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                      <h5 class="modal-title" id="returnModalLabel-<?= $r['id_sewa'] ?>"><i class="fa fa-undo me-2"></i>Proses Pengembalian Kendaraan</h5>
+                                      <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="POST" action="">
+                                      <input type="hidden" name="action" value="process_return">
+                                      <input type="hidden" name="id_sewa" value="<?= $r['id_sewa'] ?>">
+                                      
+                                      <div class="modal-body p-4">
+                                        <div class="mb-3 text-start">
+                                          <div class="small text-muted fw-bold">Nomor Invoice:</div>
+                                          <div class="fw-bold fs-6">#INV-<?= str_pad($r['id_sewa'], 5, '0', STR_PAD_LEFT) ?></div>
+                                          <div class="small text-muted mt-2 fw-bold">Penyewa & Kendaraan:</div>
+                                          <div class="text-body-emphasis"><?= htmlspecialchars($r['nama_user'] ?? 'N/A') ?> - <?= htmlspecialchars($r['nama_kendaraan'] ?? 'N/A') ?></div>
+                                          <div class="small text-muted mt-2 fw-bold">Jadwal Tanggal Kembali:</div>
+                                          <div class="text-body-emphasis fw-semibold text-warning"><?= date('d M Y H:i', strtotime($r['tanggal_kembali'])) ?></div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                          <label class="form-label fw-bold" for="return_date_<?= $r['id_sewa'] ?>">Tanggal Pengembalian Aktual *</label>
+                                          <input type="datetime-local" id="return_date_<?= $r['id_sewa'] ?>" name="tanggal_kembali_aktual" class="form-control return-date-input" required>
+                                        </div>
+
+                                        <div class="bg-body-secondary p-3 rounded border d-flex justify-content-between align-items-center mb-3">
+                                          <div>
+                                            <div class="text-muted small">Keterlambatan:</div>
+                                            <div class="fw-bold text-body"><span class="late-days-label">0</span> Hari</div>
+                                          </div>
+                                          <div class="text-end">
+                                            <div class="text-muted small">Denda Terlambat:</div>
+                                            <div class="fw-bold fs-5 text-danger">Rp <span class="late-fee-label">0</span></div>
+                                          </div>
+                                        </div>
+                                        <p class="text-muted small mb-0"><i class="fa fa-info-circle"></i> Denda dihitung secara otomatis berdasarkan harga sewa harian (Rp <?= number_format($r['harga_per_hari'], 0, ',', '.') ?>/hari) untuk setiap hari keterlambatan.</p>
+                                      </div>
+                                      
+                                      <div class="modal-footer justify-content-center" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                        <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">Batal</button>
+                                        <button type="submit" class="btn btn-success text-white px-4 fw-bold">Proses Selesai</button>
                                       </div>
                                     </form>
                                   </div>
@@ -831,6 +987,8 @@ include 'partials/head.php';
                   echo 'Transaksi penyewaan berhasil dihapus.';
               } elseif ($msg === 'payment_verified') {
                   echo 'Pembayaran berhasil diverifikasi! Sistem telah mengirimkan email konfirmasi pembayaran.';
+              } elseif ($msg === 'returned') {
+                  echo 'Pengembalian armada berhasil diproses dan diselesaikan.';
               }
               ?>
             </p>
@@ -906,6 +1064,40 @@ include 'partials/head.php';
         const editModal = new coreui.Modal(document.getElementById('editSewaModal-<?= $error_edit_id ?>'));
         editModal.show();
         <?php endif; ?>
+
+        // 4. Return Modal Live Calculator
+        document.querySelectorAll('.return-modal-el').forEach(function(modal) {
+          const inputEl = modal.querySelector('.return-date-input');
+          const lateDaysEl = modal.querySelector('.late-days-label');
+          const lateFeeEl = modal.querySelector('.late-fee-label');
+          
+          const scheduledStr = modal.getAttribute('data-scheduled-return');
+          const pricePerDay = parseFloat(modal.getAttribute('data-price-per-day')) || 0;
+          const t_scheduled = new Date(scheduledStr);
+
+          // Default actual date to current local time
+          var now = new Date();
+          var tzoffset = now.getTimezoneOffset() * 60000;
+          var localNow = new Date(now - tzoffset).toISOString().slice(0, 16);
+          inputEl.value = localNow;
+
+          function calcDenda() {
+            if (!inputEl.value) return;
+            const t_aktual = new Date(inputEl.value);
+            const diffMs = t_aktual - t_scheduled;
+            let diffDays = 0;
+            if (diffMs > 0) {
+              diffDays = Math.ceil(diffMs / 86400000);
+            }
+            const denda = diffDays * pricePerDay;
+            lateDaysEl.textContent = diffDays;
+            lateFeeEl.textContent = new Intl.NumberFormat('id-ID').format(denda);
+          }
+
+          inputEl.addEventListener('change', calcDenda);
+          modal.addEventListener('show.coreui.modal', calcDenda);
+          calcDenda();
+        });
       });
     </script>
 </body>
