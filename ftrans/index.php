@@ -306,7 +306,7 @@ function getCarImageUrl($car) {
         <div class="container py-4">
             <div class="text-center mb-5 reveal">
                 <span class="text-primary fw-semibold text-uppercase tracking-wider small">Eksklusif</span>
-                <h2 class="fw-bold mt-2">Armada Mobil Mewah Kami</h2>
+                <h2 class="fw-bold mt-2">Armada Kendaraan Mewah Kami</h2>
                 <div class="mx-auto bg-primary" style="width: 60px; height: 3px; border-radius: 2px;"></div>
                 <p class="text-muted mt-3 max-w-2xl mx-auto">Kami menyediakan berbagai tipe kendaraan premium berkualitas tinggi yang selalu prima dan siap menemani perjalanan penting Anda.</p>
             </div>
