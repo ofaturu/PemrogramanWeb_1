@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2026 at 08:46 AM
+-- Generation Time: Jul 08, 2026 at 06:23 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,11 +51,14 @@ INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `je
 (2, 12, 'BMW M4', 'roda 4', 750000, 0x6d342e77656270, 'Matic', '4 Seater', 'Bensin', 'disewa', 1, 'Biru'),
 (3, 1, 'Honda NSX', 'roda 4', 2500000, 0x6e73782e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Oranye'),
 (4, 2, 'Toyota GR Supra', 'roda 4', 3000000, 0x67725f73757072612e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Merah'),
-(5, 8, 'Mazda RX 7', 'roda 4', 2000000, 0x72785f372e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
-(6, 19, 'Kawasaki z1000', 'roda 2', 555555, 0x7a313030302e6a7067, 'Matic', '2 Seater', 'V Power', 'perawatan', 1, 'Hitam'),
-(7, 6, 'Mitsubishi Lancer Evo X', 'roda 4', 1000000, 0x6c616e6365725f65766f5f782e77656270, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
-(8, 7, 'Nissan GTR R35', 'roda 4', 3500000, 0x6774725f7233352e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Putih'),
-(9, 18, 'Yamaha R1M', 'roda 2', 500000, 0x72316d2e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Hitam');
+(5, 8, 'Mazda RX 7', 'roda 4', 2000000, 0x72785f372e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(6, 19, 'Kawasaki z1000', 'roda 2', 555555, 0x7a313030302e6a7067, 'Matic', '2 Seater', 'V Power', 'disewa', 1, 'Hitam'),
+(7, 6, 'Mitsubishi Lancer Evo X', 'roda 4', 1000000, 0x6c616e6365725f65766f5f782e77656270, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(8, 7, 'Nissan GTR R35', 'roda 4', 3500000, 0x6774725f7233352e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Putih'),
+(9, 18, 'Yamaha R1M', 'roda 2', 500000, 0x72316d2e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(10, 12, 'BMW S1000RR', 'roda 2', 1750000, 0x733130303072722e6a7067, 'Matic', '2 Seater', 'V Power', 'tersedia', 1, 'Hitam'),
+(11, 22, 'Ducati Monster', 'roda 2', 1900000, 0x6d6f6e737465722e6a706567, 'Matic', '2 Seater', 'V Power', 'tersedia', 1, 'Merah'),
+(12, 22, 'Ducati Panigale V4 S', 'roda 2', 10000000, 0x70616e6967616c655f76345f732e6a7067, 'Matic', '2 Seater', 'V Power', 'tersedia', 1, 'Merah');
 
 -- --------------------------------------------------------
 
@@ -99,7 +102,7 @@ CREATE TABLE `maintenance` (
 INSERT INTO `maintenance` (`id`, `kode_unik_kendaraan`, `deskripsi`, `biaya`, `tanggal_mulai`, `tanggal_selesai`) VALUES
 (1, 1, 'ganti oli', 500000, '2026-07-06', '2026-07-06'),
 (2, 2, 'pajak', 2500000, '2026-07-06', '2026-07-06'),
-(3, 6, 'modif hedon', 0, '2026-07-06', NULL);
+(3, 6, 'modif hedon', 1000000, '2026-07-06', '2026-07-08');
 
 -- --------------------------------------------------------
 
@@ -137,7 +140,9 @@ INSERT INTO `merk_kendaraan` (`id_merk`, `nama_merk`) VALUES
 (18, 'Yamaha'),
 (19, 'Kawasaki'),
 (20, 'Vespa'),
-(21, 'Porsche');
+(21, 'Porsche'),
+(22, 'Ducati'),
+(23, 'KTM');
 
 -- --------------------------------------------------------
 
@@ -174,7 +179,34 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `cr
 (13, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Toyota GR Supra Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-06 13:14:30'),
 (14, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Toyota GR Supra.', 1, '2026-07-06 13:14:30'),
 (15, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 3.000.000 untuk sewa Toyota GR Supra berhasil diterima.', 1, '2026-07-06 13:14:38'),
-(16, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-43 oleh ofaturu sebesar Rp 3.000.000 telah sukses dibayar via Xendit.', 1, '2026-07-06 13:14:38');
+(16, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-43 oleh ofaturu sebesar Rp 3.000.000 telah sukses dibayar via Xendit.', 1, '2026-07-06 13:14:38'),
+(17, 8, 'Pembaruan Transaksi #INV-39', 'Transaksi sewa kendaraan Yamaha R1M Anda telah diperbarui. Status saat ini: Selesai', 1, '2026-07-08 14:47:38'),
+(18, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Mazda RX 7 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:18:34'),
+(19, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Mazda RX 7.', 0, '2026-07-08 15:18:34'),
+(20, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 2.000.000 untuk sewa Mazda RX 7 berhasil diterima.', 1, '2026-07-08 15:18:44'),
+(21, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-44 oleh ofaturu sebesar Rp 2.000.000 telah sukses dibayar via Xendit.', 0, '2026-07-08 15:18:44'),
+(22, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Kawasaki z1000 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:22:12'),
+(23, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Kawasaki z1000.', 0, '2026-07-08 15:22:12'),
+(24, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Kawasaki z1000 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:22:17'),
+(25, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Kawasaki z1000.', 0, '2026-07-08 15:22:17'),
+(26, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 555.555 untuk sewa Kawasaki z1000 berhasil diterima.', 1, '2026-07-08 15:22:23'),
+(27, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-46 oleh ofaturu sebesar Rp 555.555 telah sukses dibayar via Xendit.', 0, '2026-07-08 15:22:23'),
+(28, 8, 'Pembaruan Transaksi #INV-45', 'Transaksi sewa kendaraan Kawasaki z1000 Anda telah diperbarui. Status saat ini: Sedang disewa', 1, '2026-07-08 15:26:21'),
+(29, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Mitsubishi Lancer Evo X Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:27:58'),
+(30, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Mitsubishi Lancer Evo X.', 0, '2026-07-08 15:27:58'),
+(31, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Mitsubishi Lancer Evo X Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:28:03'),
+(32, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Mitsubishi Lancer Evo X.', 0, '2026-07-08 15:28:03'),
+(33, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 1.000.000 untuk sewa Mitsubishi Lancer Evo X berhasil diterima.', 1, '2026-07-08 15:29:30'),
+(34, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-48 oleh ofaturu sebesar Rp 1.000.000 telah sukses dibayar via Xendit.', 0, '2026-07-08 15:29:30'),
+(35, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 1.000.000 untuk sewa Mitsubishi Lancer Evo X berhasil diterima.', 1, '2026-07-08 15:30:10'),
+(36, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-47 oleh ofaturu sebesar Rp 1.000.000 telah sukses dibayar via Xendit.', 0, '2026-07-08 15:30:10'),
+(37, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Nissan GTR R35 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:30:29'),
+(38, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Nissan GTR R35.', 0, '2026-07-08 15:30:29'),
+(39, 8, 'Pembayaran Terverifikasi', 'Pembayaran sewa kendaraan Nissan GTR R35 Anda telah diverifikasi oleh Admin. Selamat berkendara!', 1, '2026-07-08 15:31:47'),
+(40, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Yamaha R1M Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-08 15:32:17'),
+(41, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Yamaha R1M.', 0, '2026-07-08 15:32:17'),
+(42, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 500.000 untuk sewa Yamaha R1M berhasil diterima.', 1, '2026-07-08 15:32:25'),
+(43, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-50 oleh ofaturu sebesar Rp 500.000 telah sukses dibayar via Xendit.', 0, '2026-07-08 15:32:25');
 
 -- --------------------------------------------------------
 
@@ -202,17 +234,24 @@ CREATE TABLE `penyewaan` (
 -- Dumping data for table `penyewaan`
 --
 
-INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`, `xendit_invoice_id`, `xendit_invoice_url`) VALUES
-(31, 1, 3, '2026-07-05 10:23:00', '2026-07-06 10:23:00', 2500000, 'selesai', NULL, NULL, NULL, NULL),
-(32, 8, 1, '2026-07-05 10:24:00', '2026-07-06 10:24:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_32.png', '2026-07-05 15:24:47', NULL, NULL),
-(33, 8, 3, '2026-07-05 10:29:00', '2026-07-06 10:29:00', 2500000, 'selesai', 'bukti pembayaran_ofaturu_33.jpg', '2026-07-05 15:29:50', NULL, NULL),
-(35, 8, 8, '2026-07-05 10:44:00', '2026-07-06 10:44:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_35.jpg', '2026-07-05 15:44:30', NULL, NULL),
-(37, 8, 1, '2026-07-05 10:48:00', '2026-07-06 10:48:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_37.jpg', '2026-07-05 15:49:04', NULL, NULL),
-(39, 8, 9, '2026-07-06 12:53:00', '2026-07-07 12:53:00', 500000, 'sedang_disewa', NULL, NULL, NULL, NULL),
-(40, 8, 1, '2026-07-06 14:31:00', '2026-07-07 14:31:00', 1000000, 'sedang_disewa', NULL, '2026-07-06 19:31:42', NULL, NULL),
-(41, 8, 2, '2026-07-06 20:00:00', '2026-07-23 20:00:00', 12750000, 'sedang_disewa', NULL, '2026-07-06 19:46:53', NULL, NULL),
-(42, 8, 3, '2026-07-06 20:00:00', '2026-07-07 20:00:00', 2500000, 'sedang_disewa', NULL, '2026-07-06 19:54:03', NULL, NULL),
-(43, 8, 4, '2026-07-06 21:00:00', '2026-07-07 21:00:00', 3000000, 'sedang_disewa', NULL, '2026-07-06 20:14:38', NULL, NULL);
+INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`, `xendit_invoice_id`, `xendit_invoice_url`, `tanggal_kembali_aktual`, `denda`) VALUES
+(31, 1, 3, '2026-07-05 10:23:00', '2026-07-06 10:23:00', 2500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0),
+(32, 8, 1, '2026-07-05 10:24:00', '2026-07-06 10:24:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_32.png', '2026-07-05 15:24:47', NULL, NULL, NULL, 0),
+(33, 8, 3, '2026-07-05 10:29:00', '2026-07-06 10:29:00', 2500000, 'selesai', 'bukti pembayaran_ofaturu_33.jpg', '2026-07-05 15:29:50', NULL, NULL, NULL, 0),
+(35, 8, 8, '2026-07-05 10:44:00', '2026-07-06 10:44:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_35.jpg', '2026-07-05 15:44:30', NULL, NULL, NULL, 0),
+(37, 8, 1, '2026-07-05 10:48:00', '2026-07-06 10:48:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_37.jpg', '2026-07-05 15:49:04', NULL, NULL, NULL, 0),
+(39, 8, 9, '2026-07-06 12:53:00', '2026-07-07 12:53:00', 500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0),
+(40, 8, 1, '2026-07-06 14:31:00', '2026-07-07 14:31:00', 1000000, 'sedang_disewa', NULL, '2026-07-06 19:31:42', NULL, NULL, NULL, 0),
+(41, 8, 2, '2026-07-06 20:00:00', '2026-07-23 20:00:00', 12750000, 'sedang_disewa', NULL, '2026-07-06 19:46:53', NULL, NULL, NULL, 0),
+(42, 8, 3, '2026-07-06 20:00:00', '2026-07-07 20:00:00', 2500000, 'sedang_disewa', NULL, '2026-07-06 19:54:03', NULL, NULL, NULL, 0),
+(43, 8, 4, '2026-07-06 21:00:00', '2026-07-07 21:00:00', 3000000, 'sedang_disewa', NULL, '2026-07-06 20:14:38', NULL, NULL, NULL, 0),
+(44, 8, 5, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 2000000, 'sedang_disewa', NULL, '2026-07-08 22:18:44', NULL, NULL, NULL, 0),
+(45, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'sedang_disewa', NULL, NULL, NULL, NULL, NULL, 0),
+(46, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'sedang_disewa', NULL, '2026-07-08 22:22:23', NULL, NULL, NULL, 0),
+(47, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'sedang_disewa', NULL, '2026-07-08 22:30:10', NULL, NULL, NULL, 0),
+(48, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'sedang_disewa', NULL, '2026-07-08 22:29:30', NULL, NULL, NULL, 0),
+(49, 8, 8, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 3500000, 'sedang_disewa', 'bukti pembayaran_ofaturu_49.jpg', '2026-07-08 22:30:39', NULL, NULL, NULL, 0),
+(50, 8, 9, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 500000, 'sedang_disewa', NULL, '2026-07-08 22:32:25', NULL, NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -235,11 +274,10 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`, `role`, `no_hp`) VALUES
-(1, 'fatchur rachman', 'fatchurrachman001@gmail.com', '$2y$10$FfKXrNXR33xGG4Hkt1ZiH.3XQWCzTFewNhuAAjztGGEvxaNLT3kpW', '2026-07-01 06:56:39', 'admin', '08123456789'),
-(7, 'user1', 'user1@gmail.com', '$2y$10$LAb0osYqgunw558Nbf6CRO01j6erzyIxATOwt8oxgWl.ubFxiawBW', '2026-07-01 07:18:28', 'user', NULL),
-(8, 'ofaturu', 'ofaturu@gmail.com', '$2y$10$M3wrlOyQr/QnizkLgXvzg.4pgD7v4WkykWZeMNjbsz1JEjxamqbiu', '2026-07-01 07:35:14', 'user', '08123456789'),
-(9, 'Test Modal', 'testmodal@gmail.com', '$2y$10$MnfgkqOX3CIfjLkIfIsp/OxDbL4svmv11p9cl/esSRznhINv444wq', '2026-07-06 12:12:05', 'user', '081234567890');
+INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`, `role`, `no_hp`, `membership_tier`) VALUES
+(1, 'admin', 'fatchurrachman001@gmail.com', '$2y$10$qKEwaPD0QUk65g.beQdEKuHx.BNvc6zCyxAJqh4QtUeGWVNAoo9kK', '2026-07-01 06:56:39', 'admin', '08123456789', 'gold'),
+(8, 'ofaturu', 'ofaturu@gmail.com', '$2y$10$M3wrlOyQr/QnizkLgXvzg.4pgD7v4WkykWZeMNjbsz1JEjxamqbiu', '2026-07-01 07:35:14', 'user', '08123456789', 'gold'),
+(10, 'Bagas Pramono', 'pramonobagas01@gmail.com', '$2y$10$HWPSHiqj/BB6L3vYv/cAQuaNbA6NtqUEelabIlOUg/qShIrHaTWbu', '2026-07-08 15:31:12', 'user', '1234567890', 'basic');
 
 --
 -- Indexes for dumped tables
@@ -299,7 +337,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `kendaraan`
 --
 ALTER TABLE `kendaraan`
-  MODIFY `kode_unik_kendaraan` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `kode_unik_kendaraan` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `maintenance`
@@ -311,25 +349,25 @@ ALTER TABLE `maintenance`
 -- AUTO_INCREMENT for table `merk_kendaraan`
 --
 ALTER TABLE `merk_kendaraan`
-  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id_merk` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables
