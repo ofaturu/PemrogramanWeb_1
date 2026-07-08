@@ -623,7 +623,7 @@ function getCarImageUrl($car) {
     </section>
 
     <!-- --- FOOTER SECTION --- -->
-    <footer class="bg-dark text-light py-5 mt-5 border-top border-secondary border-opacity-25">
+    <footer class="footer-landing py-5 mt-5">
         <div class="container py-3">
             <div class="row g-4">
                 <div class="col-lg-5">
