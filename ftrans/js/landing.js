@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Animasi scroll reveal menggunakan Intersection Observer
     const reveals = document.querySelectorAll('.reveal');
-    
+
     if ('IntersectionObserver' in window) {
         const revealObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = getAppliedTheme();
             const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
+
             // Setel atribut dan simpan preferensi ke penyimpanan lokal
             document.documentElement.setAttribute('data-coreui-theme', targetTheme);
             localStorage.setItem(storageKey, targetTheme);
@@ -92,15 +92,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const setSize = slides.length / 3;
             let width = 0;
             for (let i = 0; i < setSize; i++) {
-                width += slides[i].offsetWidth + 30; // jarak antar kartu (gap) 30px
+                if (slides[i].offsetWidth > 0) {
+                    width += slides[i].offsetWidth + 30; // jarak antar kartu (gap) 30px
+                }
             }
             return width;
         };
 
         const initMiddleScroll = () => {
+            const setWidth = getSetWidth();
+            
+            // Matikan scroll snap sementara selama pemindahan scrollLeft instan
+            slider.style.scrollSnapType = 'none';
             slider.style.scrollBehavior = 'auto';
-            slider.scrollLeft = getSetWidth();
-            slider.style.scrollBehavior = 'smooth';
+            
+            if (setWidth > slider.clientWidth) {
+                slider.scrollLeft = setWidth;
+            } else {
+                slider.scrollLeft = 0;
+            }
+            
+            setTimeout(() => {
+                slider.style.scrollSnapType = 'x mandatory';
+                slider.style.scrollBehavior = 'smooth';
+                updateActiveSlide();
+            }, 50);
         };
 
         // Inisialisasi posisi gulir saat dimuat
@@ -112,6 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let minDistance = Infinity;
 
             slides.forEach(slide => {
+                if (slide.offsetWidth === 0) return; // Lewati slide yang disembunyikan
+
                 const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
                 const distance = Math.abs(containerCenter - slideCenter);
                 if (distance < minDistance) {
@@ -133,24 +151,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const setWidth = getSetWidth();
             if (setWidth <= 0) return;
 
+            // Nonaktifkan putaran tak terbatas jika set width <= viewport
+            if (setWidth <= slider.clientWidth) {
+                return;
+            }
+
             // Jika digulir masuk ke Set A (set klon sebelah kiri)
             if (slider.scrollLeft < setWidth - 50) {
+                slider.style.scrollSnapType = 'none'; // Matikan scroll snap sementara untuk menghindari konflik
                 slider.style.scrollBehavior = 'auto';
                 slider.scrollLeft = slider.scrollLeft + setWidth;
-                slider.style.scrollBehavior = 'smooth';
+                setTimeout(() => {
+                    slider.style.scrollSnapType = 'x mandatory';
+                    slider.style.scrollBehavior = 'smooth';
+                }, 50);
             }
             // Jika digulir masuk ke Set C (set klon sebelah kanan)
             else if (slider.scrollLeft >= (setWidth * 2) - 50) {
+                slider.style.scrollSnapType = 'none'; // Matikan scroll snap sementara untuk menghindari konflik
                 slider.style.scrollBehavior = 'auto';
                 slider.scrollLeft = slider.scrollLeft - setWidth;
-                slider.style.scrollBehavior = 'smooth';
+                setTimeout(() => {
+                    slider.style.scrollSnapType = 'x mandatory';
+                    slider.style.scrollBehavior = 'smooth';
+                }, 50);
             }
         };
 
         // Listener event scroll dengan requestAnimationFrame dan debounce untuk lompatan loop tak terbatas
         let ticking = false;
         let scrollTimeout;
-        
+
         slider.addEventListener('scroll', () => {
             if (!ticking) {
                 window.requestAnimationFrame(() => {
@@ -172,10 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pengikatan tombol navigasi panah
         if (prevBtn && nextBtn) {
             const getScrollAmount = () => {
-                if (slides.length > 0) {
-                    return slides[0].offsetWidth + 30; // Lebar slide + gap
+                for (let i = 0; i < slides.length; i++) {
+                    if (slides[i].offsetWidth > 0) {
+                        return slides[i].offsetWidth + 30; // Lebar slide + gap
+                    }
                 }
-                return 410;
+                return 430; // Fallback default
             };
 
             prevBtn.addEventListener('click', () => {
@@ -196,9 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     filterButtons.forEach(b => b.classList.remove('active'));
                     // Tambah kelas aktif ke tombol yang diklik
                     btn.classList.add('active');
-                    
+
                     const filterValue = btn.getAttribute('data-filter');
-                    
+
                     // Sembunyikan atau tampilkan slide berdasarkan jenis
                     slides.forEach(slide => {
                         const jenis = slide.getAttribute('data-jenis');
@@ -208,16 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             slide.style.display = 'none';
                         }
                     });
-                    
-                    // Kembalikan slider ke awal tengah jika semua, atau ke ujung kiri jika difilter
-                    if (filterValue === 'all') {
-                        initMiddleScroll();
-                    } else {
-                        slider.style.scrollBehavior = 'auto';
-                        slider.scrollLeft = 0;
-                        slider.style.scrollBehavior = 'smooth';
-                    }
-                    
+
+                    // Kembalikan slider ke posisi tengah
+                    initMiddleScroll();
+
                     // Perbarui slide aktif setelah perubahan filter
                     setTimeout(updateActiveSlide, 100);
                 });

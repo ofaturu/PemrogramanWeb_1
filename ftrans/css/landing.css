@@ -764,3 +764,33 @@ h6 {
 .footer-landing i.text-primary {
     color: var(--accent-gold, #5856d6) !important;
 }
+
+/* --- UTILITY CLASSES --- */
+.text-main {
+    color: var(--text-main) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* --- DROPDOWN THEME SWITCHER AND MENU STYLING --- */
+.navbar-luxury .dropdown-menu .dropdown-item {
+    color: var(--text-main) !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease;
+}
+
+.navbar-luxury .dropdown-menu .dropdown-item:hover {
+    background-color: var(--accent-gold-light) !important;
+    color: var(--accent-gold) !important;
+}
+
+.navbar-luxury .dropdown-menu .dropdown-item.active {
+    background-color: var(--accent-gold) !important;
+    color: #ffffff !important;
+}
+
+.navbar-luxury .dropdown-menu .dropdown-item.active i {
+    color: #ffffff !important;
+}

@@ -160,17 +160,17 @@ function getCarImageUrl($car) {
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border border-secondary border-opacity-25" style="background: var(--bg-card);">
                             <li>
-                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="light">
+                                <button class="dropdown-item d-flex align-items-center gap-2 border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="light">
                                     <i class="fas fa-sun text-warning"></i> Terang
                                 </button>
                             </li>
                             <li>
-                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="dark">
+                                <button class="dropdown-item d-flex align-items-center gap-2 border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="dark">
                                     <i class="fas fa-moon text-primary"></i> Gelap
                                 </button>
                             </li>
                             <li>
-                                <button class="dropdown-item d-flex align-items-center gap-2 text-main bg-transparent border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="auto">
+                                <button class="dropdown-item d-flex align-items-center gap-2 border-0 py-2 w-100 text-start" type="button" data-coreui-theme-value="auto">
                                     <i class="fas fa-magic text-info"></i> Otomatis
                                 </button>
                             </li>
@@ -342,7 +342,7 @@ function getCarImageUrl($car) {
                                     $car_img = (!empty($car['gambar']) && file_exists('uploads/' . $car['gambar'])) ? 'uploads/' . $car['gambar'] : '';
                                     $status_k = strtolower(trim($car['status_kendaraan'] ?? 'tersedia'));
                                 ?>
-                                    <div class="car-slide" data-jenis="<?= htmlspecialchars(strtolower($car['jenis_kendaraan'])) ?>">
+                                    <div class="car-slide" data-jenis="<?= htmlspecialchars(strtolower($car['jenis_kendaraan'])) ?>" data-set="<?= $set ?>">
                                         <div class="car-card text-start">
                                             <div class="car-img-wrapper position-relative">
                                                 <!-- Status Badge (Absolute Positioned over Image) -->

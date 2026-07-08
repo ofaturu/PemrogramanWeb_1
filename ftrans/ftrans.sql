@@ -48,13 +48,13 @@ CREATE TABLE `kendaraan` (
 
 INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`, `transmisi`, `tempat_duduk`, `bahan_bakar`, `status_kendaraan`, `stok`, `warna`) VALUES
 (1, 14, 'Audi A8', 'roda 4', 1000000, 0x61382e6a7067, 'Matic', '5 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
-(2, 12, 'BMW M4', 'roda 2', 750000, 0x6d342e77656270, 'Matic', '4 Seater', 'Bensin', 'disewa', 1, 'Biru'),
-(3, 1, 'Honda NSX', 'roda 2', 2500000, 0x6e73782e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Oranye'),
-(4, 2, 'Toyota GR Supra', 'roda 2', 3000000, 0x67725f73757072612e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Merah'),
-(5, 8, 'Mazda RX 7', 'roda 2', 2000000, 0x72785f372e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(2, 12, 'BMW M4', 'roda 4', 750000, 0x6d342e77656270, 'Matic', '4 Seater', 'Bensin', 'disewa', 1, 'Biru'),
+(3, 1, 'Honda NSX', 'roda 4', 2500000, 0x6e73782e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Oranye'),
+(4, 2, 'Toyota GR Supra', 'roda 4', 3000000, 0x67725f73757072612e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Merah'),
+(5, 8, 'Mazda RX 7', 'roda 4', 2000000, 0x72785f372e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
 (6, 19, 'Kawasaki z1000', 'roda 2', 555555, 0x7a313030302e6a7067, 'Matic', '2 Seater', 'V Power', 'perawatan', 1, 'Hitam'),
-(7, 6, 'Mitsubishi Lancer Evo X', 'roda 2', 1000000, 0x6c616e6365725f65766f5f782e77656270, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
-(8, 7, 'Nissan GTR R35', 'roda 2', 3500000, 0x6774725f7233352e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Putih'),
+(7, 6, 'Mitsubishi Lancer Evo X', 'roda 4', 1000000, 0x6c616e6365725f65766f5f782e77656270, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
+(8, 7, 'Nissan GTR R35', 'roda 4', 3500000, 0x6774725f7233352e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Putih'),
 (9, 18, 'Yamaha R1M', 'roda 2', 500000, 0x72316d2e6a7067, 'Matic', '2 Seater', 'Bensin', 'disewa', 1, 'Hitam');
 
 -- --------------------------------------------------------
