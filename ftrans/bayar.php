@@ -302,6 +302,38 @@ include 'partials/head.php';
             <?php endif; ?>
 
             <?php if ($success): ?>
+                <!-- Modal Notifikasi Sukses -->
+                <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                      <div class="modal-header bg-success text-white py-3 border-0">
+                        <h5 class="modal-title fw-bold" id="successModalLabel">
+                          <i class="fa fa-check-circle me-2"></i>Transaksi Berhasil
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body p-4 text-center">
+                        <div class="mb-3 text-success">
+                          <i class="fa fa-check-circle fa-4x animate__animated animate__bounceIn" style="font-size: 5rem;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Terima Kasih!</h5>
+                        <p class="text-muted mb-4"><?= htmlspecialchars($success) ?></p>
+                        <button type="button" class="btn btn-success px-5 py-2.5 fw-bold text-white rounded-pill shadow-sm" data-coreui-dismiss="modal">
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const modalEl = document.getElementById('successModal');
+                    const modalObj = (window.coreui && coreui.Modal) ? new coreui.Modal(modalEl) : (window.bootstrap && bootstrap.Modal) ? new bootstrap.Modal(modalEl) : null;
+                    if (modalObj) modalObj.show();
+                });
+                </script>
+
                 <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success p-3 mb-4" style="border-radius: 8px;">
                     <i class="fa fa-check-circle me-2"></i> <?= htmlspecialchars($success) ?>
                 </div>
@@ -359,30 +391,44 @@ include 'partials/head.php';
                       </div>
                     </form>
 
-                <?php elseif (!empty($bukti)): ?>
-                    <!-- Proof uploaded, show status info & image preview -->
-                    <div class="text-center py-2">
-                      <?php if ($status === 'booking'): ?>
-                          <div class="mb-3 text-warning">
-                            <i class="fa fa-clock fa-3x animate__animated animate__pulse animate__infinite"></i>
+                <?php elseif ($status === 'sedang_disewa' || $status === 'selesai'): ?>
+                    <!-- Paid / Completed status (either through Xendit or manual confirmation) -->
+                    <div class="text-center py-4">
+                      <div class="mb-3 text-success">
+                        <i class="fa fa-check-circle fa-3x animate__animated animate__bounceIn"></i>
+                      </div>
+                      <h6 class="fw-bold text-success mb-2">Pembayaran Berhasil / Lunas</h6>
+                      <p class="text-muted small mb-0">Pembayaran Anda telah diverifikasi dan dikonfirmasi.</p>
+                      
+                      <?php if (!empty($bukti)): ?>
+                          <div class="border rounded p-2 mt-3 bg-body-tertiary">
+                            <div class="small text-muted mb-2 text-start fw-bold">Pratinjau Bukti Pembayaran:</div>
+                            <img src="uploads/<?= htmlspecialchars($bukti) ?>" alt="Bukti Transfer" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
                           </div>
-                          <h6 class="fw-bold text-warning mb-2">Menunggu Verifikasi Admin</h6>
-                          <p class="text-muted small mb-4">Bukti transfer Anda telah kami terima pada tanggal <strong><?= date('d M Y, H:i', strtotime($rental['waktu_bayar'])) ?></strong> dan sedang diverifikasi oleh admin.</p>
                       <?php else: ?>
-                          <div class="mb-3 text-success">
-                            <i class="fa fa-check-circle fa-3x"></i>
+                          <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success py-2.5 px-3 mt-3 small text-start">
+                            <i class="fa fa-info-circle me-1"></i> Pembayaran diselesaikan secara otomatis melalui Xendit.
                           </div>
-                          <h6 class="fw-bold text-success mb-2">Pembayaran Berhasil / Lunas</h6>
-                          <p class="text-muted small mb-4">Pembayaran Anda telah diverifikasi oleh admin pada tanggal <strong><?= date('d M Y, H:i', strtotime($rental['waktu_bayar'])) ?></strong>.</p>
                       <?php endif; ?>
+                    </div>
+
+                <?php elseif (!empty($bukti) && $status === 'booking'): ?>
+                    <!-- Manual receipt uploaded, waiting admin verification -->
+                    <div class="text-center py-2">
+                      <div class="mb-3 text-warning">
+                        <i class="fa fa-clock fa-3x animate__animated animate__pulse animate__infinite"></i>
+                      </div>
+                      <h6 class="fw-bold text-warning mb-2">Menunggu Verifikasi Admin</h6>
+                      <p class="text-muted small mb-4">Bukti transfer Anda telah kami terima pada tanggal <strong><?= date('d M Y, H:i', strtotime($rental['waktu_bayar'])) ?></strong> dan sedang diverifikasi oleh admin.</p>
                       
                       <div class="border rounded p-2 bg-body-tertiary">
                         <div class="small text-muted mb-2 text-start fw-bold">Pratinjau Bukti Pembayaran:</div>
                         <img src="uploads/<?= htmlspecialchars($bukti) ?>" alt="Bukti Transfer" class="img-fluid rounded border shadow-sm" style="max-height: 250px;">
                       </div>
                     </div>
+
                 <?php else: ?>
-                    <!-- Bookings cancelled without payment -->
+                    <!-- Bookings cancelled or other default cases -->
                     <div class="text-center py-4 text-muted">
                       <i class="fa fa-ban fa-3x mb-3 text-danger"></i>
                       <h6 class="fw-bold text-danger">Transaksi Dibatalkan</h6>
