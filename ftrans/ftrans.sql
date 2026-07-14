@@ -238,7 +238,8 @@ CREATE TABLE `penyewaan` (
   `xendit_invoice_id` varchar(255) DEFAULT NULL,
   `xendit_invoice_url` varchar(500) DEFAULT NULL,
   `tanggal_kembali_aktual` datetime DEFAULT NULL,
-  `denda` int(11) DEFAULT 0
+  `denda` int(11) DEFAULT 0,
+  `metode_pembayaran` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

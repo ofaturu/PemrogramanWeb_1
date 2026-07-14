@@ -59,6 +59,16 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
     $status_label = ($email_type === 'invoice') ? 'BELUM BAYAR (Booking)' : 'LUNAS (Verified)';
     $status_color = ($email_type === 'invoice') ? '#DC2626' : '#16A34A';
     
+    $harga_per_hari = intval($rental['harga_per_hari'] ?? 0);
+    $original_total = $diff_days * $harga_per_hari;
+    $sewa_cost = intval($rental['total_biaya'] ?? 0);
+    $diskon = $original_total - $sewa_cost;
+    if ($diskon < 0) $diskon = 0;
+    $diskon_pct = ($original_total > 0) ? round(($diskon / $original_total) * 100) : 0;
+    
+    $denda = intval($rental['denda'] ?? 0);
+    $total_bayar = $sewa_cost + $denda;
+
     $pdf_html = '
     <style>
         body { font-family: "Segoe UI", Helvetica, Arial, sans-serif; color: #1E293B; font-size: 10.5pt; line-height: 1.5; }
@@ -80,6 +90,9 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
             <td class="logo-text">FTrans</td>
             <td class="comp-title">FTRANS CAR RENTAL
                 <div class="comp-sub">Kenyamanan Perjalanan Anda, Prioritas Kami</div>
+                <div style="font-size: 7.5pt; color: #64748B; text-align: right; font-weight: normal; margin-top: 3px;">
+                    Jl. Premium Luxury No. 7, Surakarta &bull; Telp: +62 821 8888 9999 &bull; Email: support@ftrans.com
+                </div>
             </td>
         </tr>
     </table>
@@ -96,7 +109,15 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
             <tr><td class="label">Tarif Sewa / Hari:</td><td>Rp ' . number_format($rental['harga_per_hari'], 0, ',', '.') . '</td></tr>
             <tr><td class="label">Periode Sewa:</td><td>' . date('d M Y H:i', $t_sewa) . ' s.d. ' . date('d M Y H:i', $t_kembali) . '</td></tr>
             <tr><td class="label">Durasi:</td><td>' . $diff_days . ' Hari</td></tr>
-            <tr class="total-row"><td class="label" style="padding: 12px 8px;">Total Biaya:</td><td class="total-val" style="padding: 12px 8px;">Rp ' . number_format($rental['total_biaya'], 0, ',', '.') . '</td></tr>
+            ' . ($diskon > 0 ? '
+            <tr><td class="label">Subtotal Sewa:</td><td>Rp ' . number_format($original_total, 0, ',', '.') . '</td></tr>
+            <tr><td class="label" style="color: #16A34A;">Diskon Member (' . $diskon_pct . '%):</td><td style="color: #16A34A; font-weight: bold;">- Rp ' . number_format($diskon, 0, ',', '.') . '</td></tr>
+            ' : '') . '
+            ' . ($denda > 0 ? '
+            ' . ($diskon > 0 ? '<tr><td class="label">Total Sewa:</td><td>Rp ' . number_format($sewa_cost, 0, ',', '.') . '</td></tr>' : '') . '
+            <tr><td class="label" style="color: #DC2626;">Denda Keterlambatan:</td><td style="color: #DC2626; font-weight: bold;">Rp ' . number_format($denda, 0, ',', '.') . '</td></tr>
+            ' : '') . '
+            <tr class="total-row"><td class="label" style="padding: 12px 8px;">Total Pembayaran:</td><td class="total-val" style="padding: 12px 8px;">Rp ' . number_format($total_bayar, 0, ',', '.') . '</td></tr>
         </table>
     </div>
     <div class="footer-note">
@@ -181,16 +202,24 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
         </div>
         ';
     } else {
+        $status_rental = $rental['status'] ?? 'booking';
+        $status_label_text = 'Sedang Disewa (Aktif)';
+        if ($status_rental === 'selesai') {
+            $status_label_text = 'Selesai (Armada Dikembalikan)';
+        }
         $email_content = '
         <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
             <h2 style="color: #16a34a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Konfirmasi Pembayaran Lunas</h2>
             <p>Halo <strong>' . htmlspecialchars($rental['nama_user']) . '</strong>,</p>
             <p>Kabar gembira! Pembayaran Anda untuk transaksi sewa kendaraan <strong>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</strong> telah berhasil **diverifikasi dan dinyatakan LUNAS**.</p>
-            <p>Status sewa Anda saat ini adalah: <strong style="color: #16a34a;">Sedang Disewa (Aktif)</strong>.</p>
+            <p>Status sewa Anda saat ini adalah: <strong style="color: #16a34a;">' . $status_label_text . '</strong>.</p>
             <ul>
                 <li><strong>Kendaraan:</strong> ' . htmlspecialchars($rental['nama_kendaraan']) . '</li>
                 <li><strong>Periode Sewa:</strong> ' . date('d F Y', $t_sewa) . ' - ' . date('d F Y', $t_kembali) . '</li>
-                <li><strong>Total Biaya:</strong> Rp ' . number_format($rental['total_biaya'], 0, ',', '.') . ' (LUNAS)</li>
+                ' . ($diskon > 0 ? '<li><strong>Diskon Member (' . $diskon_pct . '%):</strong> - Rp ' . number_format($diskon, 0, ',', '.') . '</li>' : '') . '
+                ' . ($denda > 0 ? '<li><strong>Denda Keterlambatan:</strong> <span style="color: #DC2626; font-weight: bold;">Rp ' . number_format($denda, 0, ',', '.') . '</span></li>' : '') . '
+                <li><strong>Total Pembayaran:</strong> <strong style="color: #16a34a;">Rp ' . number_format($total_bayar, 0, ',', '.') . '</strong> (LUNAS)</li>
+                ' . (!empty($rental['metode_pembayaran']) ? '<li><strong>Metode Pembayaran:</strong> ' . htmlspecialchars($rental['metode_pembayaran']) . '</li>' : '') . '
             </ul>
             <p>Kuitansi pembayaran resmi telah kami lampirkan dalam format PDF (Kuitansi_Pembayaran.pdf) pada email ini.</p>
             <p>Terima kasih telah mempercayakan perjalanan Anda bersama FTrans. Semoga perjalanan Anda menyenangkan, aman, dan nyaman.</p>

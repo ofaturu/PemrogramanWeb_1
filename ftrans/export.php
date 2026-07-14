@@ -390,6 +390,9 @@ if ($format === 'excel') {
         $sheet->setCellValue('A1', 'LAPORAN RINGKASAN KEUANGAN & OPERASIONAL');
         $sheet->getStyle('A1')->getFont()->setSize(16)->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('1E293B'));
         
+        $sheet->setCellValue('A2', 'FTrans Car Rental — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com');
+        $sheet->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('475569'));
+        
         $sheet->setCellValue('A3', 'Metrik Kunci');
         $sheet->getStyle('A3')->getFont()->setSize(12)->setBold(true);
         
@@ -457,6 +460,9 @@ if ($format === 'excel') {
         $sheet2->setCellValue('A1', 'DAFTAR RIWAYAT PERAWATAN KENDARAAN');
         $sheet2->getStyle('A1')->getFont()->setSize(14)->setBold(true);
         
+        $sheet2->setCellValue('A2', 'FTrans Car Rental — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com');
+        $sheet2->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('475569'));
+        
         $sheet2->setCellValue('A3', 'No');
         $sheet2->setCellValue('B3', 'ID');
         $sheet2->setCellValue('C3', 'Kode Kendaraan');
@@ -494,6 +500,9 @@ if ($format === 'excel') {
         
         $sheet3->setCellValue('A1', 'DAFTAR TRANSAKSI PENYEWAAN KENDARAAN');
         $sheet3->getStyle('A1')->getFont()->setSize(14)->setBold(true);
+        
+        $sheet3->setCellValue('A2', 'FTrans Car Rental — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com');
+        $sheet3->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('475569'));
         
         $sheet3->setCellValue('A3', 'No');
         $sheet3->setCellValue('B3', 'No Invoice');
@@ -540,6 +549,9 @@ if ($format === 'excel') {
         
         $sheet4->setCellValue('A1', 'DAFTAR PENGGUNA SISTEM (USERS)');
         $sheet4->getStyle('A1')->getFont()->setSize(14)->setBold(true);
+        
+        $sheet4->setCellValue('A2', 'FTrans Car Rental — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com');
+        $sheet4->getStyle('A2')->getFont()->setSize(9)->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('475569'));
         
         $sheet4->setCellValue('A3', 'No');
         $sheet4->setCellValue('B3', 'ID User');
@@ -590,7 +602,7 @@ if ($format === 'excel') {
     $sheet->getStyle("A1:{$lastColLetter}1")->getFont()->setSize(15)->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('1E293B'));
     $sheet->getStyle("A1:{$lastColLetter}1")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     
-    $sheet->setCellValue('A2', 'FTrans Car Rental Management System');
+    $sheet->setCellValue('A2', 'FTrans Car Rental Management System — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com');
     $sheet->mergeCells("A2:{$lastColLetter}2");
     $sheet->getStyle("A2:{$lastColLetter}2")->getFont()->setSize(10)->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('475569'));
     $sheet->getStyle("A2:{$lastColLetter}2")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -736,6 +748,7 @@ if ($format === 'word') {
         $section = $phpWord->addSection(['paperSize' => 'A4']);
         
         $section->addText('LAPORAN RINGKASAN KEUANGAN & OPERASIONAL FTRANS', ['bold' => true, 'size' => 16]);
+        $section->addText('FTrans Car Rental — Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com', ['italic' => true, 'size' => 9, 'color' => '475569']);
         $section->addText('Tanggal Cetak: ' . date('d F Y, H:i:s'), ['italic' => true]);
         $section->addTextBreak(1);
         
@@ -817,6 +830,15 @@ if ($format === 'word') {
         'size' => 10,
         'italic' => true,
         'color' => '475569',
+    ], [
+        'alignment' => 'center',
+        'spaceAfter' => 20
+    ]);
+    $section->addText('Jl. Premium Luxury No. 7, Surakarta | Telp: +62 821 8888 9999 | Email: support@ftrans.com', [
+        'name' => 'Segoe UI',
+        'size' => 9,
+        'italic' => true,
+        'color' => '64748B',
     ], [
         'alignment' => 'center',
         'spaceAfter' => 60
@@ -1029,6 +1051,9 @@ if ($format === 'pdf') {
             <td class="logo-text">FTrans</td>
             <td class="comp-title">FTRANS CAR RENTAL MANAGEMENT
                 <div class="comp-sub">Kenyamanan Perjalanan Anda, Prioritas Kami</div>
+                <div style="font-size: 7.5pt; color: #64748B; text-align: right; font-weight: normal; margin-top: 3px;">
+                    Jl. Premium Luxury No. 7, Surakarta &bull; Telp: +62 821 8888 9999 &bull; Email: support@ftrans.com
+                </div>
             </td>
         </tr>
     </table>
@@ -1101,6 +1126,9 @@ if ($format === 'pdf') {
             if ($status === 'dibatalkan') $statusLabel = 'Dibatalkan';
             
             $html .= '<div><strong>Status:</strong> ' . $statusLabel . '</div>';
+            if (!empty($detail_data['metode_pembayaran'])) {
+                $html .= '<div><strong>Metode Pembayaran:</strong> ' . htmlspecialchars($detail_data['metode_pembayaran']) . '</div>';
+            }
             $html .= '</td>';
             
             $html .= '</tr>';
@@ -1122,19 +1150,39 @@ if ($format === 'pdf') {
             $html .= '<div style="font-weight: bold;">' . htmlspecialchars($detail_data['nama_kendaraan'] ?? 'Kendaraan N/A') . '</div>';
             $html .= '<div style="font-size: 8pt; color: #64748B;">Kode Unik: ' . htmlspecialchars($detail_data['kode_unik_kendaraan']) . ' (' . ucwords($detail_data['nama_merk'] ?? '') . ')</div>';
             $html .= '</td>';
-            $html .= '<td class="text-center">Rp ' . number_format($detail_data['harga_per_hari'], 0, ',', '.') . '</td>';
-            $html .= '<td class="text-center">' . $diff_days . ' Hari</td>';
-            $html .= '<td class="text-right" style="font-weight: bold;">Rp ' . number_format($detail_data['total_biaya'], 0, ',', '.') . '</td>';
-            $html .= '</tr>';
-            $denda = intval($detail_data['denda'] ?? 0);
+            $harga_per_hari = intval($detail_data['harga_per_hari'] ?? 0);
+            $original_total = $diff_days * $harga_per_hari;
             $sewa_cost = intval($detail_data['total_biaya'] ?? 0);
+            $diskon = $original_total - $sewa_cost;
+            if ($diskon < 0) $diskon = 0;
+            $diskon_pct = ($original_total > 0) ? round(($diskon / $original_total) * 100) : 0;
+            
+            $html .= '<td class="text-center">Rp ' . number_format($harga_per_hari, 0, ',', '.') . '</td>';
+            $html .= '<td class="text-center">' . $diff_days . ' Hari</td>';
+            $html .= '<td class="text-right" style="font-weight: bold;">Rp ' . number_format($original_total, 0, ',', '.') . '</td>';
+            $html .= '</tr>';
+            
+            $denda = intval($detail_data['denda'] ?? 0);
             $total_bayar = $sewa_cost + $denda;
 
-            if ($denda > 0) {
+            if ($diskon > 0) {
                 $html .= '<tr>';
                 $html .= '<td colspan="3" class="text-right" style="padding: 10px;">Subtotal Sewa:</td>';
-                $html .= '<td class="text-right" style="padding: 10px; font-weight: bold;">Rp ' . number_format($sewa_cost, 0, ',', '.') . '</td>';
+                $html .= '<td class="text-right" style="padding: 10px; font-weight: bold;">Rp ' . number_format($original_total, 0, ',', '.') . '</td>';
                 $html .= '</tr>';
+                $html .= '<tr>';
+                $html .= '<td colspan="3" class="text-right" style="padding: 10px; color: #16A34A;">Diskon Member (' . $diskon_pct . '%):</td>';
+                $html .= '<td class="text-right" style="padding: 10px; font-weight: bold; color: #16A34A;">- Rp ' . number_format($diskon, 0, ',', '.') . '</td>';
+                $html .= '</tr>';
+            }
+
+            if ($denda > 0) {
+                if ($diskon > 0) {
+                    $html .= '<tr>';
+                    $html .= '<td colspan="3" class="text-right" style="padding: 10px;">Total Sewa:</td>';
+                    $html .= '<td class="text-right" style="padding: 10px; font-weight: bold;">Rp ' . number_format($sewa_cost, 0, ',', '.') . '</td>';
+                    $html .= '</tr>';
+                }
                 $html .= '<tr>';
                 $html .= '<td colspan="3" class="text-right" style="padding: 10px; color: #DC2626;">Denda Keterlambatan:</td>';
                 $html .= '<td class="text-right" style="padding: 10px; font-weight: bold; color: #DC2626;">Rp ' . number_format($denda, 0, ',', '.') . '</td>';

@@ -191,6 +191,15 @@ $t_kembali = strtotime($rental['tanggal_kembali']);
 $diff_days = ceil(($t_kembali - $t_sewa) / 86400);
 if ($diff_days <= 0) $diff_days = 1;
 
+$harga_per_hari = intval($rental['harga_per_hari'] ?? 0);
+$original_total = $diff_days * $harga_per_hari;
+$sewa_cost = intval($rental['total_biaya'] ?? 0);
+$diskon = $original_total - $sewa_cost;
+if ($diskon < 0) $diskon = 0;
+$diskon_pct = ($original_total > 0) ? round(($diskon / $original_total) * 100) : 0;
+$denda = intval($rental['denda'] ?? 0);
+$total_pembayaran = $sewa_cost + $denda;
+
 // Define active page
 $activePage = 'sewa';
 ?>
@@ -284,9 +293,32 @@ include 'partials/head.php';
                   </div>
                 </div>
 
-                <div class="mt-4 bg-body-secondary p-3 rounded border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
-                  <h5 class="mb-0 fw-bold text-body">Total Biaya</h5>
-                  <h4 class="mb-0 fw-bold text-primary">Rp <?= number_format($rental['total_biaya'], 0, ',', '.') ?></h4>
+                <div class="mt-4 bg-body-secondary p-3 rounded border border-secondary border-opacity-10">
+                  <?php if ($diskon > 0): ?>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
+                      <span>Harga Sewa Awal</span>
+                      <span>Rp <?= number_format($original_total, 0, ',', '.') ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 text-success small">
+                      <span>Diskon Member (<?= $diskon_pct ?>%)</span>
+                      <span class="fw-semibold">- Rp <?= number_format($diskon, 0, ',', '.') ?></span>
+                    </div>
+                  <?php endif; ?>
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-secondary fw-semibold">Biaya Sewa</span>
+                    <span class="text-body fw-bold">Rp <?= number_format($sewa_cost, 0, ',', '.') ?></span>
+                  </div>
+                  <?php if ($denda > 0): ?>
+                    <div class="d-flex justify-content-between align-items-center mb-1 text-danger">
+                      <span class="fw-semibold">Denda Keterlambatan</span>
+                      <span class="fw-bold">Rp <?= number_format($denda, 0, ',', '.') ?></span>
+                    </div>
+                  <?php endif; ?>
+                  <hr class="my-2 border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-body">Total Pembayaran</h5>
+                    <h4 class="mb-0 fw-bold text-primary">Rp <?= number_format($total_pembayaran, 0, ',', '.') ?></h4>
+                  </div>
                 </div>
 
               </div>

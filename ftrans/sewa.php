@@ -271,6 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'process_return') {
         $id_sewa = intval($_POST['id_sewa'] ?? 0);
         $tgl_kembali_aktual = trim($_POST['tanggal_kembali_aktual'] ?? '');
+        $metode_pembayaran = trim($_POST['metode_pembayaran'] ?? 'Cash');
         
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
             header('Location: sewa.php?error=unauthorized');
@@ -301,8 +302,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $denda = $diff_days * $harga_per_hari;
                 }
 
-                $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET status = 'selesai', tanggal_kembali_aktual = ?, denda = ? WHERE id_sewa = ?");
-                mysqli_stmt_bind_param($upd, 'sii', $tgl_kembali_aktual, $denda, $id_sewa);
+                $upd = mysqli_prepare($mysqli, "UPDATE penyewaan SET status = 'selesai', tanggal_kembali_aktual = ?, denda = ?, metode_pembayaran = ? WHERE id_sewa = ?");
+                mysqli_stmt_bind_param($upd, 'sisi', $tgl_kembali_aktual, $denda, $metode_pembayaran, $id_sewa);
                 
                 if (mysqli_stmt_execute($upd)) {
                     mysqli_stmt_close($upd);
@@ -313,6 +314,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $msg_notif .= " Denda keterlambatan Anda: Rp " . number_format($denda, 0, ',', '.') . ".";
                     }
                     add_notification($id_user, "Pengembalian Armada Sukses", $msg_notif);
+
+                    // Kirim kuitansi/struk pelunasan (termasuk denda) ke email pelanggan
+                    try {
+                        require_once 'send_invoice.php';
+                        send_invoice_email($id_sewa, 'receipt');
+                    } catch (Exception $e) {
+                        // Tolerate email errors so return processing finishes
+                    }
 
                     header('Location: sewa.php?msg=returned');
                     exit;
@@ -764,6 +773,14 @@ include 'partials/head.php';
                                         <div class="mb-3">
                                           <label class="form-label fw-bold" for="return_date_<?= $r['id_sewa'] ?>">Tanggal Pengembalian Aktual *</label>
                                           <input type="datetime-local" id="return_date_<?= $r['id_sewa'] ?>" name="tanggal_kembali_aktual" class="form-control return-date-input" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                           <label class="form-label fw-bold" for="payment_method_<?= $r['id_sewa'] ?>">Metode Pembayaran (Denda / Pelunasan) *</label>
+                                           <select id="payment_method_<?= $r['id_sewa'] ?>" name="metode_pembayaran" class="form-select" required>
+                                             <option value="Cash">Cash (Tunai)</option>
+                                             <option value="Transfer">Transfer Bank</option>
+                                           </select>
                                         </div>
 
                                         <div class="bg-body-secondary p-3 rounded border d-flex justify-content-between align-items-center mb-3">

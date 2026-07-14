@@ -4,7 +4,7 @@
       &copy; <?= date('Y') ?> <a href="#" class="text-decoration-none text-primary fw-semibold">FTrans Management</a>. All Rights Reserved.
     </div>
     <div class="text-body-secondary small">
-      Powered by <a href="https://instagram/ofaturu" class="text-decoration-none text-primary fw-semibold" target="_blank">Ofaturu</a>
+      Powered by <a href="https://www.instagram.com/ofaturu/" class="text-decoration-none text-primary fw-semibold" target="_blank">Ofaturu</a>
     </div>
   </div>
 </footer>
