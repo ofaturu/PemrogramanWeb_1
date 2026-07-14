@@ -129,7 +129,7 @@ function getCarImageUrl($car) {
     <nav class="navbar navbar-expand-lg navbar-luxury fixed-top py-3">
         <div class="container">
             <a class="navbar-brand brand-logo" href="index.php">
-                <i class="fa fa-car me-2"></i>F<span>Trans</span>
+                <img src="assets/img/logo.png" alt="FTrans Logo" style="height: 42px;">
             </a>
             <button class="navbar-toggler border-0 shadow-none text-main" type="button" data-coreui-toggle="collapse" data-coreui-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fa fa-bars"></i>

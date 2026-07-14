@@ -62,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="container" style="max-width: 32rem">
         <div class="d-flex flex-column gap-4">
           <div class="text-center">
-            <h2 class="text-primary fw-bold d-flex align-items-center justify-content-center gap-2">
-              <i class="fa fa-car fa-lg"></i> FTrans
-            </h2>
+            <div class="d-flex justify-content-center mb-2">
+              <img src="assets/img/logo.png" alt="FTrans Logo" style="height: 52px;">
+            </div>
           </div>
           <div class="card p-4 shadow-sm">
             <div class="card-body d-flex flex-column gap-4">

@@ -129,7 +129,7 @@ include 'partials/head.php';
         <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 bg-body-tertiary">
-            <h5 class="mb-0 text-body"><i class="fa fa-users me-2 text-primary"></i>Daftar User</h5>
+            <h5 class="mb-0 text-body text-nowrap flex-shrink-0"><i class="fa fa-users me-2 text-primary"></i>Daftar User</h5>
             
             <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2 w-100 w-sm-auto justify-content-end">
               <form method="GET" action="" class="d-flex align-items-center gap-2" style="max-width: 300px; width: 100%;">

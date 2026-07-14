@@ -450,7 +450,7 @@ include 'partials/head.php';
 
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex align-items-center justify-content-between bg-body-tertiary">
-            <h5 class="mb-0 text-body"><i class="fa fa-receipt me-2 text-primary"></i>Daftar Transaksi Penyewaan</h5>
+            <h5 class="mb-0 text-body text-nowrap flex-shrink-0"><i class="fa fa-receipt me-2 text-primary"></i>Daftar Transaksi Penyewaan</h5>
             <div class="d-flex gap-2">
               <div class="dropdown">
                 <button class="btn btn-success btn-sm dropdown-toggle text-nowrap" type="button" data-coreui-toggle="dropdown" aria-expanded="false">

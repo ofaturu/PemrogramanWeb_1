@@ -370,7 +370,7 @@ include 'partials/head.php';
 
         <div class="card mb-4 shadow-sm border border-secondary border-opacity-10">
           <div class="card-header d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 bg-body-tertiary">
-            <h5 class="mb-0 text-body"><i class="fa fa-list me-2 text-primary"></i>Daftar Kendaraan</h5>
+            <h5 class="mb-0 text-body text-nowrap flex-shrink-0"><i class="fa fa-list me-2 text-primary"></i>Daftar Kendaraan</h5>
             
             <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-end align-items-sm-center">
               <div class="dropdown">
