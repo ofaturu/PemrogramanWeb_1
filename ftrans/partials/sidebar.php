@@ -1,8 +1,9 @@
 <div class="sidebar sidebar-fixed border-end" id="sidebar">
   <div class="sidebar-header border-bottom">
     <div class="sidebar-brand me-auto">
-      <a href="index.php" class="text-decoration-none text-body d-flex align-items-center">
-        <img src="assets/img/logo.png" alt="FTrans Logo" style="height: 38px;">
+      <a href="index.php" class="text-decoration-none text-body d-flex align-items-center gap-2">
+        <i class="fa fa-car fa-lg text-primary"></i>
+        <span class="fs-4 fw-bold">FTrans</span>
       </a>
     </div>
     <button class="btn-close d-lg-none" type="button" aria-label="Close" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"></button>
