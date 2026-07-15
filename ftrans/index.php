@@ -33,6 +33,56 @@ if ($mysqli) {
     }
 }
 
+// Ambil ulasan terbaru dari database
+$db_reviews = [];
+if ($mysqli) {
+    $rev_q = "SELECT r.*, u.nama AS nama_user, k.nama_kendaraan, m.nama_merk
+              FROM reviews r
+              JOIN users u ON r.id_user = u.id
+              JOIN kendaraan k ON r.kode_unik_kendaraan = k.kode_unik_kendaraan
+              LEFT JOIN merk_kendaraan m ON k.id_merk = m.id_merk
+              ORDER BY r.created_at DESC
+              LIMIT 10";
+    $rev_res = mysqli_query($mysqli, $rev_q);
+    if ($rev_res) {
+        while ($row = mysqli_fetch_assoc($rev_res)) {
+            $db_reviews[] = [
+                'rating' => intval($row['bintang']),
+                'text' => htmlspecialchars($row['ulasan']),
+                'name' => htmlspecialchars($row['nama_user']),
+                'subtitle' => 'Penyewa ' . htmlspecialchars($row['nama_kendaraan']),
+                'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($row['nama_user']) . '&background=random&color=fff'
+            ];
+        }
+    }
+}
+
+$static_reviews = [
+    [
+        'rating' => 5,
+        'text' => "Pelayanan VIP yang luar biasa! Kondisi mobil Audi A8 sangat mulus seperti keluar dari showroom. Sangat merekomendasikan untuk keperluan bisnis penting.",
+        'name' => "Rian Pratama",
+        'subtitle' => "Pengusaha & Kolektor",
+        'avatar' => "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+    ],
+    [
+        'rating' => 5,
+        'text' => "Sewa mobil di FTrans benar-benar mempermudah segalanya. Pemesanan cepat, konfirmasi kilat via email, dan verifikasi pembayaran admin sangat responsif.",
+        'name' => "Amanda Siregar",
+        'subtitle' => "Eksekutif Korporat",
+        'avatar' => "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
+    ],
+    [
+        'rating' => 5,
+        'text' => "Pilihan terbaik untuk sewa kendaraan mewah di kota ini. Proses upload bukti bayar lewat HP sangat praktis dan email invoice PDF langsung masuk.",
+        'name' => "Hendri Kusuma",
+        'subtitle' => "Direktur Keuangan",
+        'avatar' => "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80"
+    ]
+];
+
+$merged_reviews = array_merge($db_reviews, $static_reviews);
+
 // Ambil data statistik dari database untuk integrasi dengan dashboard
 $total_armada = 0;
 $transaksi_sukses = 0;
@@ -501,98 +551,50 @@ function getCarImageUrl($car) {
             <div class="reviews-marquee-container reveal">
                 <div class="reviews-marquee">
                     <!-- Set 1 -->
+                    <?php foreach ($merged_reviews as $r): ?>
                     <div class="review-card-item">
                         <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                            <div class="star-rating mb-2" style="color: #eab308;">
+                                <?php
+                                for ($i = 1; $i <= 5; $i++) {
+                                    echo $i <= $r['rating'] ? '<i class="fa fa-star"></i>' : '<i class="far fa-star"></i>';
+                                }
+                                ?>
                             </div>
-                            <p class="review-text">"Pelayanan VIP yang luar biasa! Kondisi mobil Audi A8 sangat mulus seperti keluar dari showroom. Sangat merekomendasikan untuk keperluan bisnis penting."</p>
+                            <p class="review-text">"<?= $r['text'] ?>"</p>
                             <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
+                                <img src="<?= $r['avatar'] ?>" alt="Avatar" class="reviewer-avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
                                 <div>
-                                    <h6 class="fw-bold mb-0">Rian Pratama</h6>
-                                    <span class="text-muted small">Pengusaha & Kolektor</span>
+                                    <h6 class="fw-bold mb-0"><?= $r['name'] ?></h6>
+                                    <span class="text-muted small"><?= $r['subtitle'] ?></span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="review-card-item">
-                        <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                            </div>
-                            <p class="review-text">"Sewa mobil di FTrans benar-benar mempermudah segalanya. Pemesanan cepat, konfirmasi kilat via email, dan verifikasi pembayaran admin sangat responsif."</p>
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
-                                <div>
-                                    <h6 class="fw-bold mb-0">Amanda Siregar</h6>
-                                    <span class="text-muted small">Eksekutif Korporat</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="review-card-item">
-                        <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                            </div>
-                            <p class="review-text">"Pilihan terbaik untuk sewa kendaraan mewah di kota ini. Proses upload bukti bayar lewat HP sangat praktis dan email invoice PDF langsung masuk."</p>
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
-                                <div>
-                                    <h6 class="fw-bold mb-0">Hendri Kusuma</h6>
-                                    <span class="text-muted small">Direktur Keuangan</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
                     
                     <!-- Set 2 (Duplicated for infinite scroll looping) -->
+                    <?php foreach ($merged_reviews as $r): ?>
                     <div class="review-card-item">
                         <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                            <div class="star-rating mb-2" style="color: #eab308;">
+                                <?php
+                                for ($i = 1; $i <= 5; $i++) {
+                                    echo $i <= $r['rating'] ? '<i class="fa fa-star"></i>' : '<i class="far fa-star"></i>';
+                                }
+                                ?>
                             </div>
-                            <p class="review-text">"Pelayanan VIP yang luar biasa! Kondisi mobil Audi A8 sangat mulus seperti keluar dari showroom. Sangat merekomendasikan untuk keperluan bisnis penting."</p>
+                            <p class="review-text">"<?= $r['text'] ?>"</p>
                             <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
+                                <img src="<?= $r['avatar'] ?>" alt="Avatar" class="reviewer-avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
                                 <div>
-                                    <h6 class="fw-bold mb-0">Rian Pratama</h6>
-                                    <span class="text-muted small">Pengusaha & Kolektor</span>
+                                    <h6 class="fw-bold mb-0"><?= $r['name'] ?></h6>
+                                    <span class="text-muted small"><?= $r['subtitle'] ?></span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="review-card-item">
-                        <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                            </div>
-                            <p class="review-text">"Sewa mobil di FTrans benar-benar mempermudah segalanya. Pemesanan cepat, konfirmasi kilat via email, dan verifikasi pembayaran admin sangat responsif."</p>
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
-                                <div>
-                                    <h6 class="fw-bold mb-0">Amanda Siregar</h6>
-                                    <span class="text-muted small">Eksekutif Korporat</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="review-card-item">
-                        <div class="review-card">
-                            <div class="star-rating">
-                                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-                            </div>
-                            <p class="review-text">"Pilihan terbaik untuk sewa kendaraan mewah di kota ini. Proses upload bukti bayar lewat HP sangat praktis dan email invoice PDF langsung masuk."</p>
-                            <div class="d-flex align-items-center gap-3">
-                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80" alt="Avatar" class="reviewer-avatar">
-                                <div>
-                                    <h6 class="fw-bold mb-0">Hendri Kusuma</h6>
-                                    <span class="text-muted small">Direktur Keuangan</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
