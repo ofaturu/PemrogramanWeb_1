@@ -265,7 +265,7 @@ include 'partials/head.php';
         <?php 
         $u = $users_list[0] ?? ['id' => $_SESSION['user_id'], 'nama' => $_SESSION['user_nama'], 'email' => '', 'no_hp' => ''];
         $user_id = $u['id'];
-        $rental_query = "SELECT p.id_sewa, p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, p.status, k.nama_kendaraan
+        $rental_query = "SELECT p.id_sewa, p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, p.status, p.bukti_pembayaran, k.nama_kendaraan
                          FROM penyewaan p
                          LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
                          WHERE p.id_user = ?
@@ -347,12 +347,17 @@ include 'partials/head.php';
                             <td>
                               <?php
                               $st = $rent['status'];
+                              $bukti = $rent['bukti_pembayaran'] ?? '';
                               if ($st === 'booking') {
-                                  echo '<span class="badge bg-warning text-dark px-2 py-1">Booking</span>';
+                                  if (empty($bukti)) {
+                                      echo '<span class="badge bg-warning text-dark px-2 py-1">Booking</span>';
+                                  } else {
+                                      echo '<span class="badge bg-warning text-dark px-2 py-1">Sedang Diproses</span>';
+                                  }
                               } elseif ($st === 'sedang_disewa') {
-                                  echo '<span class="badge bg-info text-white px-2 py-1">Sedang Disewa</span>';
+                                  echo '<span class="badge bg-success text-white px-2 py-1">Berhasil</span>';
                               } elseif ($st === 'selesai') {
-                                  echo '<span class="badge bg-success text-white px-2 py-1">Selesai</span>';
+                                  echo '<span class="badge bg-secondary text-white px-2 py-1">Selesai</span>';
                               } else {
                                   echo '<span class="badge bg-danger text-white px-2 py-1">Dibatalkan</span>';
                               }

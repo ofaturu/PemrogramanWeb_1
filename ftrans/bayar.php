@@ -253,10 +253,10 @@ include 'partials/head.php';
                         if (empty($bukti)) {
                             echo '<span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 fw-semibold fs-7 border border-danger border-opacity-25">Belum Dibayar</span>';
                         } else {
-                            echo '<span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 fw-semibold fs-7 border border-warning border-opacity-25">Menunggu Verifikasi</span>';
+                            echo '<span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 fw-semibold fs-7 border border-warning border-opacity-25">Sedang Diproses</span>';
                         }
                     } elseif ($status === 'sedang_disewa') {
-                        echo '<span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fw-semibold fs-7 border border-success border-opacity-25">Sedang Sewa (Lunas)</span>';
+                        echo '<span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fw-semibold fs-7 border border-success border-opacity-25">Berhasil</span>';
                     } elseif ($status === 'selesai') {
                         echo '<span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 fw-semibold fs-7 border border-secondary border-opacity-25">Selesai</span>';
                     } elseif ($status === 'dibatalkan') {
@@ -401,25 +401,131 @@ include 'partials/head.php';
 
                     <!-- Form for uploading transfer receipt -->
                     <div class="mb-4">
-                      <h6 class="fw-bold mb-2">PILIHAN REKENING BANK:</h6>
-                      <div class="p-3 border rounded mb-2 d-flex align-items-center bg-body-tertiary">
-                        <i class="fa fa-university fa-2x me-3 text-secondary"></i>
-                        <div>
-                          <div class="small text-muted fw-bold">BANK BCA</div>
-                          <div class="fs-5 fw-bold text-primary">123456789</div>
-                          <div class="small text-muted">a.n. FTrans Car Rental</div>
+                      <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link active" id="pills-transfer-tab" data-coreui-toggle="pill" data-coreui-target="#pills-transfer" type="button" role="tab" aria-controls="pills-transfer" aria-selected="true">
+                            <i class="fa fa-university me-1"></i> Transfer Bank
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="pills-qris-tab" data-coreui-toggle="pill" data-coreui-target="#pills-qris" type="button" role="tab" aria-controls="pills-qris" aria-selected="false">
+                            <i class="fa fa-qrcode me-1"></i> QRIS GPN
+                          </button>
+                        </li>
+                      </ul>
+                      
+                      <div class="tab-content" id="pills-tabContent">
+                        <!-- Tab 1: Bank Transfer -->
+                        <div class="tab-pane fade show active" id="pills-transfer" role="tabpanel" aria-labelledby="pills-transfer-tab">
+                          <div class="p-3 border rounded mb-2 d-flex align-items-center bg-body-tertiary">
+                            <i class="fa fa-university fa-2x me-3 text-secondary"></i>
+                            <div>
+                              <div class="small text-muted fw-bold">BANK BCA</div>
+                              <div class="fs-5 fw-bold text-primary">123456789</div>
+                              <div class="small text-muted">a.n. FTrans Car Rental</div>
+                            </div>
+                          </div>
+                          <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning py-2 px-3 small mt-2">
+                            <i class="fa fa-info-circle me-1"></i> Transfer tepat sesuai nominal tagihan Anda, lalu unggah bukti transfer di bawah ini.
+                          </div>
+                        </div>
+                        
+                        <!-- Tab 2: QRIS GPN -->
+                        <div class="tab-pane fade" id="pills-qris" role="tabpanel" aria-labelledby="pills-qris-tab">
+                          <?php
+                          // Cek beberapa kemungkinan nama file gambar QRIS
+                          $qris_image_path = 'assets/img/qrcode.jpg';
+                          if (!file_exists($qris_image_path)) {
+                              $qris_image_path = 'uploads/qrcode.jpg';
+                          }
+                          if (!file_exists($qris_image_path)) {
+                              $qris_image_path = 'assets/img/qris.png';
+                          }
+                          if (!file_exists($qris_image_path)) {
+                              $qris_image_path = 'uploads/qris.png';
+                          }
+                          if (file_exists($qris_image_path)): ?>
+                              <div class="text-center">
+                                  <img src="<?= $qris_image_path ?>" alt="QRIS Code" class="img-fluid rounded border shadow-sm mx-auto d-block" style="max-height: 380px; object-fit: contain;">
+                              </div>
+                          <?php else: ?>
+                              <!-- SVG Fallback QRIS Card -->
+                              <div class="qris-card border p-3 rounded bg-white text-center shadow-sm position-relative overflow-hidden" style="max-width: 320px; margin: 0 auto; border-color: #e2e8f0;">
+                                  <div class="d-flex justify-content-between align-items-center mb-2">
+                                      <div style="font-weight: 800; font-size: 1.1rem; color: #1e293b; letter-spacing: -0.5px;">QRIS</div>
+                                      <div style="font-weight: 700; font-size: 0.8rem; color: #e11d48;">GPN</div>
+                                  </div>
+                                  
+                                  <div class="my-2">
+                                      <h6 class="fw-bold text-dark mb-0" style="letter-spacing: 0.5px; font-size: 0.85rem;">OFATURU, DIGITAL & KREATIF</h6>
+                                      <div class="text-muted" style="font-size: 0.7rem; font-weight: 600;">NMID: ID1026483072538</div>
+                                      <div class="text-muted" style="font-size: 0.7rem; font-weight: 600;">A01</div>
+                                  </div>
+                                  
+                                  <div class="p-2 bg-white d-inline-block rounded border my-2" style="border-color: #cbd5e1;">
+                                      <svg width="180" height="180" viewBox="0 0 100 100" style="display: block;">
+                                          <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
+                                          <rect x="5" y="5" width="25" height="25" fill="#000000" />
+                                          <rect x="10" y="10" width="15" height="15" fill="#ffffff" />
+                                          <rect x="13" y="13" width="9" height="9" fill="#000000" />
+                                          <rect x="70" y="5" width="25" height="25" fill="#000000" />
+                                          <rect x="75" y="10" width="15" height="15" fill="#ffffff" />
+                                          <rect x="78" y="13" width="9" height="9" fill="#000000" />
+                                          <rect x="5" y="70" width="25" height="25" fill="#000000" />
+                                          <rect x="10" y="75" width="15" height="15" fill="#ffffff" />
+                                          <rect x="13" y="78" width="9" height="9" fill="#000000" />
+                                          <rect x="35" y="5" width="5" height="10" fill="#000000" />
+                                          <rect x="45" y="5" width="10" height="5" fill="#000000" />
+                                          <rect x="60" y="10" width="5" height="5" fill="#000000" />
+                                          <rect x="35" y="20" width="15" height="5" fill="#000000" />
+                                          <rect x="55" y="20" width="10" height="10" fill="#000000" />
+                                          <rect x="5" y="35" width="10" height="5" fill="#000000" />
+                                          <rect x="20" y="35" width="5" height="10" fill="#000000" />
+                                          <rect x="30" y="30" width="5" height="5" fill="#000000" />
+                                          <rect x="40" y="35" width="10" height="5" fill="#000000" />
+                                          <rect x="55" y="35" width="5" height="15" fill="#000000" />
+                                          <rect x="65" y="30" width="10" height="5" fill="#000000" />
+                                          <rect x="80" y="35" width="15" height="5" fill="#000000" />
+                                          <rect x="10" y="50" width="15" height="5" fill="#000000" />
+                                          <rect x="30" y="45" width="10" height="10" fill="#000000" />
+                                          <rect x="45" y="50" width="5" height="5" fill="#000000" />
+                                          <rect x="65" y="45" width="5" height="15" fill="#000000" />
+                                          <rect x="75" y="50" width="10" height="5" fill="#000000" />
+                                          <rect x="35" y="60" width="5" height="15" fill="#000000" />
+                                          <rect x="45" y="65" width="15" height="5" fill="#000000" />
+                                          <rect x="70" y="60" width="20" height="5" fill="#000000" />
+                                          <rect x="35" y="80" width="15" height="5" fill="#000000" />
+                                          <rect x="55" y="75" width="5" height="15" fill="#000000" />
+                                          <rect x="65" y="80" width="10" height="10" fill="#000000" />
+                                          <rect x="80" y="75" width="5" height="5" fill="#000000" />
+                                          <rect x="90" y="80" width="5" height="15" fill="#000000" />
+                                      </svg>
+                                  </div>
+                                  
+                                  <div style="font-size: 0.65rem; font-weight: 700; color: #475569;" class="mt-1">
+                                      SATU QRIS UNTUK SEMUA
+                                  </div>
+                                  <div style="font-size: 0.55rem; color: #64748b;">
+                                      Cek aplikasi penyelenggara di: www.aspi-qris.id
+                                  </div>
+                              </div>
+                          <?php endif; ?>
+                          <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning py-2 px-3 small mt-3">
+                            <i class="fa fa-info-circle me-1"></i> Scan QRIS di atas menggunakan aplikasi dompet digital Anda (Gopay, OVO, Dana, LinkAja, Mobile Banking), lalu unggah bukti suksesnya di bawah ini.
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <form method="POST" action="" enctype="multipart/form-data" class="row g-3" novalidate>
+                    <form method="POST" action="" enctype="multipart/form-data" class="row g-3 needs-validation" novalidate>
                       <div class="col-12">
-                        <label class="form-label fw-bold" for="bukti_pembayaran">Unggah Bukti Transfer *</label>
+                        <label class="form-label fw-bold" for="bukti_pembayaran">Unggah Bukti Pembayaran (Transfer/QRIS) *</label>
                         <input type="file" class="form-control" id="bukti_pembayaran" name="bukti_pembayaran" accept="image/*" required>
-                        <div class="form-text text-muted">Harap unggah tangkapan layar (screenshot) bukti transfer resmi dengan nominal yang sesuai. Format: JPG, JPEG, PNG.</div>
+                        <div class="invalid-feedback">Wajib mengunggah bukti pembayaran untuk verifikasi.</div>
+                        <div class="form-text text-muted">Harap unggah tangkapan layar (screenshot) bukti transfer atau bukti scan QRIS resmi. Format: JPG, JPEG, PNG.</div>
                       </div>
                       <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-outline-secondary w-100 py-2.5 fw-semibold"><i class="fa fa-upload me-2"></i>Kirim Bukti Pembayaran Manual</button>
+                        <button type="submit" class="btn btn-outline-secondary w-100 py-2.5 fw-semibold"><i class="fa fa-upload me-2"></i>Kirim Bukti Pembayaran</button>
                       </div>
                     </form>
 

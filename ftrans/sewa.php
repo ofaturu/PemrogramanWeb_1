@@ -520,12 +520,17 @@ include 'partials/head.php';
                           <td>
                               <?php
                               $status = $r['status'] ?? 'booking';
+                              $bukti = $r['bukti_pembayaran'] ?? '';
                               if ($status === 'booking') {
-                                  echo '<span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1">Booking</span>';
+                                  if (empty($bukti)) {
+                                      echo '<span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1">Booking (Belum Bayar)</span>';
+                                  } else {
+                                      echo '<span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1">Sedang Diproses</span>';
+                                  }
                               } elseif ($status === 'sedang_disewa') {
-                                  echo '<span class="badge bg-info bg-opacity-10 text-info px-2 py-1">Sedang Disewa</span>';
+                                  echo '<span class="badge bg-success bg-opacity-10 text-success px-2 py-1">Berhasil (Sedang Disewa)</span>';
                               } elseif ($status === 'selesai') {
-                                  echo '<span class="badge bg-success bg-opacity-10 text-success px-2 py-1">Selesai</span>';
+                                  echo '<span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1">Selesai</span>';
                               } elseif ($status === 'dibatalkan') {
                                   echo '<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">Dibatalkan</span>';
                               }
