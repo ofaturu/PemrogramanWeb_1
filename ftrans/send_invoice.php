@@ -161,6 +161,14 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
     $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@ftrans.com', 'FTrans Car Rental');
     $mail->addAddress($rental['email_user'], $rental['nama_user']);
     
+    // Send a BCC to all admin users so they get notified of booking/receipts
+    $admin_res = mysqli_query($mysqli, "SELECT email, nama FROM users WHERE role = 'admin'");
+    if ($admin_res) {
+        while ($admin = mysqli_fetch_assoc($admin_res)) {
+            $mail->addBCC($admin['email'], $admin['nama']);
+        }
+    }
+    
     // ---------------------------------------------------------
     // 4. ATTACH THE PDF STRING TO EMAIL
     // ---------------------------------------------------------
