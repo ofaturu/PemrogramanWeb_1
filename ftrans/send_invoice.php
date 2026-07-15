@@ -212,15 +212,65 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
     } else {
         $status_rental = $rental['status'] ?? 'booking';
         $status_label_text = 'Sedang Disewa (Aktif)';
+        $lateness_info = '';
+        $review_cta = '';
+        
         if ($status_rental === 'selesai') {
             $status_label_text = 'Selesai (Armada Dikembalikan)';
+            
+            // 1. Bukti Keterlambatan jika ada denda / keterlambatan
+            if (intval($rental['denda'] ?? 0) > 0 && !empty($rental['tanggal_kembali_aktual'])) {
+                $t_sched = strtotime($rental['tanggal_kembali']);
+                $t_act = strtotime($rental['tanggal_kembali_aktual']);
+                $late_sec = $t_act - $t_sched;
+                $late_days = ceil($late_sec / 86400);
+                if ($late_days <= 0) $late_days = 1;
+                
+                $lateness_info = '
+                <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin-top: 0; color: #dc2626; font-weight: bold; font-size: 14px;">⚠️ Detail Keterlambatan Pengembalian:</h4>
+                    <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 4px 0; color: #475569; width: 45%;">Batas Waktu Kembali:</td>
+                            <td style="padding: 4px 0; font-weight: bold; color: #1e293b;">' . date('d F Y, H:i', $t_sched) . '</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 4px 0; color: #475569;">Kembali Aktual:</td>
+                            <td style="padding: 4px 0; font-weight: bold; color: #dc2626;">' . date('d F Y, H:i', $t_act) . '</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 4px 0; color: #475569;">Durasi Terlambat:</td>
+                            <td style="padding: 4px 0; font-weight: bold; color: #dc2626;">' . $late_days . ' Hari</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 4px 0; color: #475569; border-top: 1px dashed #fca5a5; margin-top: 5px;">Denda Keterlambatan:</td>
+                            <td style="padding: 4px 0; font-weight: bold; color: #dc2626; border-top: 1px dashed #fca5a5; margin-top: 5px;">Rp ' . number_format($rental['denda'], 0, ',', '.') . '</td>
+                        </tr>
+                    </table>
+                </div>
+                ';
+            }
+            
+            // 2. Link / CTA Ulasan
+            $review_url = "http://localhost/PemrogramanWeb_1/ftrans/review.php?id=" . $id_sewa;
+            $review_cta = '
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <h4 style="margin-top: 0; color: #16a34a; font-weight: bold;">Bagaimana Pengalaman Perjalanan Anda?</h4>
+                <p style="font-size: 13px; color: #475569; margin-bottom: 15px;">Kepuasan Anda sangat penting bagi kami. Silakan berikan rating bintang dan ulasan ulasan perjalanan Anda bersama armada premium kami.</p>
+                <a href="' . $review_url . '" style="display: inline-block; background-color: #16a34a; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">Beri Ulasan Sekarang</a>
+            </div>
+            ';
         }
+        
         $email_content = '
         <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-            <h2 style="color: #16a34a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">Konfirmasi Pembayaran Lunas</h2>
+            <h2 style="color: #16a34a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0;">' . ($status_rental === 'selesai' ? 'Konfirmasi Pengembalian & Pelunasan' : 'Konfirmasi Pembayaran Lunas') . '</h2>
             <p>Halo <strong>' . htmlspecialchars($rental['nama_user']) . '</strong>,</p>
-            <p>Kabar gembira! Pembayaran Anda untuk transaksi sewa kendaraan <strong>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</strong> telah berhasil **diverifikasi dan dinyatakan LUNAS**.</p>
+            <p>' . ($status_rental === 'selesai' ? 'Terima kasih telah mengembalikan armada sewa. Transaksi Anda telah dinyatakan selesai dan lunas.' : 'Kabar gembira! Pembayaran Anda untuk transaksi sewa kendaraan <strong>#INV-' . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . '</strong> telah berhasil **diverifikasi dan dinyatakan LUNAS**.') . '</p>
             <p>Status sewa Anda saat ini adalah: <strong style="color: #16a34a;">' . $status_label_text . '</strong>.</p>
+            
+            ' . $lateness_info . '
+            
             <ul>
                 <li><strong>Kendaraan:</strong> ' . htmlspecialchars($rental['nama_kendaraan']) . '</li>
                 <li><strong>Periode Sewa:</strong> ' . date('d F Y', $t_sewa) . ' - ' . date('d F Y', $t_kembali) . '</li>
@@ -229,6 +279,9 @@ function send_invoice_email($id_sewa, $email_type = 'invoice') {
                 <li><strong>Total Pembayaran:</strong> <strong style="color: #16a34a;">Rp ' . number_format($total_bayar, 0, ',', '.') . '</strong> (LUNAS)</li>
                 ' . (!empty($rental['metode_pembayaran']) ? '<li><strong>Metode Pembayaran:</strong> ' . htmlspecialchars($rental['metode_pembayaran']) . '</li>' : '') . '
             </ul>
+            
+            ' . $review_cta . '
+            
             <p>Kuitansi pembayaran resmi telah kami lampirkan dalam format PDF (Kuitansi_Pembayaran.pdf) pada email ini.</p>
             <p>Terima kasih telah mempercayakan perjalanan Anda bersama FTrans. Semoga perjalanan Anda menyenangkan, aman, dan nyaman.</p>
             <br>

@@ -87,6 +87,20 @@ mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `maintenance` (
   `tanggal_selesai` DATE NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+// Data migration: Buat tabel reviews jika belum ada
+mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `reviews` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_sewa` INT NOT NULL,
+  `id_user` INT NOT NULL,
+  `kode_unik_kendaraan` INT NOT NULL,
+  `bintang` INT NOT NULL,
+  `ulasan` TEXT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`id_sewa`) REFERENCES `penyewaan` (`id_sewa`) ON DELETE CASCADE,
+  FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`kode_unik_kendaraan`) REFERENCES `kendaraan` (`kode_unik_kendaraan`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
 // Data migration: Tambah kolom is_verified, otp_code, otp_expiry di tabel users jika belum ada
 $check_is_verified = mysqli_query($mysqli, "SHOW COLUMNS FROM `users` LIKE 'is_verified'");
 if ($check_is_verified && mysqli_num_rows($check_is_verified) === 0) {

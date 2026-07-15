@@ -265,9 +265,10 @@ include 'partials/head.php';
         <?php 
         $u = $users_list[0] ?? ['id' => $_SESSION['user_id'], 'nama' => $_SESSION['user_nama'], 'email' => '', 'no_hp' => ''];
         $user_id = $u['id'];
-        $rental_query = "SELECT p.id_sewa, p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, p.status, p.bukti_pembayaran, k.nama_kendaraan
+        $rental_query = "SELECT p.id_sewa, p.tanggal_sewa, p.tanggal_kembali, p.total_biaya, p.status, p.bukti_pembayaran, k.nama_kendaraan, r.bintang AS user_rating
                          FROM penyewaan p
                          LEFT JOIN kendaraan k ON p.kode_unik_kendaraan = k.kode_unik_kendaraan
+                         LEFT JOIN reviews r ON p.id_sewa = r.id_sewa
                          WHERE p.id_user = ?
                          ORDER BY p.tanggal_sewa DESC";
         $r_stmt = mysqli_prepare($mysqli, $rental_query);
@@ -363,9 +364,24 @@ include 'partials/head.php';
                               }
                               ?>
                             </td>
-                            <td class="pe-4 text-end">
-                              <a href="bayar.php?id=<?= $rent['id_sewa'] ?>" class="btn btn-sm btn-primary text-white"><i class="fa fa-receipt me-1"></i> Rincian & Bayar</a>
-                            </td>
+                             <td class="pe-4 text-end">
+                               <div class="d-flex justify-content-end gap-2 align-items-center">
+                                 <a href="bayar.php?id=<?= $rent['id_sewa'] ?>" class="btn btn-sm btn-primary text-white"><i class="fa fa-receipt me-1"></i> Rincian</a>
+                                 <?php if ($st === 'selesai'): ?>
+                                     <?php if (!empty($rent['user_rating'])): ?>
+                                         <span class="text-warning fw-bold fs-6" title="Anda memberikan <?= intval($rent['user_rating']) ?> bintang" style="cursor: default; font-family: monospace;">
+                                             <?php
+                                             for ($i = 1; $i <= 5; $i++) {
+                                                 echo $i <= intval($rent['user_rating']) ? '★' : '☆';
+                                             }
+                                             ?>
+                                         </span>
+                                     <?php else: ?>
+                                         <a href="review.php?id=<?= $rent['id_sewa'] ?>" class="btn btn-sm btn-warning text-dark fw-bold"><i class="fa fa-star me-1"></i> Ulas</a>
+                                     <?php endif; ?>
+                                 <?php endif; ?>
+                               </div>
+                             </td>
                           </tr>
                         <?php endforeach; ?>
                       </tbody>

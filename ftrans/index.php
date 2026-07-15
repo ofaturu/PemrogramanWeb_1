@@ -19,9 +19,11 @@ $landing_hero_image = (strpos($landing_hero_image_raw, 'http') !== false) ? $lan
 // Ambil data kendaraan dari database
 $vehicles = [];
 if ($mysqli) {
-    $query = "SELECT k.*, m.nama_merk 
+    $query = "SELECT k.*, m.nama_merk, AVG(rv.bintang) as avg_rating, COUNT(rv.id) as count_reviews
               FROM kendaraan k 
               LEFT JOIN merk_kendaraan m ON k.id_merk = m.id_merk 
+              LEFT JOIN reviews rv ON k.kode_unik_kendaraan = rv.kode_unik_kendaraan
+              GROUP BY k.kode_unik_kendaraan
               ORDER BY k.harga_per_hari DESC";
     $result = mysqli_query($mysqli, $query);
     if ($result) {
@@ -371,6 +373,31 @@ function getCarImageUrl($car) {
                                                             <span class="badge car-meta-badge"><i class="fa fa-palette me-1"></i><?= htmlspecialchars($car['warna'] ?? 'Hitam') ?></span>
                                                         </div>
                                                         <h5 class="fw-bold mb-0 text-truncate" style="max-width: 170px;"><?= htmlspecialchars($car['nama_kendaraan']) ?></h5>
+                                                        <!-- Rating Stars -->
+                                                        <?php
+                                                        $rating = floatval($car['avg_rating'] ?? 0);
+                                                        $count_rv = intval($car['count_reviews'] ?? 0);
+                                                        ?>
+                                                        <div class="d-flex align-items-center mt-1" style="font-size: 0.8rem;">
+                                                            <div class="text-warning me-1">
+                                                                <?php
+                                                                $full_stars = floor($rating);
+                                                                $has_half = ($rating - $full_stars) >= 0.5;
+                                                                for ($i = 1; $i <= 5; $i++) {
+                                                                    if ($i <= $full_stars) {
+                                                                        echo '<i class="fas fa-star"></i>';
+                                                                    } elseif ($i == $full_stars + 1 && $has_half) {
+                                                                        echo '<i class="fas fa-star-half-alt"></i>';
+                                                                    } else {
+                                                                        echo '<i class="far fa-star"></i>';
+                                                                    }
+                                                                }
+                                                                ?>
+                                                            </div>
+                                                            <span class="text-body-secondary fw-semibold small" style="font-size: 0.72rem;">
+                                                                <?= $count_rv > 0 ? number_format($rating, 1) . ' (' . $count_rv . ')' : 'Belum ada ulasan' ?>
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     <div class="text-end ms-2 flex-shrink-0">
                                                         <span class="text-primary fw-bold fs-5" style="font-size: 1.1rem !important;">Rp <?= number_format($car['harga_per_hari'], 0, ',', '.') ?> <span class="text-muted fw-normal" style="font-size: 0.7rem;">/ Hari</span></span>
