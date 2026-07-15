@@ -106,6 +106,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const badge = document.getElementById("notificationBadge");
     const container = document.getElementById("notificationItemsContainer");
     const markAllBtn = document.getElementById("markAllReadBtn");
+    const userRole = <?= json_encode($_SESSION['user_role'] ?? 'user') ?>;
 
     // Request browser notification permission
     if (window.Notification && Notification.permission === "default") {
@@ -136,6 +137,19 @@ document.addEventListener("DOMContentLoaded", function() {
                         `;
                         
                         li.addEventListener("click", () => {
+                            // Tentukan target URL berdasarkan role dan isi notifikasi
+                            let targetUrl = "users.php";
+                            if (userRole === "admin") {
+                                targetUrl = "sewa.php";
+                            } else {
+                                // Cek jika ada nomor invoice di judul/pesan untuk langsung ke rincian pembayaran
+                                const invMatch = n.title.match(/#INV-(\d+)/) || n.message.match(/#INV-(\d+)/);
+                                if (invMatch) {
+                                    const idSewa = parseInt(invMatch[1], 10);
+                                    targetUrl = "bayar.php?id=" + idSewa;
+                                }
+                            }
+
                             const formData = new FormData();
                             formData.append("action", "read");
                             formData.append("id", n.id);
@@ -143,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 method: "POST",
                                 body: formData
                             }).then(() => {
-                                fetchNotifications();
+                                window.location.href = targetUrl;
                             });
                         });
                         
