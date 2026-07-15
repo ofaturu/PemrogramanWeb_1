@@ -28,6 +28,12 @@
         Perawatan Kendaraan
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link <?= ($activePage ?? '') === 'backup' ? 'active' : '' ?>" href="backup.php">
+        <i class="nav-icon fa fa-database me-2"></i>
+        Backup Database
+      </a>
+    </li>
     <?php endif; ?>
     <li class="nav-item">
       <a class="nav-link <?= ($activePage ?? '') === 'dashboard' ? 'active' : '' ?>" href="dashboard.php">
