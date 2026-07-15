@@ -1418,7 +1418,7 @@ if ($format === 'pdf') {
                 <tbody>';
                 if (!empty($maintenance_data)) {
                     $no = 1;
-                    foreach (array_slice($maintenance_data, 0, 15) as $md) {
+                    foreach ($maintenance_data as $md) {
                         $html .= '
                         <tr>
                             <td class="text-center">' . $no++ . '</td>
@@ -1427,9 +1427,6 @@ if ($format === 'pdf') {
                             <td>' . htmlspecialchars($md['deskripsi']) . '</td>
                             <td class="text-right">Rp ' . number_format($md['biaya'], 0, ',', '.') . '</td>
                         </tr>';
-                    }
-                    if (count($maintenance_data) > 15) {
-                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($maintenance_data) - 15) . ' data perawatan lainnya ...</td></tr>';
                     }
                 } else {
                     $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat pengeluaran servis.</td></tr>';
@@ -1454,7 +1451,7 @@ if ($format === 'pdf') {
                 <tbody>';
                 if (!empty($rentals_data)) {
                     $no = 1;
-                    foreach (array_slice($rentals_data, 0, 15) as $rd) {
+                    foreach ($rentals_data as $rd) {
                         $html .= '
                         <tr>
                             <td class="text-center">' . $no++ . '</td>
@@ -1463,9 +1460,6 @@ if ($format === 'pdf') {
                             <td>' . htmlspecialchars($rd['nama_kendaraan']) . '</td>
                             <td class="text-right">Rp ' . number_format($rd['total_biaya'], 0, ',', '.') . '</td>
                         </tr>';
-                    }
-                    if (count($rentals_data) > 15) {
-                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($rentals_data) - 15) . ' data transaksi lainnya ...</td></tr>';
                     }
                 } else {
                     $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat penyewaan.</td></tr>';
@@ -1488,7 +1482,7 @@ if ($format === 'pdf') {
                 <tbody>';
                 if (!empty($users_data)) {
                     $no = 1;
-                    foreach (array_slice($users_data, 0, 15) as $ud) {
+                    foreach ($users_data as $ud) {
                         $html .= '
                         <tr>
                             <td class="text-center">' . $no++ . '</td>
@@ -1497,9 +1491,6 @@ if ($format === 'pdf') {
                             <td>' . htmlspecialchars($ud['email']) . '</td>
                             <td class="text-center">' . htmlspecialchars($ud['no_hp'] ?? '-') . '</td>
                         </tr>';
-                    }
-                    if (count($users_data) > 15) {
-                        $html .= '<tr><td colspan="5" class="text-center text-muted">... Dan ' . (count($users_data) - 15) . ' data user lainnya ...</td></tr>';
                     }
                 } else {
                     $html .= '<tr><td colspan="5" class="text-center text-muted">Belum ada pelanggan terdaftar.</td></tr>';
