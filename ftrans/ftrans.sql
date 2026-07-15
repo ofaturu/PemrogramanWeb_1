@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 14, 2026 at 04:35 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Jul 15, 2026 at 09:59 AM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.1.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -47,8 +47,8 @@ CREATE TABLE `kendaraan` (
 --
 
 INSERT INTO `kendaraan` (`kode_unik_kendaraan`, `id_merk`, `nama_kendaraan`, `jenis_kendaraan`, `harga_per_hari`, `gambar`, `transmisi`, `tempat_duduk`, `bahan_bakar`, `status_kendaraan`, `stok`, `warna`) VALUES
-(1, 14, 'Audi A8', 'roda 4', 1000000, 0x61382e6a7067, 'Matic', '5 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
-(2, 12, 'BMW M4', 'roda 4', 750000, 0x6d342e77656270, 'Matic', '4 Seater', 'Bensin', 'tersedia', 1, 'Biru'),
+(1, 14, 'Audi A8', 'roda 4', 1000000, 0x61382e6a7067, 'Matic', '5 Seater', 'Bensin', 'disewa', 1, 'Hitam'),
+(2, 12, 'BMW M4', 'roda 4', 750000, 0x6d342e77656270, 'Matic', '4 Seater', 'Bensin', 'disewa', 1, 'Biru'),
 (3, 1, 'Honda NSX', 'roda 4', 2500000, 0x6e73782e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Oranye'),
 (4, 2, 'Toyota GR Supra', 'roda 4', 3000000, 0x67725f73757072612e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Merah'),
 (5, 8, 'Mazda RX 7', 'roda 4', 2000000, 0x72785f372e6a7067, 'Matic', '2 Seater', 'Bensin', 'tersedia', 1, 'Hitam'),
@@ -217,7 +217,42 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `cr
 (51, 8, 'Pengembalian Armada Sukses', 'Kendaraan Honda NSX telah berhasil dikembalikan. Denda keterlambatan Anda: Rp 20.000.000.', 1, '2026-07-14 14:32:46'),
 (52, 8, 'Pengembalian Armada Sukses', 'Kendaraan BMW M4 telah berhasil dikembalikan.', 1, '2026-07-14 14:32:48'),
 (53, 8, 'Pengembalian Armada Sukses', 'Kendaraan Toyota GR Supra telah berhasil dikembalikan. Denda keterlambatan Anda: Rp 24.000.000.', 1, '2026-07-14 14:32:51'),
-(54, 8, 'Pengembalian Armada Sukses', 'Kendaraan Audi A8 telah berhasil dikembalikan. Denda keterlambatan Anda: Rp 8.000.000.', 1, '2026-07-14 14:32:56');
+(54, 8, 'Pengembalian Armada Sukses', 'Kendaraan Audi A8 telah berhasil dikembalikan. Denda keterlambatan Anda: Rp 8.000.000.', 1, '2026-07-14 14:32:56'),
+(55, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Audi A8 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:00:39'),
+(56, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Audi A8.', 1, '2026-07-15 06:00:39'),
+(57, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 850.000 untuk sewa Audi A8 berhasil diterima.', 1, '2026-07-15 06:00:49'),
+(58, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-51 oleh ofaturu sebesar Rp 850.000 telah sukses dibayar via Xendit.', 1, '2026-07-15 06:00:49'),
+(59, 1, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Nissan GTR R35 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:04:45'),
+(60, NULL, 'Pemesanan Baru Masuk', 'Penyewa admin baru saja melakukan pemesanan kendaraan Nissan GTR R35.', 1, '2026-07-15 06:04:45'),
+(61, 1, 'Pembaruan Transaksi #INV-52', 'Transaksi sewa kendaraan Nissan GTR R35 Anda telah diperbarui. Status saat ini: Selesai', 1, '2026-07-15 06:04:55'),
+(62, 8, 'Pengembalian Armada Sukses', 'Kendaraan Audi A8 telah berhasil dikembalikan. Denda keterlambatan Anda: Rp 1.000.000.', 1, '2026-07-15 06:05:54'),
+(63, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan BMW S1000RR Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:16:05'),
+(64, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan BMW S1000RR.', 1, '2026-07-15 06:16:05'),
+(65, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 1.487.500 untuk sewa BMW S1000RR berhasil diterima.', 1, '2026-07-15 06:16:25'),
+(66, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-53 oleh ofaturu sebesar Rp 1.487.500 telah sukses dibayar via Xendit.', 1, '2026-07-15 06:16:25'),
+(67, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Audi A8 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:51:11'),
+(68, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Audi A8.', 1, '2026-07-15 06:51:11'),
+(69, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 850.000 untuk sewa Audi A8 berhasil diterima.', 1, '2026-07-15 06:51:36'),
+(70, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-54 oleh ofaturu sebesar Rp 850.000 telah sukses dibayar via Xendit.', 1, '2026-07-15 06:51:36'),
+(71, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan BMW M4 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:54:54'),
+(72, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan BMW M4.', 1, '2026-07-15 06:54:54'),
+(73, 8, 'Pembayaran Xendit Sukses', 'Pembayaran Anda via VA_SIMULATOR sebesar Rp 637.500 untuk sewa BMW M4 berhasil diterima.', 1, '2026-07-15 06:55:05'),
+(74, NULL, 'Pembayaran Masuk (Xendit)', 'Pembayaran penyewaan #INV-55 oleh ofaturu sebesar Rp 637.500 telah sukses dibayar via Xendit.', 1, '2026-07-15 06:55:05'),
+(75, 8, 'Pengembalian Armada Sukses', 'Kendaraan BMW M4 telah berhasil dikembalikan.', 1, '2026-07-15 06:55:23'),
+(76, 8, 'Pengembalian Armada Sukses', 'Kendaraan BMW M4 telah berhasil dikembalikan.', 1, '2026-07-15 06:55:27'),
+(77, 8, 'Pengembalian Armada Sukses', 'Kendaraan BMW M4 telah berhasil dikembalikan.', 1, '2026-07-15 06:55:31'),
+(78, 8, 'Pengembalian Armada Sukses', 'Kendaraan Audi A8 telah berhasil dikembalikan.', 1, '2026-07-15 06:55:34'),
+(79, 8, 'Pengembalian Armada Sukses', 'Kendaraan BMW S1000RR telah berhasil dikembalikan.', 1, '2026-07-15 06:55:38'),
+(80, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Audi A8 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 06:56:02'),
+(81, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Audi A8.', 1, '2026-07-15 06:56:02'),
+(82, 8, 'Pembayaran Terverifikasi', 'Pembayaran sewa kendaraan Audi A8 Anda telah diverifikasi oleh Admin. Selamat berkendara!', 1, '2026-07-15 06:56:17'),
+(83, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan BMW M4 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 07:03:06'),
+(84, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan BMW M4.', 1, '2026-07-15 07:03:06'),
+(85, 8, 'Pembayaran Terverifikasi', 'Pembayaran sewa kendaraan BMW M4 Anda telah diverifikasi oleh Admin. Selamat berkendara!', 1, '2026-07-15 07:06:45'),
+(86, 8, 'Pemesanan Kendaraan Berhasil', 'Pemesanan kendaraan Mazda RX 7 Anda berhasil dibuat. Silakan selesaikan pembayaran.', 1, '2026-07-15 07:24:33'),
+(87, NULL, 'Pemesanan Baru Masuk', 'Penyewa ofaturu baru saja melakukan pemesanan kendaraan Mazda RX 7.', 1, '2026-07-15 07:24:33'),
+(88, 8, 'Pembayaran Terverifikasi', 'Pembayaran sewa kendaraan Mazda RX 7 Anda telah diverifikasi oleh Admin. Selamat berkendara!', 1, '2026-07-15 07:26:56'),
+(89, 8, 'Pengembalian Armada Sukses', 'Kendaraan Mazda RX 7 telah berhasil dikembalikan.', 1, '2026-07-15 07:27:06');
 
 -- --------------------------------------------------------
 
@@ -246,24 +281,58 @@ CREATE TABLE `penyewaan` (
 -- Dumping data for table `penyewaan`
 --
 
-INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`, `xendit_invoice_id`, `xendit_invoice_url`, `tanggal_kembali_aktual`, `denda`) VALUES
-(31, 1, 3, '2026-07-05 10:23:00', '2026-07-06 10:23:00', 2500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0),
-(32, 8, 1, '2026-07-05 10:24:00', '2026-07-06 10:24:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_32.png', '2026-07-05 15:24:47', NULL, NULL, NULL, 0),
-(33, 8, 3, '2026-07-05 10:29:00', '2026-07-06 10:29:00', 2500000, 'selesai', 'bukti pembayaran_ofaturu_33.jpg', '2026-07-05 15:29:50', NULL, NULL, NULL, 0),
-(35, 8, 8, '2026-07-05 10:44:00', '2026-07-06 10:44:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_35.jpg', '2026-07-05 15:44:30', NULL, NULL, NULL, 0),
-(37, 8, 1, '2026-07-05 10:48:00', '2026-07-06 10:48:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_37.jpg', '2026-07-05 15:49:04', NULL, NULL, NULL, 0),
-(39, 8, 9, '2026-07-06 12:53:00', '2026-07-07 12:53:00', 500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0),
-(40, 8, 1, '2026-07-06 14:31:00', '2026-07-07 14:31:00', 1000000, 'selesai', NULL, '2026-07-06 19:31:42', NULL, NULL, '2026-07-14 21:32:00', 8000000),
-(41, 8, 2, '2026-07-06 20:00:00', '2026-07-23 20:00:00', 12750000, 'selesai', NULL, '2026-07-06 19:46:53', NULL, NULL, '2026-07-14 21:32:00', 0),
-(42, 8, 3, '2026-07-06 20:00:00', '2026-07-07 20:00:00', 2500000, 'selesai', NULL, '2026-07-06 19:54:03', NULL, NULL, '2026-07-14 21:32:00', 20000000),
-(43, 8, 4, '2026-07-06 21:00:00', '2026-07-07 21:00:00', 3000000, 'selesai', NULL, '2026-07-06 20:14:38', NULL, NULL, '2026-07-14 21:32:00', 24000000),
-(44, 8, 5, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 2000000, 'selesai', NULL, '2026-07-08 22:18:44', NULL, NULL, '2026-07-14 21:32:00', 10000000),
-(45, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'selesai', NULL, NULL, NULL, NULL, '2026-07-14 21:32:00', 2777775),
-(46, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'selesai', NULL, '2026-07-08 22:22:23', NULL, NULL, '2026-07-14 21:32:00', 2777775),
-(47, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'selesai', NULL, '2026-07-08 22:30:10', NULL, NULL, '2026-07-14 21:32:00', 5000000),
-(48, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'selesai', NULL, '2026-07-08 22:29:30', NULL, NULL, '2026-07-14 21:32:00', 5000000),
-(49, 8, 8, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_49.jpg', '2026-07-08 22:30:39', NULL, NULL, '2026-07-14 21:32:00', 17500000),
-(50, 8, 9, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 500000, 'selesai', NULL, '2026-07-08 22:32:25', NULL, NULL, '2026-07-14 21:32:00', 2500000);
+INSERT INTO `penyewaan` (`id_sewa`, `id_user`, `kode_unik_kendaraan`, `tanggal_sewa`, `tanggal_kembali`, `total_biaya`, `status`, `bukti_pembayaran`, `waktu_bayar`, `xendit_invoice_id`, `xendit_invoice_url`, `tanggal_kembali_aktual`, `denda`, `metode_pembayaran`) VALUES
+(31, 1, 3, '2026-07-05 10:23:00', '2026-07-06 10:23:00', 2500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0, NULL),
+(32, 8, 1, '2026-07-05 10:24:00', '2026-07-06 10:24:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_32.png', '2026-07-05 15:24:47', NULL, NULL, NULL, 0, NULL),
+(33, 8, 3, '2026-07-05 10:29:00', '2026-07-06 10:29:00', 2500000, 'selesai', 'bukti pembayaran_ofaturu_33.jpg', '2026-07-05 15:29:50', NULL, NULL, NULL, 0, NULL),
+(35, 8, 8, '2026-07-05 10:44:00', '2026-07-06 10:44:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_35.jpg', '2026-07-05 15:44:30', NULL, NULL, NULL, 0, NULL),
+(37, 8, 1, '2026-07-05 10:48:00', '2026-07-06 10:48:00', 1000000, 'selesai', 'bukti pembayaran_ofaturu_37.jpg', '2026-07-05 15:49:04', NULL, NULL, NULL, 0, NULL),
+(39, 8, 9, '2026-07-06 12:53:00', '2026-07-07 12:53:00', 500000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0, NULL),
+(40, 8, 1, '2026-07-06 14:31:00', '2026-07-07 14:31:00', 1000000, 'selesai', NULL, '2026-07-06 19:31:42', NULL, NULL, '2026-07-14 21:32:00', 8000000, NULL),
+(41, 8, 2, '2026-07-06 20:00:00', '2026-07-23 20:00:00', 12750000, 'selesai', NULL, '2026-07-06 19:46:53', NULL, NULL, '2026-07-14 21:32:00', 0, NULL),
+(42, 8, 3, '2026-07-06 20:00:00', '2026-07-07 20:00:00', 2500000, 'selesai', NULL, '2026-07-06 19:54:03', NULL, NULL, '2026-07-14 21:32:00', 20000000, NULL),
+(43, 8, 4, '2026-07-06 21:00:00', '2026-07-07 21:00:00', 3000000, 'selesai', NULL, '2026-07-06 20:14:38', NULL, NULL, '2026-07-14 21:32:00', 24000000, NULL),
+(44, 8, 5, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 2000000, 'selesai', NULL, '2026-07-08 22:18:44', NULL, NULL, '2026-07-14 21:32:00', 10000000, NULL),
+(45, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'selesai', NULL, NULL, NULL, NULL, '2026-07-14 21:32:00', 2777775, NULL),
+(46, 8, 6, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 555555, 'selesai', NULL, '2026-07-08 22:22:23', NULL, NULL, '2026-07-14 21:32:00', 2777775, NULL),
+(47, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'selesai', NULL, '2026-07-08 22:30:10', NULL, NULL, '2026-07-14 21:32:00', 5000000, NULL),
+(48, 8, 7, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 1000000, 'selesai', NULL, '2026-07-08 22:29:30', NULL, NULL, '2026-07-14 21:32:00', 5000000, NULL),
+(49, 8, 8, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 3500000, 'selesai', 'bukti pembayaran_ofaturu_49.jpg', '2026-07-08 22:30:39', NULL, NULL, '2026-07-14 21:32:00', 17500000, NULL),
+(50, 8, 9, '2026-07-08 23:00:00', '2026-07-09 23:00:00', 500000, 'selesai', NULL, '2026-07-08 22:32:25', NULL, NULL, '2026-07-14 21:32:00', 2500000, NULL),
+(51, 8, 1, '2026-07-15 14:00:00', '2026-07-16 14:00:00', 850000, 'selesai', NULL, '2026-07-15 13:00:49', NULL, NULL, '2026-07-17 13:04:00', 1000000, 'Cash'),
+(52, 1, 8, '2026-07-15 08:04:00', '2026-07-16 08:04:00', 2975000, 'selesai', NULL, NULL, NULL, NULL, NULL, 0, NULL),
+(53, 8, 10, '2026-07-15 08:15:00', '2026-07-16 08:15:00', 1487500, 'selesai', NULL, '2026-07-15 13:16:25', NULL, NULL, '2026-07-15 13:55:00', 0, 'Cash'),
+(54, 8, 1, '2026-07-15 14:00:00', '2026-07-16 14:00:00', 850000, 'selesai', NULL, '2026-07-15 13:51:36', NULL, NULL, '2026-07-15 13:55:00', 0, 'Cash'),
+(55, 8, 2, '2026-07-15 14:00:00', '2026-07-16 14:00:00', 637500, 'selesai', NULL, '2026-07-15 13:55:05', NULL, NULL, '2026-07-15 13:55:00', 0, 'Transfer'),
+(56, 8, 1, '2026-07-15 14:00:00', '2026-07-16 14:00:00', 850000, 'sedang_disewa', 'bukti pembayaran_ofaturu_56.jpg', '2026-07-15 13:56:11', NULL, NULL, NULL, 0, NULL),
+(57, 8, 2, '2026-07-15 15:00:00', '2026-07-16 15:00:00', 637500, 'sedang_disewa', 'bukti pembayaran_ofaturu_57.jpg', '2026-07-15 14:06:32', NULL, NULL, NULL, 0, NULL),
+(58, 8, 5, '2026-07-15 09:24:00', '2026-07-16 09:24:00', 1700000, 'selesai', 'bukti pembayaran_ofaturu_58.png', '2026-07-15 14:26:51', NULL, NULL, '2026-07-15 14:27:00', 0, 'Cash');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int(11) NOT NULL,
+  `id_sewa` int(11) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `kode_unik_kendaraan` int(11) NOT NULL,
+  `bintang` int(11) NOT NULL,
+  `ulasan` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`id`, `id_sewa`, `id_user`, `kode_unik_kendaraan`, `bintang`, `ulasan`, `created_at`) VALUES
+(1, 58, 8, 5, 5, 'mantep mas', '2026-07-15 07:27:35'),
+(2, 55, 8, 2, 5, 'gelo', '2026-07-15 07:46:59'),
+(3, 54, 8, 1, 5, 'gg', '2026-07-15 07:47:23'),
+(4, 51, 8, 1, 5, 'gg', '2026-07-15 07:47:27');
 
 -- --------------------------------------------------------
 
@@ -279,18 +348,23 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `role` varchar(20) DEFAULT 'user',
   `no_hp` varchar(20) DEFAULT NULL,
-  `membership_tier` varchar(20) DEFAULT 'basic'
+  `membership_tier` varchar(20) DEFAULT 'basic',
+  `is_verified` tinyint(1) DEFAULT 0,
+  `otp_code` varchar(10) DEFAULT NULL,
+  `otp_expiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`, `role`, `no_hp`, `membership_tier`) VALUES
-(1, 'admin', 'fatchurrachman001@gmail.com', '$2y$10$qKEwaPD0QUk65g.beQdEKuHx.BNvc6zCyxAJqh4QtUeGWVNAoo9kK', '2026-07-01 06:56:39', 'admin', '08123456789', 'gold'),
-(8, 'ofaturu', 'ofaturu@gmail.com', '$2y$10$M3wrlOyQr/QnizkLgXvzg.4pgD7v4WkykWZeMNjbsz1JEjxamqbiu', '2026-07-01 07:35:14', 'user', '08123456789', 'gold'),
-(10, 'Bagas Pramono', 'pramonobagas01@gmail.com', '$2y$10$HWPSHiqj/BB6L3vYv/cAQuaNbA6NtqUEelabIlOUg/qShIrHaTWbu', '2026-07-08 15:31:12', 'user', '1234567890', 'basic'),
-(11, 'Bagas pramono', 'kasmi18022016@gmail.com', '$2y$10$79kEKSwu.AH1wW9L1GguCe0I0aiYLe5o2Ghez00EiuCHEG/BwinnC', '2026-07-14 12:39:47', 'user', NULL, 'basic');
+INSERT INTO `users` (`id`, `nama`, `email`, `password`, `created_at`, `role`, `no_hp`, `membership_tier`, `is_verified`, `otp_code`, `otp_expiry`) VALUES
+(1, 'admin', 'fatchurrachman001@gmail.com', '$2y$10$qKEwaPD0QUk65g.beQdEKuHx.BNvc6zCyxAJqh4QtUeGWVNAoo9kK', '2026-07-01 06:56:39', 'admin', '08123456789', 'gold', 1, NULL, NULL),
+(8, 'ofaturu', 'ofaturu@gmail.com', '$2y$10$G5aK.sDK/8ookefjj3GTPevJ7h0Mmnc/LqdVcO6zSAo8AKkkbnD0.', '2026-07-01 07:35:14', 'user', '08123456789', 'gold', 1, NULL, NULL),
+(10, 'Bagas Pramono', 'pramonobagas01@gmail.com', '$2y$10$HWPSHiqj/BB6L3vYv/cAQuaNbA6NtqUEelabIlOUg/qShIrHaTWbu', '2026-07-08 15:31:12', 'user', '1234567890', 'basic', 1, NULL, NULL),
+(11, 'Bagas pramono', 'kasmi18022016@gmail.com', '$2y$10$79kEKSwu.AH1wW9L1GguCe0I0aiYLe5o2Ghez00EiuCHEG/BwinnC', '2026-07-14 12:39:47', 'user', NULL, 'basic', 1, NULL, NULL),
+(12, 'tes', 'riotnet32@gmail.com', '$2y$10$yMJeqpZbiOq5Ew8eFGHVh.Q.Zt36IqboygBU4zu2Rn7AigjFCc5eC', '2026-07-15 06:33:14', 'user', '08123456789', 'basic', 1, NULL, NULL),
+(13, 'asd', 'riotnet8@gmail.com', '$2y$10$bYJqfQ.vEN6Q5feUmcjXDud6ZOHbtulxaxgn806OpvNBxeh890N32', '2026-07-15 07:54:26', 'user', '2345', 'basic', 0, '653103', '2026-07-15 10:09:26');
 
 --
 -- Indexes for dumped tables
@@ -336,6 +410,15 @@ ALTER TABLE `penyewaan`
   ADD KEY `kode_unik_kendaraan` (`kode_unik_kendaraan`);
 
 --
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_sewa` (`id_sewa`),
+  ADD KEY `id_user` (`id_user`),
+  ADD KEY `kode_unik_kendaraan` (`kode_unik_kendaraan`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -368,19 +451,25 @@ ALTER TABLE `merk_kendaraan`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `penyewaan`
 --
 ALTER TABLE `penyewaan`
-  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id_sewa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+
+--
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
@@ -398,6 +487,14 @@ ALTER TABLE `kendaraan`
 ALTER TABLE `penyewaan`
   ADD CONSTRAINT `penyewaan_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `penyewaan_ibfk_2` FOREIGN KEY (`kode_unik_kendaraan`) REFERENCES `kendaraan` (`kode_unik_kendaraan`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`id_sewa`) REFERENCES `penyewaan` (`id_sewa`) ON DELETE CASCADE,
+  ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `reviews_ibfk_3` FOREIGN KEY (`kode_unik_kendaraan`) REFERENCES `kendaraan` (`kode_unik_kendaraan`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
