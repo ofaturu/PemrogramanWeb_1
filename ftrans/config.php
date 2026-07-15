@@ -87,6 +87,24 @@ mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `maintenance` (
   `tanggal_selesai` DATE NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+// Data migration: Tambah kolom is_verified, otp_code, otp_expiry di tabel users jika belum ada
+$check_is_verified = mysqli_query($mysqli, "SHOW COLUMNS FROM `users` LIKE 'is_verified'");
+if ($check_is_verified && mysqli_num_rows($check_is_verified) === 0) {
+    mysqli_query($mysqli, "ALTER TABLE `users` ADD `is_verified` TINYINT(1) DEFAULT 0");
+    // Tandai pengguna yang sudah ada sebelumnya sebagai terverifikasi agar tidak terkunci
+    mysqli_query($mysqli, "UPDATE `users` SET `is_verified` = 1");
+}
+
+$check_otp_code = mysqli_query($mysqli, "SHOW COLUMNS FROM `users` LIKE 'otp_code'");
+if ($check_otp_code && mysqli_num_rows($check_otp_code) === 0) {
+    mysqli_query($mysqli, "ALTER TABLE `users` ADD `otp_code` VARCHAR(10) DEFAULT NULL");
+}
+
+$check_otp_expiry = mysqli_query($mysqli, "SHOW COLUMNS FROM `users` LIKE 'otp_expiry'");
+if ($check_otp_expiry && mysqli_num_rows($check_otp_expiry) === 0) {
+    mysqli_query($mysqli, "ALTER TABLE `users` ADD `otp_expiry` DATETIME DEFAULT NULL");
+}
+
 // Isi data default jika tabel masih kosong
 $check_empty = mysqli_query($mysqli, "SELECT COUNT(*) as count FROM landing_settings");
 if ($check_empty) {

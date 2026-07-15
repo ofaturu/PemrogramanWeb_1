@@ -41,21 +41,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
     } else {
-        $stmt = mysqli_prepare($mysqli, "SELECT id, nama, password, role FROM users WHERE email = ?");
+        $stmt = mysqli_prepare($mysqli, "SELECT id, nama, password, role, is_verified FROM users WHERE email = ?");
         mysqli_stmt_bind_param($stmt, 's', $email);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $user   = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
-
+ 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['user_nama'] = $user['nama'];
-            $_SESSION['user_role'] = $user['role'];
-            // Session flag to indicate if they logged in via Google
-            $_SESSION['logged_in_via_google'] = false; 
-            header('Location: dashboard.php');
-            exit;
+            if (intval($user['is_verified'] ?? 0) === 0) {
+                $error = 'Akun Anda belum terverifikasi. Silakan <a href="verify.php?email=' . urlencode($email) . '" class="fw-bold">verifikasi akun Anda di sini</a>.';
+            } else {
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['user_nama'] = $user['nama'];
+                $_SESSION['user_role'] = $user['role'];
+                // Session flag to indicate if they logged in via Google
+                $_SESSION['logged_in_via_google'] = false; 
+                header('Location: dashboard.php');
+                exit;
+            }
         } else {
             $error = 'Email atau password salah.';
         }
@@ -101,8 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <input class="form-control" id="email" name="email" type="email" placeholder="your@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                 </div>
                 <div class="col-12">
-                  <label class="form-label" for="password">Password</label>
-                  <input class="form-control" id="password" name="password" type="password" placeholder="Your password" required>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <label class="form-label mb-0" for="password">Password</label>
+                    <a href="forgot_password.php" class="small text-decoration-none text-primary fw-semibold">Forgot Password?</a>
+                  </div>
+                  <input class="form-control mt-2" id="password" name="password" type="password" placeholder="Your password" required>
                 </div>
                 <div class="col-12 mt-4">
                   <button class="btn btn-primary w-100 py-2" type="submit">Sign In</button>

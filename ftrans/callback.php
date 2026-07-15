@@ -102,7 +102,7 @@ if ($user) {
 } else {
     // User does not exist, auto-register them
     $random_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
-    $insert_stmt = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password) VALUES (?, ?, ?)");
+    $insert_stmt = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password, is_verified) VALUES (?, ?, ?, 1)");
     if ($insert_stmt) {
         mysqli_stmt_bind_param($insert_stmt, 'sss', $name, $email, $random_password);
         if (mysqli_stmt_execute($insert_stmt)) {

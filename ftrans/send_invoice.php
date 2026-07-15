@@ -347,3 +347,93 @@ function send_expense_notification_email($maintenance_id) {
     $mail->send();
     return true;
 }
+
+/**
+ * Sends a verification OTP email to a user who just registered.
+ */
+function send_verification_otp_email($email, $nama, $otp) {
+    $mail = new PHPMailer(true);
+    $mail->SMTPDebug  = 0;
+    $mail->isSMTP();
+    $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $_ENV['SMTP_USER'] ?? '';
+    $mail->Password   = $_ENV['SMTP_PASS'] ?? '';
+    $port             = intval($_ENV['SMTP_PORT'] ?? 465);
+    $mail->Port       = $port;
+    if ($port === 465) {
+        $mail->SMTPSecure = 'ssl';
+    } else {
+        $mail->SMTPSecure = 'tls';
+    }
+    $mail->Timeout    = 10;
+    $mail->CharSet    = 'UTF-8';
+    
+    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@ftrans.com', 'FTrans Car Rental');
+    $mail->addAddress($email, $nama);
+    $mail->isHTML(true);
+    $mail->Subject = 'Kode Verifikasi OTP Pendaftaran Akun FTrans';
+    
+    $mail->Body = '
+    <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #3b82f6; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; text-align: center;">Verifikasi Akun FTrans</h2>
+        <p>Halo <strong>' . htmlspecialchars($nama) . '</strong>,</p>
+        <p>Terima kasih telah mendaftar di FTrans. Silakan gunakan kode OTP di bawah ini untuk memverifikasi akun Anda:</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #3b82f6; background-color: #f1f5f9; padding: 12px 24px; border-radius: 8px; border: 1px dashed #3b82f6;">' . htmlspecialchars($otp) . '</span>
+        </div>
+        <p style="color: #dc2626; font-size: 13px; text-align: center;">Kode OTP ini berlaku selama 15 menit. Jangan bagikan kode ini kepada siapa pun.</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <p style="font-size: 12px; color: #64748b; text-align: center;">Jika Anda tidak merasa melakukan pendaftaran ini, abaikan email ini.</p>
+        <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 5px;">&copy; ' . date('Y') . ' FTrans Car Rental.</p>
+    </div>
+    ';
+    
+    $mail->send();
+    return true;
+}
+
+/**
+ * Sends a password reset OTP email to a user requesting reset.
+ */
+function send_reset_otp_email($email, $nama, $otp) {
+    $mail = new PHPMailer(true);
+    $mail->SMTPDebug  = 0;
+    $mail->isSMTP();
+    $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = $_ENV['SMTP_USER'] ?? '';
+    $mail->Password   = $_ENV['SMTP_PASS'] ?? '';
+    $port             = intval($_ENV['SMTP_PORT'] ?? 465);
+    $mail->Port       = $port;
+    if ($port === 465) {
+        $mail->SMTPSecure = 'ssl';
+    } else {
+        $mail->SMTPSecure = 'tls';
+    }
+    $mail->Timeout    = 10;
+    $mail->CharSet    = 'UTF-8';
+    
+    $mail->setFrom($_ENV['SMTP_USER'] ?? 'noreply@ftrans.com', 'FTrans Car Rental');
+    $mail->addAddress($email, $nama);
+    $mail->isHTML(true);
+    $mail->Subject = 'Kode OTP Reset Password FTrans';
+    
+    $mail->Body = '
+    <div style="font-family: \'Segoe UI\', Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #dc2626; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; text-align: center;">Reset Password FTrans</h2>
+        <p>Halo <strong>' . htmlspecialchars($nama) . '</strong>,</p>
+        <p>Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda. Silakan gunakan kode OTP di bawah ini untuk melanjutkan:</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #dc2626; background-color: #fef2f2; padding: 12px 24px; border-radius: 8px; border: 1px dashed #dc2626;">' . htmlspecialchars($otp) . '</span>
+        </div>
+        <p style="color: #dc2626; font-size: 13px; text-align: center;">Kode OTP ini berlaku selama 15 menit. Jangan bagikan kode ini kepada siapa pun.</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <p style="font-size: 12px; color: #64748b; text-align: center;">Jika Anda tidak merasa meminta reset password, abaikan email ini dan segera amankan akun Anda.</p>
+        <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 5px;">&copy; ' . date('Y') . ' FTrans Car Rental.</p>
+    </div>
+    ';
+    
+    $mail->send();
+    return true;
+}

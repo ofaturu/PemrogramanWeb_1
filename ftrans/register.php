@@ -29,11 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Email sudah terdaftar. Gunakan email lain.';
         } else {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $ins = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password, no_hp) VALUES (?, ?, ?, ?)");
-            mysqli_stmt_bind_param($ins, 'ssss', $nama, $email, $hashed, $no_hp);
+            $otp = strval(rand(100000, 999999));
+            $otp_expiry = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+            $ins = mysqli_prepare($mysqli, "INSERT INTO users (nama, email, password, no_hp, is_verified, otp_code, otp_expiry) VALUES (?, ?, ?, ?, 0, ?, ?)");
+            mysqli_stmt_bind_param($ins, 'ssssss', $nama, $email, $hashed, $no_hp, $otp, $otp_expiry);
 
             if (mysqli_stmt_execute($ins)) {
-                $success = 'Akun berhasil dibuat! Silakan <a href="login.php" class="text-primary fw-bold">login di sini</a>.';
+                require_once 'send_invoice.php';
+                try {
+                    send_verification_otp_email($email, $nama, $otp);
+                } catch (\Exception $e) {
+                    error_log("Failed to send verification OTP: " . $e->getMessage());
+                }
+                header('Location: verify.php?email=' . urlencode($email) . '&msg=sent');
+                exit;
             } else {
                 $error = 'Terjadi kesalahan. Coba lagi.';
             }
