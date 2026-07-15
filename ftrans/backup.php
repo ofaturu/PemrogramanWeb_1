@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // 2. Fetch system/database info for UI display
-$db_name = DB_NAME; // Loaded from config/env
+$db_name = $databaseName ?? 'ftrans';
 $server_info = mysqli_get_server_info($mysqli);
 
 // Count tables
