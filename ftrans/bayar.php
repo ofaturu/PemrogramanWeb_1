@@ -139,6 +139,9 @@ if ($status === 'booking' && empty($bukti) && empty($rental['xendit_invoice_url'
 if (isset($_GET['xendit_status']) && $_GET['xendit_status'] === 'success') {
     $success = 'Pembayaran Anda berhasil diproses melalui Xendit!';
 }
+if (isset($_GET['verified']) && $_GET['verified'] === '1') {
+    $success = 'Pembayaran Anda telah diverifikasi oleh Admin. Transaksi Berhasil!';
+}
 
 // Handle upload receipt submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -584,5 +587,24 @@ include 'partials/head.php';
     </div>
     <?php include 'partials/footer.php'; ?>
   </div>
+
+  <?php if ($status === 'booking'): ?>
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const idSewa = <?= intval($id_sewa) ?>;
+      const pollInterval = setInterval(function() {
+          fetch('check_status.php?id=' + idSewa)
+              .then(response => response.json())
+              .then(data => {
+                  if (data && data.is_verified) {
+                      clearInterval(pollInterval);
+                      window.location.href = 'bayar.php?id=' + idSewa + '&verified=1';
+                  }
+              })
+              .catch(err => console.error('Error polling status:', err));
+      }, 3500);
+  });
+  </script>
+  <?php endif; ?>
 </body>
 </html>
