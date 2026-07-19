@@ -1196,24 +1196,37 @@ if ($format === 'pdf') {
             $html .= '</tbody>';
             $html .= '</table>';
 
-            // Validasi QR Code Receipt
-            $receipt_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/PemrogramanWeb_1/ftrans/bayar.php?id=" . $detail_data['id_sewa'];
-            $qr_code_src = "https://quickchart.io/qr?text=" . urlencode($receipt_url) . "&size=100&margin=1";
+            // Validasi QR Code & Barcode Receipt secara dinamis (mendukung Localhost & Hosting InfinityFree/Vercel/dll)
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+            $script_dir = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
+            if ($script_dir === '/' || $script_dir === '.') $script_dir = '';
+            $receipt_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . $script_dir . "/bayar.php?id=" . $detail_data['id_sewa'];
+            
+            $inv_code_str = 'INV-' . str_pad($detail_data['id_sewa'], 5, '0', STR_PAD_LEFT);
+            $qr_code_src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($receipt_url);
+            $barcode_src = "https://bwipjs-api.metafloor.com/bwipjs?bcid=code128&text=" . urlencode($inv_code_str) . "&scale=2&rotate=N&includetext";
 
             $html .= '
-            <table style="width: 100%; border: none; margin-top: 30px;">
+            <table style="width: 100%; border: none; margin-top: 25px;">
                 <tr>
-                    <td style="width: 70%; vertical-align: top; border: none; padding: 0;">
-                        <div style="font-weight: bold; color: #475569; margin-bottom: 5px;">CATATAN:</div>
-                        <div style="font-size: 8.5pt; color: #64748B; line-height: 1.4;">
-                            * Struk ini adalah bukti pembayaran digital resmi dari FTrans.<br>
-                            * Silakan tunjukkan QR Code di samping kepada petugas kami saat melakukan pengambilan/pengembalian armada.<br>
+                    <td style="width: 60%; vertical-align: top; border: none; padding: 0;">
+                        <div style="font-weight: bold; color: #475569; margin-bottom: 5px; font-size: 8.5pt;">CATATAN & KETENTUAN:</div>
+                        <div style="font-size: 8pt; color: #64748B; line-height: 1.4;">
+                            * Struk ini adalah bukti pembayaran digital resmi dari <strong>FTrans Car Rental</strong>.<br>
+                            * Silakan tunjukkan QR Code / Barcode ini kepada petugas kami saat melakukan pengambilan atau pengembalian armada.<br>
                             * Hubungi support@ftrans.com jika Anda memerlukan bantuan lebih lanjut.
                         </div>
+                        <div style="margin-top: 12px;">
+                            <div style="font-size: 7.5pt; color: #64748B; font-weight: bold; margin-bottom: 3px;">BARCODE FAKTUR:</div>
+                            <img src="' . $barcode_src . '" style="height: 38px; max-width: 210px;" alt="Barcode ' . $inv_code_str . '">
+                        </div>
                     </td>
-                    <td style="width: 30%; text-align: right; vertical-align: top; border: none; padding: 0;">
-                        <div style="font-weight: bold; color: #475569; font-size: 8pt; margin-bottom: 5px;">VALIDASI STRUK:</div>
-                        <img src="' . $qr_code_src . '" style="width: 100px; height: 100px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                    <td style="width: 40%; text-align: right; vertical-align: top; border: none; padding: 0;">
+                        <div style="font-weight: bold; color: #475569; font-size: 8pt; margin-bottom: 5px;">VERIFIKASI STRUK DIGITAL:</div>
+                        <div style="display: inline-block; text-align: center; border: 1px solid #CBD5E1; padding: 6px; border-radius: 6px; background-color: #FFFFFF;">
+                            <img src="' . $qr_code_src . '" style="width: 100px; height: 100px; display: block; margin: 0 auto;" alt="QR Code Verification">
+                            <div style="font-size: 6.5pt; color: #64748B; margin-top: 4px; font-weight: bold;">SCAN UNTUK CEK STATUS</div>
+                        </div>
                     </td>
                 </tr>
             </table>
