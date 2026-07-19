@@ -143,7 +143,8 @@ if (isset($_GET['xendit_status']) && $_GET['xendit_status'] === 'success') {
 // Handle upload receipt submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($rental['status'] !== 'booking') {
-        $error = 'Transaksi ini sudah diproses dan tidak dapat menerima pembayaran baru.';
+        header("Location: bayar.php?id=" . $id_sewa);
+        exit;
     } elseif (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] === UPLOAD_ERR_OK) {
         $file_tmp = $_FILES['bukti_pembayaran']['tmp_name'];
         $file_name = $_FILES['bukti_pembayaran']['name'];
