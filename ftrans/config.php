@@ -29,10 +29,11 @@ if (file_exists($envFile)) {
     }
 }
 
-$databaseHost     = 'localhost';
-$databaseName     = 'ftrans';
-$databaseUsername = 'root';
-$databasePassword = '';
+// Konfigurasi Database InfinityFree (dengan fallback ke .env / Localhost jika diatur)
+$databaseHost     = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'sql211.infinityfree.com');
+$databaseName     = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'if0_42443860_ftrans');
+$databaseUsername = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'if0_42443860');
+$databasePassword = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? 'WKuB2nlrWh');
 
 $mysqli = mysqli_connect($databaseHost, $databaseUsername, $databasePassword, $databaseName);
 
