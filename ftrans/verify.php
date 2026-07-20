@@ -84,7 +84,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'resend') {
 }
 ?>
 <?php
-$admin_wa_number = $_ENV['ADMIN_WA_NUMBER'] ?? getenv('ADMIN_WA_NUMBER') ?? '6281234567890';
+$admin_wa_number = $_ENV['ADMIN_WA_NUMBER'] ?? getenv('ADMIN_WA_NUMBER') ?? '6281226835860';
 $wa_phone_clean = preg_replace('/[^0-9]/', '', $admin_wa_number);
 if (substr($wa_phone_clean, 0, 1) === '0') $wa_phone_clean = '62' . substr($wa_phone_clean, 1);
 $wa_user_text = "Halo Admin FTrans, akun saya (" . ($email ?? 'Pengguna') . ") telah berhasil diverifikasi. Saya siap untuk menyewa kendaraan!";

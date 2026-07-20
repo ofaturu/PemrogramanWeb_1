@@ -164,6 +164,14 @@ function getCarImageUrl($car) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>FTrans — Sewa Mobil Mewah & Premium Terbaik</title>
     
+    <!-- PWA & Mobile Icons -->
+    <link rel="manifest" href="assets/favicon/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FTrans">
+    <meta name="theme-color" content="#1e293b">
+
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -692,5 +700,6 @@ function getCarImageUrl($car) {
     <!-- Bootstrap & necessary scripts -->
     <script src="vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
     <script src="js/landing.js"></script>
+    <script src="js/pwa.js"></script>
 </body>
 </html>
