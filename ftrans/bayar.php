@@ -200,6 +200,15 @@ $diskon_pct = ($original_total > 0) ? round(($diskon / $original_total) * 100) :
 $denda = intval($rental['denda'] ?? 0);
 $total_pembayaran = $sewa_cost + $denda;
 
+// Formatter WhatsApp Link untuk Admin FTrans
+$admin_wa_number = $_ENV['ADMIN_WA_NUMBER'] ?? getenv('ADMIN_WA_NUMBER') ?? '6281234567890';
+$wa_phone = preg_replace('/[^0-9]/', '', $admin_wa_number);
+if (substr($wa_phone, 0, 1) === '0') {
+    $wa_phone = '62' . substr($wa_phone, 1);
+}
+$wa_text = "Halo Admin FTrans, saya " . ($rental['nama_user'] ?? 'Penyewa') . " ingin mengonfirmasi bahwa pembayaran penyewaan #INV-" . str_pad($id_sewa, 5, '0', STR_PAD_LEFT) . " (" . ($rental['nama_kendaraan'] ?? 'Kendaraan') . ") telah diverifikasi. Terima kasih!";
+$wa_link = "https://api.whatsapp.com/send?phone=" . urlencode($wa_phone) . "&text=" . urlencode($wa_text);
+
 // Define active page
 $activePage = 'sewa';
 ?>
@@ -350,9 +359,14 @@ include 'partials/head.php';
                         </div>
                         <h5 class="fw-bold mb-2">Terima Kasih!</h5>
                         <p class="text-muted mb-4"><?= htmlspecialchars($success) ?></p>
-                        <button type="button" class="btn btn-success px-5 py-2.5 fw-bold text-white rounded-pill shadow-sm" data-coreui-dismiss="modal">
-                          Tutup
-                        </button>
+                        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-2">
+                          <a href="<?= htmlspecialchars($wa_link) ?>" target="_blank" class="btn btn-success px-4 py-2.5 fw-bold text-white rounded-pill shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                            <i class="fab fa-whatsapp fs-5"></i> Kirim Pesan ke WhatsApp Admin
+                          </a>
+                          <button type="button" class="btn btn-outline-secondary px-4 py-2.5 fw-semibold rounded-pill" data-coreui-dismiss="modal">
+                            Tutup
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -366,8 +380,11 @@ include 'partials/head.php';
                 });
                 </script>
 
-                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success p-3 mb-4" style="border-radius: 8px;">
-                    <i class="fa fa-check-circle me-2"></i> <?= htmlspecialchars($success) ?>
+                <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2" style="border-radius: 8px;">
+                    <div><i class="fa fa-check-circle me-2"></i> <?= htmlspecialchars($success) ?></div>
+                    <a href="<?= htmlspecialchars($wa_link) ?>" target="_blank" class="btn btn-success btn-sm fw-bold text-white rounded-pill px-3">
+                      <i class="fab fa-whatsapp me-1"></i> WhatsApp Admin
+                    </a>
                 </div>
             <?php endif; ?>
 
@@ -538,6 +555,15 @@ include 'partials/head.php';
                       <h6 class="fw-bold text-success mb-2">Pembayaran Berhasil / Lunas</h6>
                       <p class="text-muted small mb-0">Pembayaran Anda telah diverifikasi dan dikonfirmasi.</p>
                       
+                      <!-- Direct WhatsApp Action Card after Admin Verification -->
+                      <div class="mt-4 p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 text-center">
+                        <h6 class="fw-bold text-success mb-1"><i class="fab fa-whatsapp me-2 fs-5"></i>Konfirmasi Terverifikasi ke Admin</h6>
+                        <p class="small text-muted mb-3">Klik tombol di bawah ini untuk mengirim pesan konfirmasi langsung ke WhatsApp Admin FTrans.</p>
+                        <a href="<?= htmlspecialchars($wa_link) ?>" target="_blank" class="btn btn-success btn-whatsapp-cta text-white fw-bold px-4 py-2.5 rounded-pill shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                          <i class="fab fa-whatsapp fs-5"></i> Kirim Pesan ke WhatsApp Admin
+                        </a>
+                      </div>
+
                       <?php if (!empty($bukti)): ?>
                           <div class="border rounded p-2 mt-3 bg-body-tertiary">
                             <div class="small text-muted mb-2 text-start fw-bold">Pratinjau Bukti Pembayaran:</div>

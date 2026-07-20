@@ -83,6 +83,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'resend') {
     }
 }
 ?>
+<?php
+$admin_wa_number = $_ENV['ADMIN_WA_NUMBER'] ?? getenv('ADMIN_WA_NUMBER') ?? '6281234567890';
+$wa_phone_clean = preg_replace('/[^0-9]/', '', $admin_wa_number);
+if (substr($wa_phone_clean, 0, 1) === '0') $wa_phone_clean = '62' . substr($wa_phone_clean, 1);
+$wa_user_text = "Halo Admin FTrans, akun saya (" . ($email ?? 'Pengguna') . ") telah berhasil diverifikasi. Saya siap untuk menyewa kendaraan!";
+$wa_user_link = "https://api.whatsapp.com/send?phone=" . urlencode($wa_phone_clean) . "&text=" . urlencode($wa_user_text);
+?>
 <!DOCTYPE html>
 <html lang="id">
   <head>
@@ -90,6 +97,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'resend') {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Verifikasi OTP — FTrans</title>
+    <link rel="manifest" href="assets/favicon/manifest.json">
+    <meta name="theme-color" content="#1e293b">
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -118,8 +127,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'resend') {
               <?php endif; ?>
               
               <?php if ($success): ?>
-                  <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small py-2 px-3">
-                      <i class="fa fa-check-circle me-1"></i> <?= $success ?>
+                  <div class="alert alert-success border-0 bg-success bg-opacity-10 text-success small py-3 px-3 rounded-3 text-center">
+                      <div class="fw-bold mb-1"><i class="fa fa-check-circle me-1"></i> <?= $success ?></div>
+                      <p class="mb-3 text-muted small">Kirim pesan konfirmasi ke WhatsApp Admin untuk bantuan pelayanan VIP lebih lanjut:</p>
+                      <a href="<?= htmlspecialchars($wa_user_link) ?>" target="_blank" class="btn btn-success btn-sm text-white fw-bold rounded-pill px-4 py-2 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm">
+                          <i class="fab fa-whatsapp fs-6"></i> Kirim Pesan ke WhatsApp Admin
+                      </a>
                   </div>
               <?php endif; ?>
 
@@ -152,5 +165,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'resend') {
     </div>
     <!-- CoreUI and necessary plugins-->
     <script src="vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
+    <script src="js/pwa.js"></script>
   </body>
 </html>
