@@ -17,6 +17,8 @@
 <!-- CoreUI and necessary plugins-->
 <script src="vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
 <script src="vendors/simplebar/js/simplebar.min.js"></script>
+<!-- PWA & Mobile Script -->
+<script src="js/pwa.js"></script>
 <script>
   // Add scroll class to header
   const headerElement = document.querySelector("header.header");

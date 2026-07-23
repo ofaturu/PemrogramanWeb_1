@@ -18,9 +18,13 @@
     <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
     <link rel="manifest" href="assets/favicon/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FTrans">
+    <meta name="msapplication-TileColor" content="#1e293b">
     <meta name="msapplication-TileImage" content="assets/favicon/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#1e293b">
     
     <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -74,6 +78,39 @@
         /* Force modal footers to match the active theme's background */
         .modal-footer, .modal-footer.bg-light {
             background-color: transparent !important;
+        }
+        
+        /* Smartphone & Mobile Layout Optimizations */
+        @media (max-width: 767.98px) {
+            .body.flex-grow-1 {
+                padding-left: 0.5rem !important;
+                padding-right: 0.5rem !important;
+            }
+            .container-lg, .container-fluid {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+                border-radius: 8px;
+            }
+            .card-body {
+                padding: 1rem !important;
+            }
+            .btn {
+                padding-top: 0.6rem;
+                padding-bottom: 0.6rem;
+            }
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            /* High visibility WhatsApp CTA for mobile */
+            .btn-whatsapp-cta {
+                font-size: 0.95rem;
+                padding: 12px 18px;
+                border-radius: 50px;
+                box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35);
+            }
         }
     </style>
 </head>
